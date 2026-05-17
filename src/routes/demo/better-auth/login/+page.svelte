@@ -43,10 +43,24 @@
 
 <hr class="my-4" />
 
+<!-- GitHub 로그인 -->
 <form method="post" action="?/signInSocial" use:enhance>
-	<input type="hidden" name="provider" value="github" />
-	<input type="hidden" name="callbackURL" value="/demo/better-auth" />
-	<button class="rounded-md bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
-		>Sign in with GitHub</button
-	>
+    <input type="hidden" name="provider" value="github" />
+    <input type="hidden" name="callbackURL" value="/demo/better-auth" />
+    <button
+        class="rounded-md bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
+    >
+        Sign in with GitHub
+    </button>
+</form>
+
+<!-- Google 로그인 -->
+<form method="post" action="?/signInSocial" use:enhance>
+    <input type="hidden" name="provider" value="google" />
+    <input type="hidden" name="callbackURL" value="/demo/better-auth" />
+    <button
+        class="rounded-md bg-red-600 px-4 py-2 text-white transition hover:bg-red-700"
+    >
+        Sign in with Google
+    </button>
 </form>

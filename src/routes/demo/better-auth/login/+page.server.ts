@@ -65,7 +65,7 @@ export const actions: Actions = {
 
 		const result = await auth.api.signInSocial({
 			body: {
-				provider: provider as 'github',
+				provider: provider as 'github' | 'google',
 				callbackURL
 			}
 		});

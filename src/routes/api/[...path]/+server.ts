@@ -1,0 +1,5 @@
+// src\routes\api\auth\[...path]\+server.ts
+import { auth } from "$lib/server/auth";
+
+export const GET = auth.handler;
+export const POST = auth.handler;
