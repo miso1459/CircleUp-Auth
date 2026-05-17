@@ -7,6 +7,8 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
+		"start": "cross-env NODE_ENV=production node server.js",
+		"start:dev": "cross-env NODE_ENV=development node server.js",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -27,6 +29,7 @@
 		"@internationalized/date": "^3.12.1",
 		"@lucide/svelte": "^1.16.0",
 		"@sveltejs/adapter-auto": "^7.0.1",
+		"@sveltejs/adapter-node": "^5.5.4",
 		"@sveltejs/kit": "^2.60.1",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"@tailwindcss/forms": "^0.5.11",
@@ -37,6 +40,7 @@
 		"better-auth": "~1.4.22",
 		"bits-ui": "^2.18.1",
 		"clsx": "^2.1.1",
+		"cross-env": "^10.1.0",
 		"drizzle-kit": "^0.31.10",
 		"drizzle-orm": "^0.45.2",
 		"eslint": "^10.4.0",
@@ -59,6 +63,7 @@
 		"vite": "^8.0.13"
 	},
 	"dependencies": {
-		"better-sqlite3": "^12.10.0"
+		"better-sqlite3": "^12.10.0",
+		"dotenv-flow": "^4.1.0"
 	}
 }
