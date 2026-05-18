@@ -1,13 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-<<<<<<< HEAD
-  "id": "62a4b1a1-82e2-4f63-8984-7035725fe1a3",
-  "prevId": "00000000-0000-0000-0000-000000000000",
-  "tables": {
-=======
-  "id": "2f8fa842-a7b1-4aa4-b532-d90dc4151287",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "e35cc937-f65c-43da-b640-4d0ee89520d8",
+  "prevId": "2f8fa842-a7b1-4aa4-b532-d90dc4151287",
   "tables": {
     "config": {
       "name": "config",
@@ -78,7 +73,6 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
->>>>>>> main
     "task": {
       "name": "task",
       "columns": {
@@ -294,8 +288,6 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
-<<<<<<< HEAD
-=======
         },
         "impersonated_by": {
           "name": "impersonated_by",
@@ -303,7 +295,6 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
->>>>>>> main
         }
       },
       "indexes": {
@@ -380,17 +371,6 @@
           "notNull": false,
           "autoincrement": false
         },
-<<<<<<< HEAD
-        "role": {
-          "name": "role",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'user'"
-        },
-=======
->>>>>>> main
         "created_at": {
           "name": "created_at",
           "type": "integer",
@@ -406,15 +386,14 @@
           "notNull": true,
           "autoincrement": false,
           "default": "(cast(unixepoch('subsecond') * 1000 as integer))"
-<<<<<<< HEAD
-=======
         },
         "role": {
           "name": "role",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'user'"
         },
         "banned": {
           "name": "banned",
@@ -437,7 +416,6 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
->>>>>>> main
         }
       },
       "indexes": {

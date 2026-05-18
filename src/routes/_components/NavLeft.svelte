@@ -7,6 +7,16 @@
 <NavigationMenu.Root>
 	<NavigationMenu.List>
 		<NavigationMenu.Item>
+		<NavigationMenu.Trigger>Docs</NavigationMenu.Trigger>
+			<NavigationMenu.Content>
+				<ul class="grid w-[300px] gap-4 p-2">
+					<NavigationMenu.Link>
+						<a href={resolve('/doc/ContentsEditor' as Pathname)}>ContentsEditor</a>
+					</NavigationMenu.Link>
+				</ul>
+			</NavigationMenu.Content>
+		</NavigationMenu.Item>
+		<NavigationMenu.Item>
 			<NavigationMenu.Trigger>LLM</NavigationMenu.Trigger>
 			<NavigationMenu.Content>
 				<ul class="grid w-[300px] gap-4 p-2">

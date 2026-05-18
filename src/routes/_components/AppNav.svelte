@@ -5,7 +5,11 @@
 	let { navRightData } = $props();
 </script>
 
-<nav class="flex w-full items-center justify-between border-b border-gray-200 pr-8 pl-4">
-	<NavLeft />
+<nav class="relative z-50 flex w-full items-center justify-between border-b border-gray-200 pr-8 pl-4 bg-background">
+	{#if navRightData?.user}
+		<NavLeft />
+	{:else}
+		<div></div>
+	{/if}
 	<NavRight data={navRightData} />
 </nav>
