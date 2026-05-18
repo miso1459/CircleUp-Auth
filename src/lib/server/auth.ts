@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth/minimal';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
+import { admin } from 'better-auth/plugins';
 import { env } from '$env/dynamic/private';
 import { getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
@@ -27,6 +28,7 @@ export const auth = betterAuth({
 		expiresIn: 60 * 30
 	},
 	plugins: [
-		sveltekitCookies(getRequestEvent) // make sure this is the last plugin in the array
+		admin(),
+		sveltekitCookies(getRequestEvent)
 	]
 });
