@@ -2,10 +2,18 @@
 	import type { Pathname } from '$app/types';
 	import { resolve } from '$app/paths';
 	import * as NavigationMenu from '$lib/components/ui/navigation-menu/index.js';
+
+	let { data } = $props();
 </script>
 
 <NavigationMenu.Root>
 	<NavigationMenu.List>
+		<NavigationMenu.Item>
+			<NavigationMenu.Link>
+				<a href={resolve('/' as Pathname)}>Home</a>
+			</NavigationMenu.Link>
+		   </NavigationMenu.Item>
+		{#if data?.role == 'admin'}
 		<NavigationMenu.Item>
 		<NavigationMenu.Trigger>Docs</NavigationMenu.Trigger>
 			<NavigationMenu.Content>
@@ -36,5 +44,6 @@
 				</ul>
 			</NavigationMenu.Content>
 		</NavigationMenu.Item>
+		{/if}
 	</NavigationMenu.List>
 </NavigationMenu.Root>

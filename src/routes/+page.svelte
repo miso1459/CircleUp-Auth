@@ -71,6 +71,7 @@
 				</div>
 			</article>
 
+			{#if data.navRightData?.role == 'admin'}
 			<!-- Quick Editor Action (Floating Button style) -->
 			<div class="flex justify-center mt-2">
 				<a 
@@ -81,7 +82,7 @@
 					<ArrowRight class="w-4 h-4 text-indigo-400" />
 				</a>
 			</div>
-			
+			{/if}
 		{:else}
 			<!-- Empty State / No Document Configured -->
 			<div class="bg-white/60 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-xl p-12 text-center flex flex-col items-center justify-center gap-6 max-w-2xl mx-auto my-12 transition-all duration-300">
