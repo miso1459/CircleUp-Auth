@@ -63,6 +63,9 @@
 		"vite": "^8.0.13"
 	},
 	"dependencies": {
+		"@tiptap/core": "^3.23.4",
+		"@tiptap/pm": "^3.23.4",
+		"@tiptap/starter-kit": "^3.23.4",
 		"better-sqlite3": "^12.10.0",
 		"dotenv-flow": "^4.1.0"
 	}
