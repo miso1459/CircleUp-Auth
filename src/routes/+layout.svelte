@@ -18,11 +18,13 @@
 </svelte:head>
 
 <div class="flex min-h-screen flex-col">
-	<!-- 상단 네비게이션 -->
-	<AppNav navRightData={data.navRightData} />
+	<!-- 상단 네비게이션 (고정) -->
+	<div class="fixed top-0 right-0 left-0 z-50 bg-white">
+		<AppNav navRightData={data.navRightData} />
+	</div>
 
-	<!-- 컨텐츠 영역 -->
-	<main class="m-4 flex-1 rounded-2xl border border-gray-300 p-4">
+	<!-- 컨텐츠 영역 (네비게이션 높이만큼 상단 여백) -->
+	<main class="mt-16 m-4 flex-1 rounded-2xl border border-gray-300 p-4">
 		{@render children()}
 	</main>
 </div>
