@@ -82,24 +82,22 @@
 			>
 				<ul class="grid gap-4 p-2">
 					{#if data?.user}
-						<NavigationMenu.Link>
-							<button type="button" class="profile-btn" onclick={openProfileModal}>
-								Profile
-							</button>
-						</NavigationMenu.Link>
-						<NavigationMenu.Link>
-							<a href={resolve('/logout' as Pathname)} data-sveltekit-reload>Logout</a>
+						<NavigationMenu.Link onclick={openProfileModal}>
+							Profile
+						</NavigationMenu.Link>	
+						<NavigationMenu.Link href={resolve('/logout' as Pathname)} data-sveltekit-reload>
+							Logout
 						</NavigationMenu.Link>
 					{:else}
-						<NavigationMenu.Link>
-							<a href={resolve('/login?provider=google' as Pathname)} data-sveltekit-reload
-								>Google</a
-							>
+						<NavigationMenu.Link
+							href={resolve('/login?provider=google' as Pathname)}
+							data-sveltekit-reload>
+							Google
 						</NavigationMenu.Link>
-						<NavigationMenu.Link>
-							<a href={resolve('/login?provider=github' as Pathname)} data-sveltekit-reload
-								>Github</a
-							>
+						<NavigationMenu.Link
+							href={resolve('/login?provider=github' as Pathname)}
+							data-sveltekit-reload>
+							Github
 						</NavigationMenu.Link>
 					{/if}
 				</ul>
