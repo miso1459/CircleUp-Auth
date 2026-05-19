@@ -1,53 +1,58 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { Editor } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
-	import { 
-		Plus, 
-		Trash2, 
-		Search, 
-		FileText, 
-		Home, 
-		Check, 
-		Loader2, 
-		Sparkles, 
-		Bold, 
-		Italic, 
-		Strikethrough, 
-		Heading1, 
-		Heading2, 
-		Heading3, 
-		Quote, 
-		List, 
-		ListOrdered, 
-		Code, 
-		Undo2, 
-		Redo2, 
+	import type { PageProps } from './$types';
+	import {
+		formatDate,
+		createDocument,
+		updateDocument,
+		deleteDocumentById,
+		updateHomepageDocument,
+		type DocumentItem,
+		type SaveStatus
+	} from './contents-editor';
+	import {
+		Plus,
+		Trash2,
+		Search,
+		FileText,
+		Home,
+		Check,
+		Loader2,
+		Sparkles,
+		Bold,
+		Italic,
+		Strikethrough,
+		Heading1,
+		Heading2,
+		Heading3,
+		Quote,
+		List,
+		ListOrdered,
+		Code,
+		Undo2,
+		Redo2,
 		Save,
 		FileEdit
 	} from '@lucide/svelte';
 
-	interface DocumentItem {
-		id: string;
-		title: string;
-		content: string;
-		createdAt: Date | string;
-		updatedAt: Date | string;
-	}
+	let { data }: PageProps = $props();
 
-	// Svelte 5 Runes State
 	let documents = $state<DocumentItem[]>([]);
-	let loading = $state(true);
 	let activeDocId = $state<string | null>(null);
 	let homepageDocId = $state<string | null>(null);
-	let searchQuery = $state('');
-	let saveStatus = $state<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
-	// Tiptap variables
+	$effect(() => {
+		documents = data.documents;
+		homepageDocId = data.homepageDocId;
+	});
+	let searchQuery = $state('');
+	let saveStatus = $state<SaveStatus>('idle');
+
 	let editorElement = $state<HTMLDivElement>();
 	let editor = $state<Editor | null>(null);
 
-	// Tiptap toolbar state (reactive)
 	let isBold = $state(false);
 	let isItalic = $state(false);
 	let isStrike = $state(false);
@@ -59,24 +64,23 @@
 	let isBlockquote = $state(false);
 	let isCodeBlock = $state(false);
 
-	// Title editor state
 	let currentTitle = $state('');
 
-	// Auto-save debounce timer
 	let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined;
 
-	// Derived states
-	const activeDoc = $derived(documents.find(d => d.id === activeDocId) || null);
+	const activeDoc = $derived(documents.find((d) => d.id === activeDocId) || null);
 	const filteredDocuments = $derived(
-		documents.filter(doc => 
-			doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			(doc.content && doc.content.toLowerCase().includes(searchQuery.toLowerCase()))
+		documents.filter(
+			(doc) =>
+				doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				(doc.content && doc.content.toLowerCase().includes(searchQuery.toLowerCase()))
 		)
 	);
 
-	// Load all documents and configuration on mount
-	onMount(async () => {
-		await loadAllData();
+	$effect(() => {
+		if (documents.length > 0 && !activeDocId) {
+			selectDocument(documents[0].id);
+		}
 	});
 
 	onDestroy(() => {
@@ -88,31 +92,17 @@
 		}
 	});
 
-	async function loadAllData() {
-		loading = true;
-		try {
-			const [docsRes, configRes] = await Promise.all([
-				fetch('/api/documents'),
-				fetch('/api/config')
-			]);
-
-			if (docsRes.ok) {
-				documents = await docsRes.json();
-			}
-			if (configRes.ok) {
-				const configData = await configRes.json();
-				homepageDocId = configData.value;
-			}
-
-			// Select the first document by default if available
-			if (documents.length > 0 && !activeDocId) {
-				selectDocument(documents[0].id);
-			}
-		} catch (error) {
-			console.error('Failed to load data:', error);
-		} finally {
-			loading = false;
-		}
+	function syncToolbarState(ed: Editor) {
+		isBold = ed.isActive('bold');
+		isItalic = ed.isActive('italic');
+		isStrike = ed.isActive('strike');
+		isH1 = ed.isActive('heading', { level: 1 });
+		isH2 = ed.isActive('heading', { level: 2 });
+		isH3 = ed.isActive('heading', { level: 3 });
+		isBulletList = ed.isActive('bulletList');
+		isOrderedList = ed.isActive('orderedList');
+		isBlockquote = ed.isActive('blockquote');
+		isCodeBlock = ed.isActive('codeBlock');
 	}
 
 	function initTiptap(initialContent: string) {
@@ -129,53 +119,29 @@
 					class: 'prose dark:prose-invert max-w-none focus:outline-none min-h-[450px] px-6 py-4'
 				}
 			},
-			onUpdate: ({ editor }) => {
-				// Update active toolbar states
-				isBold = editor.isActive('bold');
-				isItalic = editor.isActive('italic');
-				isStrike = editor.isActive('strike');
-				isH1 = editor.isActive('heading', { level: 1 });
-				isH2 = editor.isActive('heading', { level: 2 });
-				isH3 = editor.isActive('heading', { level: 3 });
-				isBulletList = editor.isActive('bulletList');
-				isOrderedList = editor.isActive('orderedList');
-				isBlockquote = editor.isActive('blockquote');
-				isCodeBlock = editor.isActive('codeBlock');
-
-				// Trigger auto save
+			onUpdate: ({ editor: ed }) => {
+				syncToolbarState(ed);
 				triggerAutoSave();
 			},
-			onSelectionUpdate: ({ editor }) => {
-				isBold = editor.isActive('bold');
-				isItalic = editor.isActive('italic');
-				isStrike = editor.isActive('strike');
-				isH1 = editor.isActive('heading', { level: 1 });
-				isH2 = editor.isActive('heading', { level: 2 });
-				isH3 = editor.isActive('heading', { level: 3 });
-				isBulletList = editor.isActive('bulletList');
-				isOrderedList = editor.isActive('orderedList');
-				isBlockquote = editor.isActive('blockquote');
-				isCodeBlock = editor.isActive('codeBlock');
+			onSelectionUpdate: ({ editor: ed }) => {
+				syncToolbarState(ed);
 			}
 		});
 	}
 
 	function selectDocument(id: string) {
 		if (autoSaveTimeout) {
-			// Save outstanding changes before switching
 			clearTimeout(autoSaveTimeout);
 			saveActiveDocumentImmediately();
 		}
 
 		activeDocId = id;
-		const doc = documents.find(d => d.id === id);
+		const doc = documents.find((d) => d.id === id);
 		if (doc) {
 			currentTitle = doc.title;
-			// Initialize or update Tiptap content
 			if (editor) {
 				editor.commands.setContent(doc.content || '');
 			} else {
-				// Svelte state reactivity delay
 				setTimeout(() => {
 					initTiptap(doc.content || '');
 				}, 50);
@@ -184,28 +150,17 @@
 	}
 
 	async function createNewDocument() {
-		try {
-			saveStatus = 'saving';
-			const res = await fetch('/api/documents', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					title: '제목 없는 문서',
-					content: '<p>여기에 내용을 작성하세요...</p>'
-				})
-			});
+		saveStatus = 'saving';
+		const newDoc = await createDocument();
 
-			if (res.ok) {
-				const newDoc = await res.json();
-				documents = [newDoc, ...documents];
-				selectDocument(newDoc.id);
-				saveStatus = 'saved';
-				setTimeout(() => { saveStatus = 'idle'; }, 2000);
-			} else {
-				saveStatus = 'error';
-			}
-		} catch (error) {
-			console.error(error);
+		if (newDoc) {
+			documents = [newDoc, ...documents];
+			selectDocument(newDoc.id);
+			saveStatus = 'saved';
+			setTimeout(() => {
+				saveStatus = 'idle';
+			}, 2000);
+		} else {
 			saveStatus = 'error';
 		}
 	}
@@ -216,102 +171,61 @@
 
 		autoSaveTimeout = setTimeout(async () => {
 			await saveActiveDocumentImmediately();
-		}, 1500); // Save after 1.5 seconds of inactivity
+		}, 1500);
 	}
 
 	async function saveActiveDocumentImmediately() {
 		if (!activeDocId || !editor) return;
 
-		try {
-			const htmlContent = editor.getHTML();
-			const res = await fetch(`/api/documents/${activeDocId}`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					title: currentTitle || '제목 없는 문서',
-					content: htmlContent
-				})
-			});
+		const updated = await updateDocument(
+			activeDocId,
+			currentTitle || '제목 없는 문서',
+			editor.getHTML()
+		);
 
-			if (res.ok) {
-				const updated = await res.json();
-				// Update list locally
-				documents = documents.map(d => d.id === activeDocId ? updated : d);
-				saveStatus = 'saved';
-				setTimeout(() => {
-					if (saveStatus === 'saved') saveStatus = 'idle';
-				}, 2000);
-			} else {
-				saveStatus = 'error';
-			}
-		} catch (error) {
-			console.error(error);
+		if (updated) {
+			documents = documents.map((d) => (d.id === activeDocId ? updated : d));
+			saveStatus = 'saved';
+			setTimeout(() => {
+				if (saveStatus === 'saved') saveStatus = 'idle';
+			}, 2000);
+		} else {
 			saveStatus = 'error';
 		}
 	}
 
 	async function deleteDocument(id: string, event: MouseEvent) {
 		event.stopPropagation();
-		
+
 		if (!confirm('정말로 이 문서를 삭제하시겠습니까?')) return;
 
-		try {
-			const res = await fetch(`/api/documents/${id}`, {
-				method: 'DELETE'
-			});
+		const ok = await deleteDocumentById(id);
 
-			if (res.ok) {
-				// Remove locally
-				documents = documents.filter(d => d.id !== id);
-				
-				// Handle active doc deletion
-				if (activeDocId === id) {
-					editor?.destroy();
-					editor = null;
-					activeDocId = null;
-					currentTitle = '';
-					
-					if (documents.length > 0) {
-						selectDocument(documents[0].id);
-					}
-				}
+		if (ok) {
+			documents = documents.filter((d) => d.id !== id);
 
-				// If deleted document was the homepage document, reset homepage doc
-				if (homepageDocId === id) {
-					await setAsHomepageDocument(null);
+			if (activeDocId === id) {
+				editor?.destroy();
+				editor = null;
+				activeDocId = null;
+				currentTitle = '';
+
+				if (documents.length > 0) {
+					selectDocument(documents[0].id);
 				}
 			}
-		} catch (error) {
-			console.error(error);
+
+			if (homepageDocId === id) {
+				await setAsHomepageDocument(null);
+			}
 		}
 	}
 
 	async function setAsHomepageDocument(id: string | null) {
-		try {
-			const res = await fetch('/api/config', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ value: id })
-			});
-
-			if (res.ok) {
-				homepageDocId = id;
-			}
-		} catch (error) {
-			console.error(error);
+		const ok = await updateHomepageDocument(id);
+		if (ok) {
+			homepageDocId = id;
 		}
-	}
-
-	// Helper to format date nicely
-	function formatDate(dateInput: Date | string | number | null | undefined) {
-		if (!dateInput) return '';
-		const d = new Date(dateInput);
-		return d.toLocaleDateString('ko-KR', {
-			month: 'short',
-			day: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
-		});
 	}
 </script>
 
@@ -349,12 +263,7 @@
 
 		<!-- Document Cards Container -->
 		<div class="flex-1 overflow-y-auto p-3 space-y-2">
-			{#if loading}
-				<div class="flex flex-col items-center justify-center py-10 text-slate-400 gap-2">
-					<Loader2 class="w-8 h-8 animate-spin text-indigo-500" />
-					<span class="text-sm font-medium">문서를 불러오는 중...</span>
-				</div>
-			{:else if filteredDocuments.length === 0}
+			{#if filteredDocuments.length === 0}
 				<div class="text-center py-12 text-slate-400">
 					<FileText class="w-12 h-12 mx-auto stroke-1 mb-2 opacity-50" />
 					<p class="text-sm">검색 결과가 없거나<br/>생성된 문서가 없습니다.</p>
