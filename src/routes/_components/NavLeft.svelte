@@ -17,7 +17,7 @@
 		<NavigationMenu.Item>
 			<NavigationMenu.Trigger>Docs</NavigationMenu.Trigger>
 			<NavigationMenu.Content>
-				<ul class="grid w-[300px] gap-4 p-2">
+				<ul class="grid w-75 gap-4 p-2">
 					<li>
 						<NavigationMenu.Link>
 							{#snippet child({ props })}
@@ -33,12 +33,21 @@
 		<NavigationMenu.Item>
 			<NavigationMenu.Trigger>LLM</NavigationMenu.Trigger>
 			<NavigationMenu.Content>
-				<ul class="grid w-[300px] gap-4 p-2">
+				<ul class="grid w-75 gap-4 p-2">
 					<li>
 						<NavigationMenu.Link>
 							{#snippet child({ props })}
 							<a href={resolve('/llm/StS' as Pathname)} data-sveltekit-reload {...props}>
 								Gen Sentence to Sentence
+							</a>
+							{/snippet}
+						</NavigationMenu.Link>
+					</li>
+					<li>
+						<NavigationMenu.Link>
+							{#snippet child({ props })}
+							<a href={resolve('/llm/StoImage' as Pathname)} data-sveltekit-reload {...props}>
+								Sentence to Image
 							</a>
 							{/snippet}
 						</NavigationMenu.Link>
@@ -49,7 +58,7 @@
 		<NavigationMenu.Item>
 			<NavigationMenu.Trigger>TTS</NavigationMenu.Trigger>
 			<NavigationMenu.Content>
-				<ul class="grid w-[300px] gap-4 p-2">
+				<ul class="grid w-75 gap-4 p-2">
 					<li>
 						<NavigationMenu.Link>
 							{#snippet child({ props })}
