@@ -63,9 +63,18 @@
 		"vite": "^8.0.13"
 	},
 	"dependencies": {
-		"@tiptap/core": "^3.23.4",
-		"@tiptap/pm": "^3.23.4",
-		"@tiptap/starter-kit": "^3.23.4",
+		"@tiptap/core": "^3.23.5",
+		"@tiptap/extension-file-handler": "^3.23.5",
+		"@tiptap/extension-image": "^3.23.5",
+		"@tiptap/extension-link": "^3.23.5",
+		"@tiptap/extension-table": "^3.23.5",
+		"@tiptap/extension-table-cell": "^3.23.5",
+		"@tiptap/extension-table-header": "^3.23.5",
+		"@tiptap/extension-table-row": "^3.23.5",
+		"@tiptap/extension-text-style": "^3.23.5",
+		"@tiptap/extension-youtube": "^3.23.5",
+		"@tiptap/pm": "^3.23.5",
+		"@tiptap/starter-kit": "^3.23.5",
 		"better-sqlite3": "^12.10.0",
 		"dotenv-flow": "^4.1.0"
 	}

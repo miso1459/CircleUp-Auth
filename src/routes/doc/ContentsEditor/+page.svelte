@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { Editor } from '@tiptap/core';
-	import StarterKit from '@tiptap/starter-kit';
 	import type { PageProps } from './$types';
 	import {
 		formatDate,
@@ -12,6 +11,13 @@
 		type DocumentItem,
 		type SaveStatus
 	} from './contents-editor';
+	import {
+		createTiptapExtensions,
+		createEditorProps,
+		insertImageFromUrl,
+		insertYoutubeVideo,
+		insertImagesFromFiles
+	} from './tiptap-editor';
 	import {
 		Plus,
 		Trash2,
@@ -34,7 +40,10 @@
 		Undo2,
 		Redo2,
 		Save,
-		FileEdit
+		FileEdit,
+		Image,
+		ImagePlus,
+		Video
 	} from '@lucide/svelte';
 
 	let { data }: PageProps = $props();
@@ -52,6 +61,7 @@
 
 	let editorElement = $state<HTMLDivElement>();
 	let editor = $state<Editor | null>(null);
+	let imageFileInput = $state<HTMLInputElement>();
 
 	let isBold = $state(false);
 	let isItalic = $state(false);
@@ -112,13 +122,9 @@
 
 		editor = new Editor({
 			element: editorElement,
-			extensions: [StarterKit],
+			extensions: createTiptapExtensions(),
 			content: initialContent,
-			editorProps: {
-				attributes: {
-					class: 'prose dark:prose-invert max-w-none focus:outline-none min-h-[450px] px-6 py-4'
-				}
-			},
+			editorProps: createEditorProps(() => editor),
 			onUpdate: ({ editor: ed }) => {
 				syncToolbarState(ed);
 				triggerAutoSave();
@@ -226,6 +232,17 @@
 		if (ok) {
 			homepageDocId = id;
 		}
+	}
+
+	function openImageFilePicker() {
+		imageFileInput?.click();
+	}
+
+	async function onImageFileSelected(event: Event) {
+		const input = event.target as HTMLInputElement;
+		if (!editor || !input.files?.length) return;
+		await insertImagesFromFiles(editor, input.files);
+		input.value = '';
 	}
 </script>
 
@@ -471,6 +488,39 @@
 					>
 						<Code class="w-4 h-4" />
 					</button>
+
+					<div class="w-px h-5 bg-slate-250 dark:bg-slate-850 mx-1"></div>
+
+					<button
+						onclick={openImageFilePicker}
+						class="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg transition-all cursor-pointer"
+						title="이미지 파일 추가 (붙여넣기·드래그 지원)"
+					>
+						<Image class="w-4 h-4" />
+					</button>
+					<button
+						onclick={() => editor && insertImageFromUrl(editor)}
+						class="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg transition-all cursor-pointer"
+						title="이미지 URL로 추가"
+					>
+						<ImagePlus class="w-4 h-4" />
+					</button>
+					<button
+						onclick={() => editor && insertYoutubeVideo(editor)}
+						class="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 text-red-500 dark:text-red-400 rounded-lg transition-all cursor-pointer"
+						title="YouTube 동영상 삽입 (URL 붙여넣기 지원)"
+					>
+						<Video class="w-4 h-4" />
+					</button>
+
+					<input
+						bind:this={imageFileInput}
+						type="file"
+						accept="image/*"
+						multiple
+						class="hidden"
+						onchange={onImageFileSelected}
+					/>
 				</div>
 			{/if}
 
@@ -509,6 +559,42 @@
 	/* Custom TipTap Tiptap Editor focus styles inside global prose */
 	:global(.ProseMirror) {
 		outline: none !important;
+	}
+
+	:global(.ProseMirror .editor-image) {
+		max-width: 100%;
+		height: auto;
+		border-radius: 0.5rem;
+		margin: 0.75rem 0;
+	}
+
+	:global(.ProseMirror .editor-youtube) {
+		display: block;
+		width: 100%;
+		max-width: 640px;
+		aspect-ratio: 16 / 9;
+		height: auto;
+		margin: 1rem 0;
+		border-radius: 0.5rem;
+		border: 0;
+	}
+
+	:global(.ProseMirror table) {
+		border-collapse: collapse;
+		width: 100%;
+		margin: 0.75rem 0;
+	}
+
+	:global(.ProseMirror th),
+	:global(.ProseMirror td) {
+		border: 1px solid #cbd5e1;
+		padding: 0.375rem 0.5rem;
+		min-width: 3rem;
+	}
+
+	:global(.dark .ProseMirror th),
+	:global(.dark .ProseMirror td) {
+		border-color: #475569;
 	}
 	
 	/* Style scrollbars gently */
