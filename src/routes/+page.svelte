@@ -28,7 +28,7 @@
 <div class="relative min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-slate-950 font-sans overflow-hidden flex flex-col items-center justify-start py-12 px-4 sm:px-6 lg:px-8">
 	
 	<!-- Premium background glow elements -->
-	<div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-linear-to-tr from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/5 dark:to-purple-500/5 rounded-full blur-3xl pointer-events-none z-0"></div>
+	<div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-125 h-125 bg-linear-to-tr from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/5 dark:to-purple-500/5 rounded-full blur-3xl pointer-events-none z-0"></div>
 	<div class="absolute bottom-10 right-10 w-72 h-72 bg-linear-to-br from-emerald-500/5 to-teal-500/5 rounded-full blur-2xl pointer-events-none z-0"></div>
 
 	<!-- Main Wrapper -->

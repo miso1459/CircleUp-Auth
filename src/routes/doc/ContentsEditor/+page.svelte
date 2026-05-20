@@ -526,7 +526,7 @@
 
 			<!-- Editor Content Area -->
 			<div class="flex-1 overflow-y-auto bg-white dark:bg-slate-900 border-none">
-				<div bind:this={editorElement} class="outline-none min-h-[500px]"></div>
+				<div bind:this={editorElement} class="outline-none min-h-125"></div>
 			</div>
 		{:else}
 			<!-- Empty State -->
