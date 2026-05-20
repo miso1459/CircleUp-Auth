@@ -1,4 +1,4 @@
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import {
 	parseSentences,
@@ -8,7 +8,11 @@ import {
 } from '$lib/server/gemini';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load = (async () => {
+export const load = (async ({ locals }) => {
+	if (locals.user?.role !== 'admin') {
+		throw redirect(303, '/');
+	}
+
 	return {
 		geminiConfigured: Boolean(env.GEMINI_API_KEY)
 	};
