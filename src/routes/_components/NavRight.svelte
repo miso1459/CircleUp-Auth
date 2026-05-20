@@ -77,10 +77,10 @@
 				{data?.user ? data.user.name : 'Login'}
 			</NavigationMenu.Trigger>
 			<NavigationMenu.Content
-				class="right-0 left-auto min-w-[120px]"
+				class="right-0 left-auto min-w-30"
 				style="--tw-enter-translate-x: 0px; --tw-exit-translate-x: 0px;"
 			>
-				<ul class="grid gap-4 p-2">
+				<ul class="grid gap-4 p-2 profile-btn">
 					{#if data?.user}
 						<NavigationMenu.Link onclick={openProfileModal}>
 							Profile
