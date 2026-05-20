@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { env } from '$env/dynamic/private';
 
 export type SentenceRow = {
@@ -6,16 +6,6 @@ export type SentenceRow = {
 	original: string;
 	statement: string;
 };
-
-function getModel() {
-	const apiKey = env.GEMINI_API_KEY;
-	if (!apiKey) {
-		throw new Error('GEMINI_API_KEY가 설정되지 않았습니다.');
-	}
-
-	const genAI = new GoogleGenerativeAI(apiKey);
-	return genAI.getGenerativeModel({ model: env.GEMINI_MODEL ?? 'gemini-2.0-flash' });
-}
 
 export function parseSentences(text: string): string[] {
 	return text
@@ -95,7 +85,11 @@ export async function transformSentencesWithPrompt(
 		throw new Error('프롬프트를 입력해 주세요.');
 	}
 
-	const model = getModel();
+	const apiKey = env.GEMINI_API_KEY;
+	if (!apiKey) {
+		throw new Error('GEMINI_API_KEY가 설정되지 않았습니다.');
+	}
+
 	const numbered = sentences.map((s, i) => `${i + 1}. ${s}`).join('\n');
 
 	const userMessage = `다음 ${sentences.length}개의 문장에 아래 프롬프트를 각 문장에 적용하세요.
@@ -112,8 +106,13 @@ ${numbered}
   { "index": 1, "original": "원문", "statement": "변환 결과" }
 ]`;
 
-	const result = await model.generateContent(userMessage);
-	const text = result.response.text();
+	const genAI = new GoogleGenAI({ apiKey });
+	const response = await genAI.models.generateContent({
+		model: env.GEMINI_MODEL ?? 'gemini-2.0-flash',
+		contents: userMessage,
+	});
+
+	const text = response.text ?? '';
 	const parsed = extractJsonArray(text);
 
 	return normalizeRows(parsed, sentences);
