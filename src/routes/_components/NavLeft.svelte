@@ -14,68 +14,76 @@
 			</NavigationMenu.Link>
 		</NavigationMenu.Item>
 		{#if data?.role == 'admin'}
-		<NavigationMenu.Item>
-			<NavigationMenu.Trigger>Docs</NavigationMenu.Trigger>
-			<NavigationMenu.Content>
-				<ul class="grid w-75 gap-4 p-2">
-					<li>
-						<NavigationMenu.Link>
-							{#snippet child({ props })}
-							<a href={resolve('/doc/ContentsEditor' as Pathname)} data-sveltekit-reload {...props}>
-								ContentsEditor
-							</a>
-							{/snippet}
-						</NavigationMenu.Link>
-					</li>
-				</ul>
-			</NavigationMenu.Content>
-		</NavigationMenu.Item>
-		<NavigationMenu.Item>
-			<NavigationMenu.Trigger>LLM</NavigationMenu.Trigger>
-			<NavigationMenu.Content>
-				<ul class="grid w-75 gap-4 p-2">
-					<li>
-						<NavigationMenu.Link>
-							{#snippet child({ props })}
-							<a href={resolve('/llm/SentToSent' as Pathname)} data-sveltekit-reload {...props}>
-								Gen Sentence to Sentence
-							</a>
-							{/snippet}
-						</NavigationMenu.Link>
-					</li>
-					<li>
-						<NavigationMenu.Link>
-							{#snippet child({ props })}
-							<a href={resolve('/llm/SentToImage' as Pathname)} data-sveltekit-reload {...props}>
-								Sentence to Image
-							</a>
-							{/snippet}
-						</NavigationMenu.Link>
-					</li>
-				</ul>
-			</NavigationMenu.Content>
-		</NavigationMenu.Item>
-		<NavigationMenu.Item>
-			<NavigationMenu.Trigger>TTS</NavigationMenu.Trigger>
-			<NavigationMenu.Content>
-				<ul class="grid w-75 gap-4 p-2">
-					<li>
-						<NavigationMenu.Link>
-							{#snippet child({ props })}
-							<a href={resolve('/tts/SentToTTS' as Pathname)} data-sveltekit-reload {...props}>
-								Gen Sentence to Voice
-							</a>
-							{/snippet}
-						</NavigationMenu.Link>
-					</li>
-				</ul>
-			</NavigationMenu.Content>
-		</NavigationMenu.Item>
+			<NavigationMenu.Item>
+				<NavigationMenu.Trigger>Docs</NavigationMenu.Trigger>
+				<NavigationMenu.Content>
+					<ul class="grid w-75 gap-4 p-2">
+						<li>
+							<NavigationMenu.Link>
+								{#snippet child({ props })}
+									<a
+										href={resolve('/doc/ContentsEditor' as Pathname)}
+										data-sveltekit-reload
+										{...props}
+									>
+										ContentsEditor
+									</a>
+								{/snippet}
+							</NavigationMenu.Link>
+						</li>
+					</ul>
+				</NavigationMenu.Content>
+			</NavigationMenu.Item>
+			<NavigationMenu.Item>
+				<NavigationMenu.Trigger>LLM</NavigationMenu.Trigger>
+				<NavigationMenu.Content>
+					<ul class="grid w-75 gap-4 p-2">
+						<li>
+							<NavigationMenu.Link>
+								{#snippet child({ props })}
+									<a href={resolve('/llm/SentToSent' as Pathname)} data-sveltekit-reload {...props}>
+										Gen Sentence to Sentence
+									</a>
+								{/snippet}
+							</NavigationMenu.Link>
+						</li>
+						<li>
+							<NavigationMenu.Link>
+								{#snippet child({ props })}
+									<a
+										href={resolve('/llm/SentToImage' as Pathname)}
+										data-sveltekit-reload
+										{...props}
+									>
+										Sentence to Image
+									</a>
+								{/snippet}
+							</NavigationMenu.Link>
+						</li>
+					</ul>
+				</NavigationMenu.Content>
+			</NavigationMenu.Item>
+			<NavigationMenu.Item>
+				<NavigationMenu.Trigger>TTS</NavigationMenu.Trigger>
+				<NavigationMenu.Content>
+					<ul class="grid w-75 gap-4 p-2">
+						<li>
+							<NavigationMenu.Link>
+								{#snippet child({ props })}
+									<a href={resolve('/tts/SentToTTS' as Pathname)} data-sveltekit-reload {...props}>
+										Gen Sentence to Voice
+									</a>
+								{/snippet}
+							</NavigationMenu.Link>
+						</li>
+					</ul>
+				</NavigationMenu.Content>
+			</NavigationMenu.Item>
 		{/if}
 	</NavigationMenu.List>
 
 	<!-- 추가: List 바로 아래, Root 안에 위치 -->
-	<div class="absolute left-0 top-full w-full">
+	<div class="absolute top-full left-0 w-full">
 		<NavigationMenu.Viewport />
 	</div>
 </NavigationMenu.Root>
