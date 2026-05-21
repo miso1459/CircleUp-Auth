@@ -1,7 +1,9 @@
 <!-- src/routes/tts/SentToTTS_Google/+page.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { fade, slide } from 'svelte/transition';
+  import { slide } from 'svelte/transition';
+  import { resolve } from '$app/navigation';
+  import type { Pathname } from '$app/types';
   import { 
     Play, 
     Pause, 
@@ -21,8 +23,8 @@
 
   // 폼 상태
   let text = $state("I am feeling down today, but let's hold onto hope for tomorrow.");
-  let selectedLanguage = $state("ko-KR");
-  let selectedVoice = $state("ko-KR-Neural2-A");
+  let selectedLanguage = $state("en-US");
+  let selectedVoice = $state("en-US-Neural2-F");
   let rate = $state(1.0);
 
   // 로딩 및 에러 상태
@@ -145,8 +147,9 @@
         }
       }, 50);
 
-    } catch (err: any) {
-      errorMsg = err.message || "음성 생성 과정에서 오류가 발생했습니다.";
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      errorMsg = message || "음성 생성 과정에서 오류가 발생했습니다.";
     } finally {
       isGenerating = false;
     }
@@ -260,7 +263,7 @@
         <Sparkles class="w-3.5 h-3.5 animate-pulse text-violet-400" />
         Google Cloud Service
       </div>
-      <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-violet-400 via-indigo-200 to-cyan-400 bg-clip-text text-transparent">
+      <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight bg-linear-to-r from-violet-400 via-indigo-200 to-cyan-400 bg-clip-text text-transparent">
         AI Text to Speech Studio
       </h1>
       <p class="text-slate-400 max-w-lg mx-auto text-sm sm:text-base">
@@ -312,45 +315,55 @@
                 bind:value={selectedVoice}
                 class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all cursor-pointer"
               >
-                {#each filteredVoices as voice}
+                {#each filteredVoices as voice (voice.name)}
                   <option value={voice.name}>{voice.label}</option>
                 {/each}
               </select>
             </div>
           </div>
 
-          <!-- 속도 슬라이더 -->
-          <div class="space-y-2 pt-2">
-            <div class="flex justify-between items-center">
-              <label for="rate-slider" class="text-xs font-bold uppercase tracking-wider text-slate-400">말하기 속도</label>
-              <span class="text-xs font-bold px-2 py-0.5 bg-slate-800 text-violet-400 rounded-md border border-slate-700">{rate.toFixed(2)}배속</span>
-            </div>
-            <div class="flex items-center gap-4">
-              <span class="text-xs text-slate-600">0.5×</span>
-              <input
-                id="rate-slider"
-                type="range"
-                min="0.5"
-                max="2.0"
-                step="0.05"
-                bind:value={rate}
-                class="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-violet-500 focus:outline-none"
-              />
-              <span class="text-xs text-slate-600">2.0×</span>
-            </div>
-          </div>
+           <!-- 선택된 코드 값 표시 -->
+           <div class="space-y-2 pt-2">
+             <div class="flex justify-between items-center">
+               <label for="code-display" class="text-xs font-bold uppercase tracking-wider text-slate-400">선택된 코드 값</label>
+               <div class="text-xs font-bold px-2 py-0.5 bg-slate-800 text-violet-400 rounded-md border border-slate-700">
+                 언어: {selectedLanguage} | 음성: {selectedVoice}
+               </div>
+             </div>
+           </div>
+
+           <!-- 속도 슬라이더 -->
+           <div class="space-y-2 pt-2">
+             <div class="flex justify-between items-center">
+               <label for="rate-slider" class="text-xs font-bold uppercase tracking-wider text-slate-400">말하기 속도</label>
+               <span class="text-xs font-bold px-2 py-0.5 bg-slate-800 text-violet-400 rounded-md border border-slate-700">{rate.toFixed(2)}배속</span>
+             </div>
+             <div class="flex items-center gap-4">
+               <span class="text-xs text-slate-600">0.5×</span>
+               <input
+                 id="rate-slider"
+                 type="range"
+                 min="0.5"
+                 max="2.0"
+                 step="0.05"
+                 bind:value={rate}
+                 class="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-violet-500 focus:outline-none"
+               />
+               <span class="text-xs text-slate-600">2.0×</span>
+             </div>
+           </div>
 
           <!-- 에러 및 성공 피드백 -->
           {#if errorMsg}
             <div transition:slide class="flex items-start gap-3 p-3.5 bg-red-950/30 border border-red-500/20 text-red-300 rounded-xl text-sm">
-              <AlertCircle class="w-4 h-4 mt-0.5 flex-shrink-0 text-red-400" />
+              <AlertCircle class="w-4 h-4 mt-0.5 shrink-0 text-red-400" />
               <span>{errorMsg}</span>
             </div>
           {/if}
 
           {#if successMsg}
             <div transition:slide class="flex items-start gap-3 p-3.5 bg-emerald-950/30 border border-emerald-500/20 text-emerald-300 rounded-xl text-sm">
-              <Sparkles class="w-4 h-4 mt-0.5 flex-shrink-0 text-emerald-400" />
+              <Sparkles class="w-4 h-4 mt-0.5 shrink-0 text-emerald-400" />
               <span>{successMsg}</span>
             </div>
           {/if}
@@ -362,7 +375,7 @@
             class="w-full py-4.5 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2.5 cursor-pointer shadow-lg shadow-violet-950/30
               {isGenerating 
                 ? 'bg-violet-950/40 text-violet-400 border border-violet-800/40 cursor-not-allowed' 
-                : 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 active:scale-[0.98] border border-violet-500/30 hover:shadow-violet-500/20'}"
+                : 'bg-linear-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 active:scale-[0.98] border border-violet-500/30 hover:shadow-violet-500/20'}"
           >
             {#if isGenerating}
               <div class="w-5 h-5 border-2 border-violet-400/30 border-t-violet-400 rounded-full animate-spin"></div>
@@ -453,7 +466,7 @@
 
               <!-- 다운로드 버튼 -->
               <a
-                href={audioUrl}
+                href={resolve(audioUrl as Pathname)}
                 download={`google-tts-${new Date().getTime()}.mp3`}
                 class="inline-flex items-center gap-2 px-4 py-2 border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-300 hover:text-cyan-400 rounded-xl text-sm font-semibold transition-all cursor-pointer active:scale-95"
               >
@@ -494,7 +507,7 @@
               <p class="text-xs font-semibold">최근 변환한 음성 파일이 없습니다.</p>
             </div>
           {:else}
-            <div class="space-y-3 max-h-[460px] overflow-y-auto pr-1 custom-scrollbar">
+            <div class="space-y-3 max-h-115 overflow-y-auto pr-1 custom-scrollbar">
               {#each history as item (item.id)}
                 <div
                   class="group relative bg-slate-950/80 hover:bg-slate-900/80 border border-slate-800/80 hover:border-violet-500/30 rounded-xl p-3.5 transition-all duration-200 block"
