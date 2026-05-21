@@ -76,6 +76,15 @@
 								{/snippet}
 							</NavigationMenu.Link>
 						</li>
+						<li>
+							<NavigationMenu.Link>
+								{#snippet child({ props })}
+									<a href={resolve('/tts/SentToTTS_Google' as Pathname)} data-sveltekit-reload {...props}>
+										Gen Sentence to Voice Google
+									</a>
+								{/snippet}
+							</NavigationMenu.Link>
+						</li>
 					</ul>
 				</NavigationMenu.Content>
 			</NavigationMenu.Item>
