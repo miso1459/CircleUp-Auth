@@ -37,7 +37,7 @@
 					<li>
 						<NavigationMenu.Link>
 							{#snippet child({ props })}
-							<a href={resolve('/llm/StS' as Pathname)} data-sveltekit-reload {...props}>
+							<a href={resolve('/llm/SentToSent' as Pathname)} data-sveltekit-reload {...props}>
 								Gen Sentence to Sentence
 							</a>
 							{/snippet}
@@ -46,7 +46,7 @@
 					<li>
 						<NavigationMenu.Link>
 							{#snippet child({ props })}
-							<a href={resolve('/llm/StoImage' as Pathname)} data-sveltekit-reload {...props}>
+							<a href={resolve('/llm/SentToImage' as Pathname)} data-sveltekit-reload {...props}>
 								Sentence to Image
 							</a>
 							{/snippet}
@@ -62,7 +62,7 @@
 					<li>
 						<NavigationMenu.Link>
 							{#snippet child({ props })}
-							<a href={resolve('/tts/StT' as Pathname)} data-sveltekit-reload {...props}>
+							<a href={resolve('/tts/SentToTTS' as Pathname)} data-sveltekit-reload {...props}>
 								Gen Sentence to Voice
 							</a>
 							{/snippet}
