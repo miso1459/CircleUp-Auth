@@ -98,25 +98,31 @@
       ></textarea>
     </label>
 
-    <div class="options">
-      <label class="field-label">
-        목소리
-        <select bind:value={selectedVoiceIndex}>
-          {#if voices.length === 0}
-            <option value={0}>기본 목소리</option>
-          {:else}
-            {#each voices as voice, i (voice.name)}
-              <option value={i}>{voice.name}</option>
-            {/each}
-          {/if}
-        </select>
-      </label>
+     <div class="options">
+       <label class="field-label">
+         목소리
+         <select bind:value={selectedVoiceIndex}>
+           {#if voices.length === 0}
+             <option value={0}>기본 목소리</option>
+           {:else}
+             {#each voices as voice, i (voice.name)}
+               <option value={i}>{voice.name}</option>
+             {/each}
+           {/if}
+         </select>
+       </label>
 
-      <label class="field-label">
-        속도: {rate.toFixed(1)}×
-        <input type="range" min="0.5" max="2" step="0.1" bind:value={rate} />
-      </label>
-    </div>
+       {#if voices.length > 0}
+         <div class="field-label">
+           목소리 코드: <strong>{voices[selectedVoiceIndex]?.lang}</strong>
+         </div>
+       {/if}
+
+       <label class="field-label">
+         속도: {rate.toFixed(1)}×
+         <input type="range" min="0.5" max="2" step="0.1" bind:value={rate} />
+       </label>
+     </div>
 
     <div class="btn-row">
       <button onclick={play} disabled={status === 'playing'}>
