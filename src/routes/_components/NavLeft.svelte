@@ -88,6 +88,22 @@
 					</ul>
 				</NavigationMenu.Content>
 			</NavigationMenu.Item>
+			<NavigationMenu.Item>
+				<NavigationMenu.Trigger>Flip Clock</NavigationMenu.Trigger>
+				<NavigationMenu.Content>
+					<ul class="grid w-75 gap-4 p-2">
+						<li>
+							<NavigationMenu.Link>
+								{#snippet child({ props })}
+									<a href={resolve('/flipclock/flipclock_Nomal' as Pathname)} data-sveltekit-reload {...props}>
+										Flip Clock Nomal
+									</a>
+								{/snippet}
+							</NavigationMenu.Link>
+						</li>
+					</ul>
+				</NavigationMenu.Content>
+			</NavigationMenu.Item>
 		{/if}
 	</NavigationMenu.List>
 
