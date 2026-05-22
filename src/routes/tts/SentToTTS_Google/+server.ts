@@ -64,24 +64,31 @@ export const POST: RequestHandler = async ({ request, locals }) => {
             throw error(500, 'No audio content received from Google TTS API');
         }
 
-        // 5. GUID 생성 및 static/TTS 폴더에 저장
+        const ttsDir = env.TTS_DIR || process.env.TTS_DIR;
+
+        const ttsDirFull = path.resolve(process.cwd(), ttsDir ?? 'static/TTS');
+
+        // 5. GUID 생성 및 TTS 폴더에 저장
         const guid = crypto.randomUUID();
         const filename = `${guid}.mp3`;
-        const ttsDir = path.resolve('static/TTS');
+        // const ttsDir = path.resolve('static/TTS');
 
         // 폴더가 없으면 생성
-        if (!fs.existsSync(ttsDir)) {
-            fs.mkdirSync(ttsDir, { recursive: true });
+        if (!fs.existsSync(ttsDirFull)) {
+            fs.mkdirSync(ttsDirFull, { recursive: true });
         }
 
-        const filePath = path.join(ttsDir, filename);
+        const filePath = path.join(ttsDirFull, filename);
         const audioBuffer = Buffer.from(data.audioContent, 'base64');
         fs.writeFileSync(filePath, audioBuffer);
+
+        const ttsBaseUrl = process.env.TTS_BASE_URL ?? 'http://localhost:5173';
+        const publicUrl = `${ttsBaseUrl}/TTS/${filename}`;
 
         // 6. 결과 반환
         return json({
             success: true,
-            url: `/TTS/${filename}`,
+            url: publicUrl,
             filename,
             guid
         });

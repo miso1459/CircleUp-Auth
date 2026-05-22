@@ -98,6 +98,13 @@
       ></textarea>
     </label>
 
+    {#if voices.length > 0}
+      <div class="field-label">
+        목소리 언어: <strong>{voices[selectedVoiceIndex]?.lang}</strong>
+        목소리 코드: <strong>{voices[selectedVoiceIndex]?.voiceURI}</strong>
+      </div>
+    {/if}
+
      <div class="options">
        <label class="field-label">
          목소리
@@ -111,12 +118,6 @@
            {/if}
          </select>
        </label>
-
-       {#if voices.length > 0}
-         <div class="field-label">
-           목소리 코드: <strong>{voices[selectedVoiceIndex]?.lang}</strong>
-         </div>
-       {/if}
 
        <label class="field-label">
          속도: {rate.toFixed(1)}×

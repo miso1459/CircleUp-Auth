@@ -2,7 +2,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { slide } from 'svelte/transition';
-  import { resolve } from '$app/navigation';
+  // import { resolve } from '$app/paths';
   import type { Pathname } from '$app/types';
   import { 
     Play, 
@@ -125,6 +125,8 @@
       audioUrl = data.url;
       successMsg = "음성이 성공적으로 생성되었습니다!";
 
+      console.log("TTS API Response:", data.url);
+
       // 히스토리 항목 추가
       const newHistoryItem = {
         id: data.guid || Math.random().toString(36).substring(2, 11),
@@ -138,6 +140,8 @@
 
       history = [newHistoryItem, ...history.slice(0, 19)]; // 최근 20개만 유지
       localStorage.setItem('tts_history_google', JSON.stringify(history));
+
+      console.log("Generated TTS URL:", audioUrl);
 
       // 오디오 로드 및 자동 재생 실행
       setTimeout(() => {
@@ -213,6 +217,8 @@
     selectedVoice = item.voiceName;
     rate = item.rate;
     audioUrl = item.url;
+
+    console.log("Loading from history:", item);
     
     successMsg = "히스토리에서 오디오를 로드했습니다.";
     errorMsg = "";
@@ -465,8 +471,7 @@
               </div>
 
               <!-- 다운로드 버튼 -->
-              <a
-                href={resolve(audioUrl as Pathname)}
+              <a href={audioUrl as Pathname}
                 download={`google-tts-${new Date().getTime()}.mp3`}
                 class="inline-flex items-center gap-2 px-4 py-2 border border-slate-800 bg-slate-950/80 hover:bg-slate-900 text-slate-300 hover:text-cyan-400 rounded-xl text-sm font-semibold transition-all cursor-pointer active:scale-95"
               >
