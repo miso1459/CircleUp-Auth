@@ -6,12 +6,10 @@ import path from 'path';
 import crypto from 'crypto';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-    // 1. 어드민 권한 검사
     if (locals.user?.role !== 'admin') {
         throw error(403, 'Unauthorized: Admin access required');
     }
 
-    // 2. 요청 바디 데이터 파싱
     let body;
     try {
         body = await request.json();
@@ -25,26 +23,19 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         throw error(400, 'Text parameter is required');
     }
 
-    // 3. API 키 획득 (GOOGLE_TTS_API_KEY 우선, 없을 시 GEMINI_API_KEY 백업)
     const apiKey = env.GOOGLE_TTS_API_KEY || env.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
     if (!apiKey) {
         throw error(500, 'Google API Key is not configured on the server');
     }
 
-    // 4. Google Cloud TTS API 호출
     const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
     try {
         const response = await fetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 input: { text },
-                voice: {
-                    languageCode,
-                    name: voiceName
-                },
+                voice: { languageCode, name: voiceName },
                 audioConfig: {
                     audioEncoding: 'MP3',
                     speakingRate: parseFloat(speakingRate) || 1.0
@@ -65,15 +56,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         }
 
         const ttsDir = env.TTS_DIR || process.env.TTS_DIR;
-
         const ttsDirFull = path.resolve(process.cwd(), ttsDir ?? 'static/TTS');
 
-        // 5. GUID 생성 및 TTS 폴더에 저장
         const guid = crypto.randomUUID();
         const filename = `${guid}.mp3`;
-        // const ttsDir = path.resolve('static/TTS');
 
-        // 폴더가 없으면 생성
         if (!fs.existsSync(ttsDirFull)) {
             fs.mkdirSync(ttsDirFull, { recursive: true });
         }
@@ -85,7 +72,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         const ttsBaseUrl = process.env.TTS_BASE_URL ?? 'http://localhost:5173';
         const publicUrl = `${ttsBaseUrl}/TTS/${filename}`;
 
-        // 6. 결과 반환
         return json({
             success: true,
             url: publicUrl,
