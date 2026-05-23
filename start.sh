@@ -15,7 +15,8 @@ echo -e "${YELLOW}========================================${NC}"
 
 # 1. Git pull
 echo -e "\n${GREEN}[1/4] Git 최신 코드 가져오는 중...${NC}"
-git pull
+git fetch origin
+git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
 echo -e "${GREEN}✔ Git pull 완료${NC}"
 
 # 2. pnpm install
