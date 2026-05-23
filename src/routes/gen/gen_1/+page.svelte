@@ -8,8 +8,9 @@
   let prompt = $state('Rewrite this sentence to be more positive and uplifting.');
   let selectedLanguage = $state('en-US');
   let selectedVoice = $state('en-US-Neural2-F');
+  let rate = $state(1.0);
   let searchQuery = $state(data.searchQuery);
-  let sentences: Array<{ id: number; lang: string; sent: string; tag: string | null; file_tts: string | null; file_image: string | null; voice: string | null; createdAt: Date }> = $state(data.sentences);
+  let sentences: Array<{ id: number; lang: string; sent: string; tag: string | null; file_tts: string | null; file_image: string | null; voice: string | null; speed: string | null; createdAt: Date }> = $state(data.sentences);
   let isGenerating = $state(false);
   let errorMsg = $state('');
   let audioUrl = $state('');
@@ -74,7 +75,8 @@
           sentence: inputSentence,
           prompt: prompt,
           languageCode: selectedLanguage,
-          voiceName: selectedVoice
+          voiceName: selectedVoice,
+          speakingRate: rate
         })
       });
       if (!res.ok) {
@@ -122,9 +124,11 @@
   async function handleDelete(id: number) {
     if (!confirm('삭제하시겠습니까?')) return;
     try {
-      const res = await fetch('/gen/gen_1?/delete', { method: 'POST', headers: { accept: 'application/json' }, body: new URLSearchParams({ id: String(id) }) });
-      const result = await res.json();
-      if (result.type === 'error') throw new Error(result.data?.message || '삭제 오류');
+      const res = await fetch('/gen/gen_1', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || '삭제 오류');
+      }
       sentences = sentences.filter(s => s.id !== id);
     } catch (e: any) {
       console.error('delete error:', e);
@@ -180,6 +184,17 @@
         <div class="voice-info">
           음성 모델: <strong>{selectedVoice}</strong>
         </div>
+        <div class="rate-row">
+          <label class="rate-label">
+            말하기 속도
+            <span class="rate-value">{rate.toFixed(2)}배속</span>
+          </label>
+          <div class="rate-slider-wrap">
+            <span class="rate-mark">0.5×</span>
+            <input type="range" min="0.5" max="2.0" step="0.05" bind:value={rate} class="rate-slider" />
+            <span class="rate-mark">2.0×</span>
+          </div>
+        </div>
         <button onclick={handleGenerate} disabled={isGenerating}>
           {isGenerating ? '생성 중...' : 'LLM 생성 + TTS 저장'}
         </button>
@@ -203,6 +218,7 @@
             <th>ID</th>
             <th>Lang</th>
             <th>Voice</th>
+            <th>Speed</th>
             <th>문장</th>
             <th>Created At</th>
             <th>재생</th>
@@ -215,6 +231,7 @@
               <td>{s.id}</td>
               <td>{s.lang}</td>
             <td class="voice-cell">{s.voice}</td>
+            <td class="speed-cell">{s.speed ?? '1.0'}</td>
             <td>{s.sent}</td>
             <td class="date">{new Date(s.createdAt).toLocaleString()}</td>
             <td>
@@ -285,6 +302,14 @@
   th { background: #f5f5f5; font-weight: 600; }
   .date { white-space: nowrap; font-size: 12px; }
   .voice-cell { font-size: 12px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .speed-cell { font-size: 12px; text-align: center; font-weight: 600; }
   .voice-info { font-size: 13px; color: #555; text-align: center; }
+  .rate-row { display: flex; flex-direction: column; gap: 4px; }
+  .rate-label { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #555; }
+  .rate-value { font-size: 12px; font-weight: 600; color: #222; padding: 2px 8px; background: #eee; border-radius: 4px; }
+  .rate-slider-wrap { display: flex; align-items: center; gap: 8px; }
+  .rate-slider { flex: 1; height: 6px; appearance: none; background: #ddd; border-radius: 3px; cursor: pointer; }
+  .rate-slider::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: #222; border-radius: 50%; cursor: pointer; }
+  .rate-mark { font-size: 11px; color: #888; min-width: 30px; text-align: center; }
   .player { margin-top: 12px; }
 </style>
