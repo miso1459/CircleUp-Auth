@@ -9,6 +9,14 @@ import { env } from '$env/dynamic/private';
 import fs from 'fs';
 import path from 'path';
 
+const ts = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+};
+const log = (...args: any[]) => console.log(`[${ts()}]`, ...args);
+const warn = (...args: any[]) => console.warn(`[${ts()}]`, ...args);
+const err = (...args: any[]) => console.error(`[${ts()}]`, ...args);
+
 export const POST: RequestHandler = async ({ request, locals }) => {
     if (locals.user?.role !== 'admin') {
         throw error(403, 'Unauthorized: Admin access required');
@@ -30,21 +38,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         throw error(400, '프롬프트를 입력해주세요.');
     }
 
-    console.log('[gen_1] Starting LLM generation via +server.ts...');
-    console.log('[gen_1] Input sentence:', sentence);
-    console.log('[gen_1] Prompt:', prompt);
+    log('[gen_1] Starting LLM generation via +server.ts...');
+    log('[gen_1] Input sentence:', sentence);
+    log('[gen_1] Prompt:', prompt);
 
     const llmResult = await transformSentencesWithPrompt([sentence], prompt);
-    console.log('[gen_1] LLM result:', JSON.stringify(llmResult, null, 2));
+    log('[gen_1] LLM result:', JSON.stringify(llmResult, null, 2));
 
     const inserted: { lang: string; sent: string; voice: string; file_tts: string; url: string; speed: string }[] = [];
 
     for (const row of llmResult) {
-        console.log('[gen_1] Generating TTS for:', row.statement);
+        log('[gen_1] Generating TTS for:', row.statement);
 
         const ttsResult = await generateTTS({ text: row.statement, languageCode, voiceName, speakingRate });
 
-        console.log('[gen_1] TTS generated, filename:', ttsResult.filename, 'url:', ttsResult.url);
+        log('[gen_1] TTS generated, filename:', ttsResult.filename, 'url:', ttsResult.url);
 
         await db.insert(sentences).values({
             lang: languageCode,
@@ -54,7 +62,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
             speed: String(speakingRate)
         });
 
-        console.log('[gen_1] Inserted into DB:', row.statement);
+        log('[gen_1] Inserted into DB:', row.statement);
 
         inserted.push({
             lang: languageCode,
@@ -66,7 +74,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         });
     }
 
-    console.log('[gen_1] All done, inserted count:', inserted.length);
+    log('[gen_1] All done, inserted count:', inserted.length);
 
     return json({
         success: true,
@@ -97,25 +105,25 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
         .where(eq(sentences.id, id))
         .limit(1);
 
-    console.log('[gen_1] DELETE: id=', id, 'file_tts=', record?.file_tts);
+    log('[gen_1] DELETE: id=', id, 'file_tts=', record?.file_tts);
 
     if (record?.file_tts && record.file_tts.trim()) {
         const ttsDir = env.TTS_DIR || process.env.TTS_DIR || 'static/TTS';
         const ttsDirFull = path.resolve(process.cwd(), ttsDir);
         const filePath = path.join(ttsDirFull, record.file_tts);
-        console.log('[gen_1] DELETE: ttsDir=', ttsDir, 'ttsDirFull=', ttsDirFull, 'filePath=', filePath);
+        log('[gen_1] DELETE: ttsDir=', ttsDir, 'ttsDirFull=', ttsDirFull, 'filePath=', filePath);
         try {
             if (fs.existsSync(filePath)) {
                 fs.unlinkSync(filePath);
-                console.log('[gen_1] Deleted MP3 file:', filePath);
+                log('[gen_1] Deleted MP3 file:', filePath);
             } else {
-                console.warn('[gen_1] MP3 file not found:', filePath);
+                warn('[gen_1] MP3 file not found:', filePath);
             }
         } catch (e) {
-            console.error('[gen_1] Failed to delete MP3 file:', filePath, e);
+            err('[gen_1] Failed to delete MP3 file:', filePath, e);
         }
     } else {
-        console.warn('[gen_1] No file_tts to delete for id:', id);
+        warn('[gen_1] No file_tts to delete for id:', id);
     }
 
     await db.delete(sentences).where(eq(sentences.id, id));

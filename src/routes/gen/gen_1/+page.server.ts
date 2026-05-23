@@ -7,6 +7,14 @@ import { like, desc, eq } from 'drizzle-orm';
 import fs from 'fs';
 import path from 'path';
 
+const ts = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+};
+const log = (...args: any[]) => console.log(`[${ts()}]`, ...args);
+const warn = (...args: any[]) => console.warn(`[${ts()}]`, ...args);
+const err = (...args: any[]) => console.error(`[${ts()}]`, ...args);
+
 
 export const load: PageServerLoad = async ({ locals, url }) => {
     if (locals.user?.role !== 'admin') {
@@ -42,7 +50,7 @@ export const actions: Actions = {
         const data = await request.formData();
         const query = String(data.get('query') || '');
 
-        console.log('[gen_1] Search query:', query);
+        log('[gen_1] Search query:', query);
 
         let rows;
         if (query.trim()) {
@@ -58,7 +66,7 @@ export const actions: Actions = {
                 .limit(100);
         }
 
-        console.log('[gen_1] Search results count:', rows.length);
+        log('[gen_1] Search results count:', rows.length);
 
         return { sentences: rows };
     },
@@ -87,25 +95,25 @@ export const actions: Actions = {
             .where(eq(sentences.id, id))
             .limit(1);
 
-        console.log('[gen_1] delete: id=', id, 'file_tts=', record?.file_tts);
+        log('[gen_1] delete: id=', id, 'file_tts=', record?.file_tts);
 
         if (record?.file_tts && record.file_tts.trim()) {
             const ttsDir = env.TTS_DIR || process.env.TTS_DIR || 'static/TTS';
             const ttsDirFull = path.resolve(process.cwd(), ttsDir);
             const filePath = path.join(ttsDirFull, record.file_tts);
-            console.log('[gen_1] delete: ttsDir=', ttsDir, 'ttsDirFull=', ttsDirFull, 'filePath=', filePath);
+            log('[gen_1] delete: ttsDir=', ttsDir, 'ttsDirFull=', ttsDirFull, 'filePath=', filePath);
             try {
                 if (fs.existsSync(filePath)) {
                     fs.unlinkSync(filePath);
-                    console.log('[gen_1] Deleted MP3 file:', filePath);
+                    log('[gen_1] Deleted MP3 file:', filePath);
                 } else {
-                    console.warn('[gen_1] MP3 file not found:', filePath);
+                    warn('[gen_1] MP3 file not found:', filePath);
                 }
             } catch (e) {
-                console.error('[gen_1] Failed to delete MP3 file:', filePath, e);
+                err('[gen_1] Failed to delete MP3 file:', filePath, e);
             }
         } else {
-            console.warn('[gen_1] No file_tts to delete for id:', id);
+            warn('[gen_1] No file_tts to delete for id:', id);
         }
 
         await db.delete(sentences).where(eq(sentences.id, id));

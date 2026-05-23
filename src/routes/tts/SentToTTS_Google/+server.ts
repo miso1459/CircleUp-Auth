@@ -5,6 +5,13 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
+const ts = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+};
+const log = (...args: any[]) => console.log(`[${ts()}]`, ...args);
+const err = (...args: any[]) => console.error(`[${ts()}]`, ...args);
+
 export const POST: RequestHandler = async ({ request, locals }) => {
     if (locals.user?.role !== 'admin') {
         throw error(403, 'Unauthorized: Admin access required');
@@ -46,7 +53,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         const data = await response.json();
 
         if (!response.ok) {
-            console.error('Google Cloud TTS API error:', data);
+            err('[SentToTTS_Google] Google Cloud TTS API error:', data);
             const errMsg = data.error?.message || 'Failed to synthesize speech';
             throw error(response.status, `Google TTS API Error: ${errMsg}`);
         }
@@ -72,6 +79,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         const ttsBaseUrl = process.env.TTS_BASE_URL ?? 'http://localhost:5173';
         const publicUrl = `${ttsBaseUrl}/TTS/${filename}`;
 
+        log('[SentToTTS_Google] TTS generation completed:', publicUrl);
+
         return json({
             success: true,
             url: publicUrl,
@@ -79,12 +88,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
             guid
         });
 
-    } catch (err: unknown) {
-        console.error('Error during TTS generation:', err);
-        if (typeof err === 'object' && err !== null && 'status' in err) {
-            throw err;
+    } catch (e: unknown) {
+        err('[SentToTTS_Google] TTS generation error:', e);
+        if (typeof e === 'object' && e !== null && 'status' in e) {
+            throw e;
         }
-        const message = err instanceof Error ? err.message : String(err);
+        const message = e instanceof Error ? e.message : String(e);
         throw error(500, `Internal Server Error: ${message}`);
     }
 };
