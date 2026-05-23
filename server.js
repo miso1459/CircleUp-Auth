@@ -7,7 +7,7 @@ import http from 'http';
 // TTS 파일만 별도 포트로 서빙 (예: 3001)
 const ttsServer = http.createServer((req, res) => {
     if (req.url.startsWith('/TTS_files/')) {
-        const filePath = path.resolve('Data', req.url.slice(1));
+        const filePath = path.resolve('static', req.url.slice(1));
         if (fs.existsSync(filePath)) {
             res.writeHead(200, { 
                 'Content-Type': 'audio/mpeg',
