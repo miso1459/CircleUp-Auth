@@ -8,5 +8,9 @@ export default defineConfig({
 		tailwindcss(),
 		sveltekit(),
 		paraglideVitePlugin({ project: './project.inlang', outdir: './src/lib/paraglide' })
-	]
+	],
+  server: {
+    host: true, // 또는 host: '0.0.0.0'
+    port: 5173,
+  }	
 });
