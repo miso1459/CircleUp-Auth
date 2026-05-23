@@ -10,6 +10,7 @@ const ts = () => {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
 };
 const log = (...args: any[]) => console.log(`[${ts()}]`, ...args);
+const warn = (...args: any[]) => console.warn(`[${ts()}]`, ...args);
 const err = (...args: any[]) => console.error(`[${ts()}]`, ...args);
 
 export const POST: RequestHandler = async ({ request, locals }) => {
@@ -96,4 +97,47 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         const message = e instanceof Error ? e.message : String(e);
         throw error(500, `Internal Server Error: ${message}`);
     }
+};
+
+export const DELETE: RequestHandler = async ({ request, locals }) => {
+    if (locals.user?.role !== 'admin') {
+        throw error(403, 'Unauthorized: Admin access required');
+    }
+
+    let body: { filenames?: string[] };
+    try {
+        body = await request.json();
+    } catch {
+        throw error(400, 'Invalid JSON body');
+    }
+
+    const filenames = body.filenames;
+    if (!Array.isArray(filenames) || filenames.length === 0) {
+        throw error(400, 'filenames array is required');
+    }
+
+    const ttsDir = env.TTS_DIR || process.env.TTS_DIR;
+    const ttsDirFull = path.resolve(process.cwd(), ttsDir ?? 'static/TTS');
+
+    const results: { filename: string; deleted: boolean; error?: string }[] = [];
+
+    for (const filename of filenames) {
+        const filePath = path.join(ttsDirFull, filename);
+        try {
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+                results.push({ filename, deleted: true });
+                log('[SentToTTS_Google] Deleted MP3 file:', filename);
+            } else {
+                results.push({ filename, deleted: false, error: 'File not found' });
+                warn('[SentToTTS_Google] MP3 file not found:', filename);
+            }
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            results.push({ filename, deleted: false, error: msg });
+            err('[SentToTTS_Google] Failed to delete MP3 file:', filename, msg);
+        }
+    }
+
+    return json({ success: true, results });
 };

@@ -225,11 +225,32 @@
   }
 
   // 히스토리 전체 삭제
-  function clearAllHistory() {
-    if (confirm("모든 생성 내역을 삭제하시겠습니까?")) {
-      history = [];
-      localStorage.removeItem('tts_history_google');
+  async function clearAllHistory() {
+    if (!confirm("모든 생성 내역을 삭제하시겠습니까? (MP3 파일도 함께 삭제됩니다)")) return;
+
+    // MP3 파일 목록 수집
+    const filenames = history
+      .map(item => item.url?.split('/').pop())
+      .filter(Boolean) as string[];
+
+    if (filenames.length > 0) {
+      try {
+        const res = await fetch('/tts/SentToTTS_Google', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filenames })
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          console.warn('MP3 파일 삭제 중 오류:', data);
+        }
+      } catch (e) {
+        console.warn('MP3 파일 삭제 요청 실패:', e);
+      }
     }
+
+    history = [];
+    localStorage.removeItem('tts_history_google');
   }
 </script>
 
