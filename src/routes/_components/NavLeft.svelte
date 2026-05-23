@@ -6,7 +6,7 @@
 	let { data } = $props();
 </script>
 
-<NavigationMenu.Root class="relative">
+<NavigationMenu.Root class="relative" viewport={false}>
 	<NavigationMenu.List>
 		<NavigationMenu.Item>
 			<NavigationMenu.Link href={resolve('/' as Pathname)} data-sveltekit-reload>
@@ -104,11 +104,22 @@
 					</ul>
 				</NavigationMenu.Content>
 			</NavigationMenu.Item>
+			<NavigationMenu.Item>
+				<NavigationMenu.Trigger>Generator</NavigationMenu.Trigger>
+				<NavigationMenu.Content>
+					<ul class="grid w-75 gap-4 p-2">
+						<li>
+							<NavigationMenu.Link>
+								{#snippet child({ props })}
+									<a href={resolve('/gen/gen_1' as Pathname)} data-sveltekit-reload {...props}>
+										Generator 1
+									</a>
+								{/snippet}
+							</NavigationMenu.Link>
+						</li>
+					</ul>
+				</NavigationMenu.Content>
+			</NavigationMenu.Item>
 		{/if}
 	</NavigationMenu.List>
-
-	<!-- 추가: List 바로 아래, Root 안에 위치 -->
-	<div class="absolute top-full left-0 w-full">
-		<NavigationMenu.Viewport />
-	</div>
 </NavigationMenu.Root>

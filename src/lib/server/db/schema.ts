@@ -23,5 +23,18 @@ export const config = sqliteTable('config', {
 	value: text('value').notNull()
 });
 
+export const sentences = sqliteTable('sentences', {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    lang: text('lang').notNull(),
+    voice: text('voice').default(''),
+    sent: text('sent').notNull(),
+    tag: text('tag').default(''),
+    file_tts: text('file_tts').default(''),
+    file_image: text('file_image').default(''),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+        .notNull()
+        .$defaultFn(() => new Date())
+});
+
 export * from './auth.schema';
 
