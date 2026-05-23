@@ -22,7 +22,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     }
 
     const searchQuery = url.searchParams.get('search') || '';
-    const ttsBaseUrl = env.TTS_BASE_URL || process.env.TTS_BASE_URL || 'http://localhost:5173';
+    const ttsBaseUrl = env.TTS_BASE_URL || process.env.TTS_BASE_URL || 'http://localhost:5173/TTS';
 
     let rows;
     if (searchQuery) {

@@ -57,8 +57,8 @@ export async function generateTTS(params: {
     const audioBuffer = Buffer.from(data.audioContent, 'base64');
     fs.writeFileSync(filePath, audioBuffer);
 
-    const ttsBaseUrl = process.env.TTS_BASE_URL ?? 'http://localhost:5173';
-    const publicUrl = `${ttsBaseUrl}/TTS/${filename}`;
+    const ttsBaseUrl = process.env.TTS_BASE_URL ?? 'http://localhost:5173/TTS';
+    const publicUrl = `${ttsBaseUrl}/${filename}`;
 
     return { url: publicUrl, filename };
 }

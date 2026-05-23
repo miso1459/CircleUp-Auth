@@ -91,7 +91,7 @@
 
       if (inserted && inserted.length > 0) {
         const first = inserted[0];
-        const audioSrc = first.url || `${data.ttsBaseUrl}/TTS/${first.file_tts}`;
+        const audioSrc = first.url || `${data.ttsBaseUrl}/${first.file_tts}`;
 
         // 오디오 재생 (SentToTTS_Google 패턴)
         audioUrl = audioSrc;
@@ -138,7 +138,7 @@
 
   function playAudio(filename: string | null) {
     if (!filename) return;
-    const fullUrl = `${data.ttsBaseUrl}/TTS/${filename}`;
+    const fullUrl = `${data.ttsBaseUrl}/${filename}`;
     audioUrl = fullUrl;
     setTimeout(() => {
       if (audioPlayer) {
