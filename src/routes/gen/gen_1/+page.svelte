@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PageData } from './$types';
+  import { invalidateAll } from '$app/navigation';
 
   let { data } = $props<{ data: PageData }>();
 
@@ -51,6 +52,11 @@
     }
   });
 
+  // data.sentences가 변경될 때 (invalidate 후) sentences 동기화
+  $effect(() => {
+    sentences = data.sentences;
+  });
+
   // SentToTTS_Google과 동일한 패턴: setTimeout + load() + play()
   async function handleGenerate() {
     if (!inputSentence.trim()) {
@@ -77,8 +83,6 @@
       }
 
       const result = await res.json();
-
-      // +server.ts → return json({ success, inserted }) → 직접 JSON
       console.log('[gen_1] response:', result);
 
       const inserted = result?.inserted;
@@ -96,18 +100,8 @@
           }
         }, 50);
 
-        // 테이블 업데이트
-        const newItems = inserted.map((item: any, idx: number) => ({
-          id: -(idx + 1),
-          lang: item.lang,
-          sent: item.sent,
-          tag: null as string | null,
-          voice: item.voice,
-          file_tts: item.file_tts,
-          file_image: null as string | null,
-          createdAt: new Date()
-        }));
-        sentences = [...newItems, ...sentences];
+        // DB 재조회 (load function 재실행 → $effect가 data.sentences를 sentences에 반영)
+        await invalidateAll();
       } else {
         console.warn('[gen_1] no inserted in response, reloading...', result);
         window.location.href = '/gen/gen_1';
