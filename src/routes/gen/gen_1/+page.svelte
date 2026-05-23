@@ -11,7 +11,8 @@
   let sentences: Array<{ id: number; lang: string; sent: string; tag: string | null; file_tts: string | null; file_image: string | null; voice: string | null; createdAt: Date }> = $state(data.sentences);
   let isGenerating = $state(false);
   let errorMsg = $state('');
-  let currentAudio = $state('');
+  let audioUrl = $state('');
+  let audioPlayer = $state<HTMLAudioElement | null>(null);
 
   const voices = [
     { code: 'ko-KR', name: 'ko-KR-Chirp3-HD-Achernar', label: '한국어 여성 (Chirp3 - 오디오북 스타일)', gender: '여성' },
@@ -23,6 +24,12 @@
     { code: 'ko-KR', name: 'ko-KR-Wavenet-B', label: '한국어 여성 B (WaveNet - 맑은 톤)', gender: '여성' },
     { code: 'ko-KR', name: 'ko-KR-Wavenet-C', label: '한국어 남성 C (WaveNet - 안정적인 톤)', gender: '남성' },
     { code: 'ko-KR', name: 'ko-KR-Wavenet-D', label: '한국어 남성 D (WaveNet - 묵직한 중저음)', gender: '남성' },
+
+    { code: 'en-US', name: 'en-US-Journey-F', label: '영어 여성 (Journey - 초고품질 내레이션)', gender: '여성' },
+    { code: 'en-US', name: 'en-US-Journey-O', label: '영어 남성 (Journey - 초고품질 내레이션)', gender: '남성' },
+    { code: 'en-US', name: 'en-US-Neural2-O', label: '영어 남성 (Neural2)', gender: '남성' },
+    { code: 'en-US', name: 'en-US-Standard-A', label: '영어 여성 (Standard)', gender: '여성' },
+    
     { code: 'en-US', name: 'en-US-Chirp3-HD-Aoede', label: '영어 여성 (Chirp3 - 자연스러운 대화 톤)', gender: '여성' },
     { code: 'en-US', name: 'en-US-Chirp3-HD-Asbolus', label: '영어 남성 (Chirp3 - 미디어 나레이션 톤)', gender: '남성' },
     { code: 'en-US', name: 'en-US-Neural2-A', label: '영어 남성 A (Neural2 - 또박또박한 뉴스 톤)', gender: '남성' },
@@ -44,26 +51,69 @@
     }
   });
 
+  // SentToTTS_Google과 동일한 패턴: setTimeout + load() + play()
   async function handleGenerate() {
+    if (!inputSentence.trim()) {
+      errorMsg = "문장을 입력해주세요.";
+      return;
+    }
     isGenerating = true;
     errorMsg = '';
 
-    const fd = new FormData();
-    fd.append('sentence', inputSentence);
-    fd.append('prompt', prompt);
-    fd.append('languageCode', selectedLanguage);
-    fd.append('voiceName', selectedVoice);
-
     try {
-      const res = await fetch('/gen/gen_1?/generate', { method: 'POST', headers: { accept: 'application/json' }, body: fd });
-      const result = await res.json();
-
-      if (!res.ok || result.type === 'error') {
-        throw new Error(result.message || 'Generation failed');
+      const res = await fetch('/gen/gen_1', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sentence: inputSentence,
+          prompt: prompt,
+          languageCode: selectedLanguage,
+          voiceName: selectedVoice
+        })
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || '생성 요청이 실패했습니다.');
       }
 
-      window.location.href = '/gen/gen_1';
+      const result = await res.json();
+
+      // +server.ts → return json({ success, inserted }) → 직접 JSON
+      console.log('[gen_1] response:', result);
+
+      const inserted = result?.inserted;
+
+      if (inserted && inserted.length > 0) {
+        const first = inserted[0];
+        const audioSrc = first.url || `${data.ttsBaseUrl}/TTS/${first.file_tts}`;
+
+        // 오디오 재생 (SentToTTS_Google 패턴)
+        audioUrl = audioSrc;
+        setTimeout(() => {
+          if (audioPlayer) {
+            audioPlayer.load();
+            audioPlayer.play().catch((e: Error) => console.warn('autoplay:', e));
+          }
+        }, 50);
+
+        // 테이블 업데이트
+        const newItems = inserted.map((item: any, idx: number) => ({
+          id: -(idx + 1),
+          lang: item.lang,
+          sent: item.sent,
+          tag: null as string | null,
+          voice: item.voice,
+          file_tts: item.file_tts,
+          file_image: null as string | null,
+          createdAt: new Date()
+        }));
+        sentences = [...newItems, ...sentences];
+      } else {
+        console.warn('[gen_1] no inserted in response, reloading...', result);
+        window.location.href = '/gen/gen_1';
+      }
     } catch (e: any) {
+      console.error('[gen_1] generate error:', e);
       errorMsg = e.message;
     } finally {
       isGenerating = false;
@@ -76,15 +126,28 @@
   }
 
   async function handleDelete(id: number) {
-    const fd = new FormData();
-    fd.append('id', String(id));
-
-    await fetch('/gen/gen_1?/delete', { method: 'POST', headers: { accept: 'application/json' }, body: fd });
-    window.location.href = '/gen/gen_1';
+    if (!confirm('삭제하시겠습니까?')) return;
+    try {
+      const res = await fetch('/gen/gen_1?/delete', { method: 'POST', headers: { accept: 'application/json' }, body: new URLSearchParams({ id: String(id) }) });
+      const result = await res.json();
+      if (result.type === 'error') throw new Error(result.data?.message || '삭제 오류');
+      sentences = sentences.filter(s => s.id !== id);
+    } catch (e: any) {
+      console.error('delete error:', e);
+      errorMsg = e.message;
+    }
   }
 
-  function playAudio(filename: string) {
-    currentAudio = `${data.ttsBaseUrl}/TTS/${filename}`;
+  function playAudio(filename: string | null) {
+    if (!filename) return;
+    const fullUrl = `${data.ttsBaseUrl}/TTS/${filename}`;
+    audioUrl = fullUrl;
+    setTimeout(() => {
+      if (audioPlayer) {
+        audioPlayer.load();
+        audioPlayer.play().catch((e: Error) => console.warn('playAudio:', e));
+      }
+    }, 50);
   }
 </script>
 
@@ -173,9 +236,9 @@
         </tbody>
       </table>
 
-      {#if currentAudio}
+      {#if audioUrl}
         <div class="player">
-          <audio controls autoplay src={currentAudio}></audio>
+          <audio controls bind:this={audioPlayer} src={audioUrl}></audio>
         </div>
       {/if}
     </section>
