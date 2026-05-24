@@ -5,7 +5,7 @@
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
-	import { Wand2, Loader2, Copy, FileAudio, Search, X } from '@lucide/svelte';
+	import { Wand2, Loader2, Copy, FileAudio, Search, X, Image } from '@lucide/svelte';
 
 	let { data, form }: PageProps = $props();
 
@@ -33,9 +33,9 @@
 	let promptLoading = $state(false);
 
 	// Table + search states (adapted from gen_1)
-	let searchQuery = $state(data.searchQuery);
-	let sentences = $state(data.sentences);
-	let ttsBaseUrl = $state(data.ttsBaseUrl);
+	let searchQuery = $state('');
+	let sentences = $derived(data.sentences);
+	let ttsBaseUrl = $derived(data.ttsBaseUrl);
 	let audioUrl = $state('');
 	let audioPlayer = $state<HTMLAudioElement | null>(null);
 
@@ -43,22 +43,25 @@
 	let copySuccess = $state<string | null>(null);
 	let searchLoading = $state(false);
 
-	// Sync form data from server (from SentToImage2)
+	// Sync searchQuery from data when load refreshes
+	$effect(() => {
+		searchQuery = data.searchQuery;
+	});
+
+	// Sync form data from server
 	$effect(() => {
 		if (form?.prompt) {
 			prompt = form.prompt;
 			errorMessage = null;
 		}
+		if (form?.success) {
+			copySuccess = 'image';
+			setTimeout(() => { copySuccess = null; }, 2000);
+			errorMessage = null;
+		}
 		if (form?.error) {
 			errorMessage = form.error;
 		}
-	});
-
-	// Sync DB data when load refreshes (from gen_1)
-	$effect(() => {
-		sentences = data.sentences;
-		searchQuery = data.searchQuery;
-		ttsBaseUrl = data.ttsBaseUrl;
 	});
 
 	function onPromptSubmit() {
@@ -83,12 +86,12 @@
 		window.location.href = '/llm/SentToImage3';
 	}
 
-	// 문장 복사 (첫 번째 행의 sent 값)
-	async function copyFirstSentence() {
+	// 문장 복사 (문장 입력 영역의 값)
+	async function copySentenceToClipboard() {
 		copySuccess = null;
-		if (!sentences.length) return;
+		if (!sentence) return;
 		try {
-			await navigator.clipboard.writeText(sentences[0].sent);
+			await navigator.clipboard.writeText(sentence);
 			copySuccess = 'sentence';
 			setTimeout(() => { copySuccess = null; }, 2000);
 		} catch {
@@ -109,6 +112,26 @@
 		} catch {
 			errorMessage = '클립보드 복사에 실패했습니다.';
 		}
+	}
+
+	// 프롬프트 복사
+	async function copyPromptToClipboard() {
+		copySuccess = null;
+		if (!prompt) return;
+		try {
+			await navigator.clipboard.writeText(prompt);
+			copySuccess = 'prompt';
+			setTimeout(() => { copySuccess = null; }, 2000);
+		} catch {
+			errorMessage = '클립보드 복사에 실패했습니다.';
+		}
+	}
+
+	// 이미지 적용 (use:enhance callback)
+	function onApplyImage() {
+		return async ({ update }: { update: () => Promise<void> }) => {
+			await update();
+		};
 	}
 
 	// 오디오 재생 (from gen_1)
@@ -145,6 +168,67 @@
 	<div class="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
 		<!-- LEFT COLUMN -->
 		<div class="space-y-6">
+			<!-- Button Toolbar -->
+			<Card.Root>
+				<Card.Content>
+					<div class="flex flex-wrap gap-2">
+						<!-- 문장 복사 -->
+						<Button onclick={copySentenceToClipboard} size="sm" disabled={!sentence}>
+							<Copy class="size-4" />
+							문장 복사
+						</Button>
+						
+						<!-- 프롬프트 생성 (form) -->
+						<form method="POST" action="?/generatePrompt" use:enhance={onPromptSubmit}>
+							<input type="hidden" name="sentenceForPrompt" value={sentenceForPrompt} />
+							<input type="hidden" name="mainSentence" value={sentence} />
+							<Button type="submit" size="sm" disabled={promptLoading || !data.geminiConfigured}>
+								{#if promptLoading}
+									<Loader2 class="size-4 animate-spin" />
+									생성 중...
+								{:else}
+									<Wand2 class="size-4" />
+									프롬프트 생성
+								{/if}
+							</Button>
+						</form>
+						
+						<!-- 프롬프트 복사 -->
+						<Button onclick={copyPromptToClipboard} size="sm" disabled={!prompt}>
+							<Copy class="size-4" />
+							프롬프트 복사
+						</Button>
+						
+						<!-- MP3 복사 -->
+						<Button onclick={copyFirstMp3} size="sm" disabled={!sentences.length || !sentences[0]?.file_tts}>
+							<FileAudio class="size-4" />
+							MP3 복사
+						</Button>
+						
+						<!-- 이미지 적용 (form) -->
+						<form method="POST" action="?/applyImage" use:enhance={onApplyImage}>
+							<input type="hidden" name="id" value={sentences[0]?.id ?? ''} />
+							<Button type="submit" size="sm" disabled={!sentences.length || !sentences[0]?.file_tts}>
+								<Image class="size-4" />
+								이미지 적용
+							</Button>
+						</form>
+					</div>
+					<!-- Copy success messages -->
+					<div class="mt-2">
+						{#if copySuccess === 'sentence'}
+							<span class="text-xs text-green-600">문장이 복사되었습니다</span>
+						{:else if copySuccess === 'prompt'}
+							<span class="text-xs text-green-600">프롬프트가 복사되었습니다</span>
+						{:else if copySuccess === 'mp3'}
+							<span class="text-xs text-green-600">MP3 파일명이 복사되었습니다</span>
+						{:else if copySuccess === 'image'}
+							<span class="text-xs text-green-600">이미지가 적용되었습니다</span>
+						{/if}
+					</div>
+				</Card.Content>
+			</Card.Root>
+
 			<!-- 문장 입력 Card -->
 			<Card.Root>
 				<Card.Header>
@@ -161,48 +245,7 @@
 				</Card.Content>
 			</Card.Root>
 
-			<!-- 프롬프트 생성 Card (from SentToImage2) -->
-			<Card.Root>
-				<Card.Header>
-					<Card.Title class="flex items-center gap-2 text-base">
-						<Wand2 class="size-4" />
-						프롬프트 생성
-					</Card.Title>
-					<Card.Description>
-						<code class="rounded bg-muted px-1 text-xs">{`{sentence}`}</code> 자리에 문장이 치환됩니다.
-					</Card.Description>
-				</Card.Header>
-				<Card.Content class="space-y-3">
-					<Textarea
-						bind:value={sentenceForPrompt}
-						rows={14}
-						placeholder="프롬프트 생성 규칙을 입력하세요."
-						class="font-mono text-sm"
-					/>
-					<form
-						method="POST"
-						action="?/generatePrompt"
-						use:enhance={onPromptSubmit}
-					>
-						<input type="hidden" name="sentenceForPrompt" value={sentenceForPrompt} />
-						<input type="hidden" name="mainSentence" value={sentence} />
-						<Button type="submit" class="w-full" disabled={promptLoading || !data.geminiConfigured}>
-							{#if promptLoading}
-								<Loader2 class="size-4 animate-spin" />
-								생성 중...
-							{:else}
-								<Wand2 class="size-4" />
-								프롬프트 생성
-							{/if}
-						</Button>
-					</form>
-				</Card.Content>
-			</Card.Root>
-		</div>
-
-		<!-- RIGHT COLUMN -->
-		<div class="space-y-6">
-			<!-- 프롬프트 입력 Card (display only, no image gen) -->
+			<!-- 프롬프트 입력 Card (moved from right column) -->
 			<Card.Root>
 				<Card.Header>
 					<Card.Title class="text-base">프롬프트 입력</Card.Title>
@@ -218,11 +261,11 @@
 				</Card.Content>
 			</Card.Root>
 
-			<!-- 저장된 문장 Card -->
+			<!-- 저장된 문서 Card -->
 			<Card.Root>
 				<Card.Header>
-					<Card.Title class="text-base">저장된 문장</Card.Title>
-					<Card.Description>file_image가 없는 레코드만 표시</Card.Description>
+					<Card.Title class="text-base">저장된 문서</Card.Title>
+					<Card.Description>이미지 없는 자료</Card.Description>
 				</Card.Header>
 				<Card.Content class="space-y-4">
 					<!-- Search Bar -->
@@ -242,24 +285,6 @@
 							<X class="size-4" />
 							지우기
 						</Button>
-					</div>
-
-					<!-- Copy Buttons -->
-					<div class="flex items-center gap-2">
-						<Button onclick={copyFirstSentence} disabled={!sentences.length} size="sm">
-							<Copy class="size-4" />
-							문장 복사
-						</Button>
-						<Button onclick={copyFirstMp3}
-							disabled={!sentences.length || !sentences[0]?.file_tts} size="sm">
-							<FileAudio class="size-4" />
-							MP3 복사
-						</Button>
-						{#if copySuccess === 'sentence'}
-							<span class="text-xs text-green-600">문장이 복사되었습니다</span>
-						{:else if copySuccess === 'mp3'}
-							<span class="text-xs text-green-600">MP3 파일명이 복사되었습니다</span>
-						{/if}
 					</div>
 
 					<!-- shadcn Table -->
@@ -318,6 +343,30 @@
 							<audio controls bind:this={audioPlayer} src={audioUrl} class="w-full"></audio>
 						</div>
 					{/if}
+				</Card.Content>
+			</Card.Root>
+		</div>
+
+		<!-- RIGHT COLUMN -->
+		<div class="space-y-6">
+			<!-- 프롬프트 생성 Card - textarea only, no form/button -->
+			<Card.Root>
+				<Card.Header>
+					<Card.Title class="flex items-center gap-2 text-base">
+						<Wand2 class="size-4" />
+						프롬프트 생성
+					</Card.Title>
+					<Card.Description>
+						<code class="rounded bg-muted px-1 text-xs">{`{sentence}`}</code> 자리에 문장이 치환됩니다.
+					</Card.Description>
+				</Card.Header>
+				<Card.Content>
+					<Textarea
+						bind:value={sentenceForPrompt}
+						rows={14}
+						placeholder="프롬프트 생성 규칙을 입력하세요."
+						class="font-mono text-sm"
+					/>
 				</Card.Content>
 			</Card.Root>
 		</div>

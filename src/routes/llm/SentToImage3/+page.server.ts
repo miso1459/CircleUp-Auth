@@ -72,5 +72,27 @@ export const actions = {
 			const message = err instanceof Error ? err.message : 'LLM 처리 중 오류가 발생했습니다.';
 			return fail(500, { error: message });
 		}
+	},
+	applyImage: async ({ request, locals }) => {
+		if (locals.user?.role !== 'admin') {
+			throw redirect(303, '/');
+		}
+		const formData = await request.formData();
+		const id = Number(formData.get('id'));
+		if (!id) return fail(400, { error: 'ID가 필요합니다.' });
+
+		try {
+			const [row] = await db.select().from(sentences).where(eq(sentences.id, id)).limit(1);
+			if (!row) return fail(404, { error: '해당 ID의 레코드를 찾을 수 없습니다.' });
+			if (!row.file_tts) return fail(400, { error: 'file_tts가 존재하지 않습니다.' });
+
+			const fileImage = row.file_tts.replace(/\.mp3$/i, '.jpg');
+			await db.update(sentences).set({ file_image: fileImage }).where(eq(sentences.id, id));
+
+			return { success: true, file_image: fileImage };
+		} catch (err) {
+			const message = err instanceof Error ? err.message : '처리 중 오류가 발생했습니다.';
+			return fail(500, { error: message });
+		}
 	}
 } satisfies Actions;
