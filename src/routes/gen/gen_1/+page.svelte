@@ -270,6 +270,11 @@
     gap: 12px;
     align-items: start;
   }
+  @media (max-width: 1024px) {
+    .layout {
+      grid-template-columns: 1fr;
+    }
+  }
   .card {
     background: #fff;
     border: 1px solid #ddd;
