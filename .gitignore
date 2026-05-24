@@ -27,3 +27,4 @@ project.inlang/cache/
 # SQLite
 *.db
 *.mp3
+.sisyphus/
