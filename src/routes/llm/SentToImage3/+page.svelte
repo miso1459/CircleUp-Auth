@@ -85,17 +85,13 @@
 		window.location.href = '/llm/SentToImage3';
 	}
 
-	// 문장 복사 (문장 입력 영역의 값)
-	async function copySentenceToClipboard() {
+	// 문장 복사 (저장된 문서 가장 상단의 문장을 문장 입력 영역에 설정)
+	function copySentenceFromTopDocument() {
 		copySuccess = null;
-		if (!sentence) return;
-		try {
-			await navigator.clipboard.writeText(sentence);
-			copySuccess = 'sentence';
-			setTimeout(() => { copySuccess = null; }, 2000);
-		} catch {
-			errorMessage = '클립보드 복사에 실패했습니다.';
-		}
+		if (!sentences.length || !sentences[0]?.sent) return;
+		sentence = sentences[0].sent;
+		copySuccess = 'sentence';
+		setTimeout(() => { copySuccess = null; }, 2000);
 	}
 
 	// MP3 복사 (첫 번째 행 file_tts - .mp3 확장자 제거)
@@ -164,15 +160,13 @@
 		{/if}
 	</div>
 
-	<div class="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-		<!-- LEFT COLUMN -->
-		<div class="space-y-6">
+	<div class="space-y-6">
 			<!-- Button Toolbar -->
 			<Card.Root>
 				<Card.Content>
 					<div class="flex flex-wrap gap-2">
 						<!-- 문장 복사 -->
-						<Button onclick={copySentenceToClipboard} size="sm" disabled={!sentence}>
+						<Button onclick={copySentenceFromTopDocument} size="sm" disabled={!sentences.length || !sentences[0]?.sent}>
 							<Copy class="size-4" />
 							문장 복사
 						</Button>
@@ -344,11 +338,7 @@
 					{/if}
 				</Card.Content>
 			</Card.Root>
-		</div>
-
-		<!-- RIGHT COLUMN -->
-		<div class="space-y-6">
-			<!-- 프롬프트 생성 Card - textarea only, no form/button -->
+			<!-- 프롬프트 생성 Card -->
 			<Card.Root>
 				<Card.Header>
 					<Card.Title class="flex items-center gap-2 text-base">
@@ -369,7 +359,6 @@
 				</Card.Content>
 			</Card.Root>
 		</div>
-	</div>
 
 	<!-- Error Message -->
 	{#if errorMessage}
