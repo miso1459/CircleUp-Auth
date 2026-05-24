@@ -38,15 +38,24 @@
 				<NavigationMenu.Trigger>LLM</NavigationMenu.Trigger>
 				<NavigationMenu.Content>
 					<ul class="grid w-75 gap-4 p-2">
-						<li>
-							<NavigationMenu.Link>
-								{#snippet child({ props })}
-									<a href={resolve('/llm/SentToSent' as Pathname)} data-sveltekit-reload {...props}>
-										Gen Sentence to Sentence
-									</a>
-								{/snippet}
-							</NavigationMenu.Link>
-						</li>
+<li>
+			<NavigationMenu.Link>
+				{#snippet child({ props })}
+					<a href={resolve('/llm/SentToSent' as Pathname)} data-sveltekit-reload {...props}>
+						Gen Sentence to Sentence
+					</a>
+				{/snippet}
+			</NavigationMenu.Link>
+		</li>
+		<li>
+			<NavigationMenu.Link>
+				{#snippet child({ props })}
+					<a href={resolve('/llm/SentToImage2' as Pathname)} data-sveltekit-reload {...props}>
+						Gen Sentence to Image 2
+					</a>
+				{/snippet}
+			</NavigationMenu.Link>
+		</li>
 						<li>
 							<NavigationMenu.Link>
 								{#snippet child({ props })}
