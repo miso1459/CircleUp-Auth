@@ -32,8 +32,6 @@
 	let errorMessage = $state<string | null>(null);
 	let promptLoading = $state(false);
 
-	// Table + search states (adapted from gen_1)
-	// eslint-disable-next-line svelte/prefer-writable-derived — $derived.writable is not a valid Svelte 5 rune
 	let searchQuery = $state('');
 	let sentences = $derived(data.sentences);
 	let ttsBaseUrl = $derived(data.ttsBaseUrl);
