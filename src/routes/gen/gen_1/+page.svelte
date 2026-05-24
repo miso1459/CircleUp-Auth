@@ -9,8 +9,8 @@
   let selectedLanguage = $state('en-US');
   let selectedVoice = $state('en-US-Neural2-F');
   let rate = $state(1.0);
-  let searchQuery = $state(data.searchQuery);
-  let sentences: Array<{ id: number; lang: string; sent: string; tag: string | null; file_tts: string | null; file_image: string | null; voice: string | null; speed: string | null; createdAt: Date }> = $state(data.sentences);
+  let searchQuery = $state(data.searchQuery); // URL param 초기값만 캡처, 이후 독립적 사용
+  let sentences: Array<{ id: number; lang: string; sent: string; tag: string | null; file_tts: string | null; file_image: string | null; voice: string | null; speed: string | null; createdAt: Date }> = $derived(data.sentences);
   let isGenerating = $state(false);
   let errorMsg = $state('');
   let audioUrl = $state('');
@@ -51,11 +51,6 @@
     if (available.length > 0 && !available.some(v => v.name === selectedVoice)) {
       selectedVoice = available[0].name;
     }
-  });
-
-  // data.sentences가 변경될 때 (invalidate 후) sentences 동기화
-  $effect(() => {
-    sentences = data.sentences;
   });
 
   // SentToTTS_Google과 동일한 패턴: setTimeout + load() + play()
@@ -102,15 +97,15 @@
           }
         }, 50);
 
-        // DB 재조회 (load function 재실행 → $effect가 data.sentences를 sentences에 반영)
+        // DB 재조회 (invalidate → $page.data 갱신 → $derived sentences 자동 반영)
         await invalidateAll();
       } else {
         console.warn('[gen_1] no inserted in response, reloading...', result);
         window.location.href = '/gen/gen_1';
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[gen_1] generate error:', e);
-      errorMsg = e.message;
+      errorMsg = e instanceof Error ? e.message : '알 수 없는 오류';
     } finally {
       isGenerating = false;
     }
@@ -129,10 +124,10 @@
         const err = await res.json();
         throw new Error(err.message || '삭제 오류');
       }
-      sentences = sentences.filter(s => s.id !== id);
-    } catch (e: any) {
+      await invalidateAll();
+    } catch (e: unknown) {
       console.error('delete error:', e);
-      errorMsg = e.message;
+      errorMsg = e instanceof Error ? e.message : '알 수 없는 오류';
     }
   }
 
@@ -185,13 +180,13 @@
           음성 모델: <strong>{selectedVoice}</strong>
         </div>
         <div class="rate-row">
-          <label class="rate-label">
+          <div class="rate-label">
             말하기 속도
             <span class="rate-value">{rate.toFixed(2)}배속</span>
-          </label>
+          </div>
           <div class="rate-slider-wrap">
             <span class="rate-mark">0.5×</span>
-            <input type="range" min="0.5" max="2.0" step="0.05" bind:value={rate} class="rate-slider" />
+            <input type="range" min="0.5" max="2.0" step="0.05" bind:value={rate} class="rate-slider" aria-label="말하기 속도" />
             <span class="rate-mark">2.0×</span>
           </div>
         </div>
@@ -246,7 +241,7 @@
             {#if s.file_image}
               <tr class="image-row">
                 <td colspan="8">
-                  <img src={`${data.imgBaseUrl}/${s.file_image}`} alt="generated image" class="sentence-image" />
+                  <img src={`${data.imgBaseUrl}/${s.file_image}`} alt={s.sent} class="sentence-image" />
                 </td>
               </tr>
             {/if}
