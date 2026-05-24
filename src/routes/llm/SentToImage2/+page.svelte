@@ -22,7 +22,11 @@
 - 구체적인 시각적 디테일 포함 (색상, 조명, 구도, 분위기)
 - 예술 스타일이나 미적 기준을 포함
 - 프롬프트만 출력하고 다른 설명은 하지 마세요
-- 마지막 줄에 필수 추가: *(no text, no words, no letters)*(Clearly express the eyes, nose, and mouth)
+- 첫 줄에 필수 추가
+***minimal vector cartoon, clean line illustration, flat art***
+***no text, no words, no letters***
+***Clearly express the eyes, nose, and mouth***
+
 `);
 	let generatedImage = $state<string | null>(null);
 	let errorMessage = $state<string | null>(null);
