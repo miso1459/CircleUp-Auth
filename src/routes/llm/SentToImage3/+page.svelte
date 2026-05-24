@@ -33,6 +33,7 @@
 	let promptLoading = $state(false);
 
 	// Table + search states (adapted from gen_1)
+	// eslint-disable-next-line svelte/prefer-writable-derived — $derived.writable is not a valid Svelte 5 rune
 	let searchQuery = $state('');
 	let sentences = $derived(data.sentences);
 	let ttsBaseUrl = $derived(data.ttsBaseUrl);
@@ -307,9 +308,9 @@
 									<Table.Row>
 										<Table.Cell class="font-mono text-xs">{s.id}</Table.Cell>
 										<Table.Cell class="text-xs">{s.lang}</Table.Cell>
-										<Table.Cell class="max-w-[150px] truncate text-xs">{s.voice}</Table.Cell>
+										<Table.Cell class="max-w-37.5 truncate text-xs">{s.voice}</Table.Cell>
 										<Table.Cell class="text-center text-xs">{s.speed ?? '1.0'}</Table.Cell>
-										<Table.Cell class="max-w-[250px] truncate">{s.sent}</Table.Cell>
+										<Table.Cell class="max-w-62.5 truncate">{s.sent}</Table.Cell>
 										<Table.Cell class="font-mono text-xs">
 											{#if s.file_tts}
 												{s.file_tts}
