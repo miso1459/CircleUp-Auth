@@ -7,6 +7,8 @@ import { like, desc, eq } from 'drizzle-orm';
 import fs from 'fs';
 import path from 'path';
 
+const imgBaseUrl = (process.env.IMG_BASE_URL || 'http://localhost:5173/IMG_files').replace(/\/+$/, '');
+
 const ts = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
@@ -38,7 +40,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
             .limit(100);
     }
 
-    return { sentences: rows, searchQuery, ttsBaseUrl };
+    return { sentences: rows, searchQuery, ttsBaseUrl, imgBaseUrl };
 };
 
 export const actions: Actions = {

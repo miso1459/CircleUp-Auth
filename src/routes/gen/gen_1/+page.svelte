@@ -243,6 +243,13 @@
                 <button class="delete" onclick={() => handleDelete(s.id)}>✕</button>
               </td>
             </tr>
+            {#if s.file_image}
+              <tr class="image-row">
+                <td colspan="8">
+                  <img src={`${data.imgBaseUrl}/${s.file_image}`} alt="generated image" class="sentence-image" />
+                </td>
+              </tr>
+            {/if}
           {/each}
         </tbody>
       </table>
@@ -317,4 +324,12 @@
   .rate-slider::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: #222; border-radius: 50%; cursor: pointer; }
   .rate-mark { font-size: 11px; color: #888; min-width: 30px; text-align: center; }
   .player { margin-top: 12px; }
+  .image-row td {
+    padding: 4px 10px 12px;
+    border-bottom: 1px solid #eee;
+  }
+  .sentence-image {
+    display: block;
+    border-radius: 4px;
+  }
 </style>

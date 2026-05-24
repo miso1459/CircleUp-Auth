@@ -86,7 +86,7 @@ export const actions = {
 			if (!row) return fail(404, { error: '해당 ID의 레코드를 찾을 수 없습니다.' });
 			if (!row.file_tts) return fail(400, { error: 'file_tts가 존재하지 않습니다.' });
 
-			const fileImage = row.file_tts.replace(/\.mp3$/i, '.jpg');
+			const fileImage = row.file_tts.replace(/\.mp3$/i, '.jpeg');
 			await db.update(sentences).set({ file_image: fileImage }).where(eq(sentences.id, id));
 
 			return { success: true, file_image: fileImage };

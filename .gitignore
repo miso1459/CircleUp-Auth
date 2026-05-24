@@ -29,4 +29,5 @@ project.inlang/cache/
 *.mp3
 .sisyphus/
 .playwright-mcp/
-static/IMG_fifles/8f8d125d-aa77-4459-9eed-699b4f41a729.jpeg
+static/
+
