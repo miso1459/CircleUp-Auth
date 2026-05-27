@@ -15,14 +15,16 @@
     return i < arr.length ? arr[i] : '';
   }
 
-  // flipMask: true ONLY when BOTH words exist AND they differ
-  // If either index is out of bounds → false (no flip, just display)
+  // flipMask: true when w1 exists and differs from w2
+  // - w1 !== w2 → flip (includes w2 shorter: w2='' → w1!=='' → flip to blank)
+  // - w1 === w2 → no flip
+  // - w1 === '' (sentence1 shorter) → no flip, just display w2
   const flipMask = $derived.by(() => {
     const mask: boolean[] = [];
     for (let i = 0; i < maxLen; i++) {
       const w1 = getWord(words1, i);
       const w2 = getWord(words2, i);
-      if (w1 !== '' && w2 !== '' && w1 !== w2) {
+      if (w1 !== '' && w1 !== w2) {
         mask[i] = true;
       } else {
         mask[i] = false;
