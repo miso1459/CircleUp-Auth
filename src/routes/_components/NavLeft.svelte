@@ -119,6 +119,24 @@
 								{/snippet}
 							</NavigationMenu.Link>
 						</li>
+						<li>
+							<NavigationMenu.Link>
+								{#snippet child({ props })}
+									<a href={resolve('/flipclock/flipclock_word' as Pathname)} data-sveltekit-reload {...props}>
+										Flip Clock Word
+									</a>
+								{/snippet}
+							</NavigationMenu.Link>
+						</li>
+						<li>
+							<NavigationMenu.Link>
+								{#snippet child({ props })}
+									<a href={resolve('/flipclock/flipclock_card' as Pathname)} data-sveltekit-reload {...props}>
+										Flip Clock Card
+									</a>
+								{/snippet}
+							</NavigationMenu.Link>
+						</li>
 					</ul>
 				</NavigationMenu.Content>
 			</NavigationMenu.Item>
