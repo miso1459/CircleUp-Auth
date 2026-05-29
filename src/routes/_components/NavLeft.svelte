@@ -82,6 +82,22 @@
 				</NavigationMenu.Content>
 			</NavigationMenu.Item>
 			<NavigationMenu.Item>
+				<NavigationMenu.Trigger>Translation</NavigationMenu.Trigger>
+				<NavigationMenu.Content>
+					<ul class="grid w-75 gap-4 p-2">
+						<li>
+							<NavigationMenu.Link>
+								{#snippet child({ props })}
+									<a href={resolve('/translation/deepL' as Pathname)} data-sveltekit-reload {...props}>
+										DeepL
+									</a>
+								{/snippet}
+							</NavigationMenu.Link>
+						</li>
+					</ul>
+				</NavigationMenu.Content>
+			</NavigationMenu.Item>
+			<NavigationMenu.Item>
 				<NavigationMenu.Trigger>TTS</NavigationMenu.Trigger>
 				<NavigationMenu.Content>
 					<ul class="grid w-75 gap-4 p-2">
