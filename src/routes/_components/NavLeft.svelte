@@ -178,6 +178,15 @@
 								{/snippet}
 							</NavigationMenu.Link>
 						</li>
+						<li>
+							<NavigationMenu.Link>
+								{#snippet child({ props })}
+									<a href={resolve('/gen/LLM_SentToSent' as Pathname)} data-sveltekit-reload {...props}>
+										LLM Sent To Sent
+									</a>
+								{/snippet}
+							</NavigationMenu.Link>
+						</li>
 					</ul>
 				</NavigationMenu.Content>
 			</NavigationMenu.Item>
