@@ -181,7 +181,7 @@
 						name="text"
 						bind:value={text}
 						placeholder="번역할 내용을 입력하세요..."
-						class="flex-1 min-h-[220px] resize-none border-muted focus-visible:ring-indigo-500 text-sm leading-relaxed"
+						class="flex-1 min-h-55 resize-none border-muted focus-visible:ring-indigo-500 text-sm leading-relaxed"
 					/>
 				</form>
 			</Card.Content>
@@ -247,7 +247,7 @@
 				</div>
 			</Card.Header>
 			<Card.Content class="flex-1 pb-4 flex flex-col justify-between">
-				<div class="relative flex-1 min-h-[220px] bg-muted/20 border rounded-md p-3 font-normal text-sm leading-relaxed text-foreground select-text whitespace-pre-wrap">
+				<div class="relative flex-1 min-h-55 bg-muted/20 border rounded-md p-3 font-normal text-sm leading-relaxed text-foreground select-text whitespace-pre-wrap">
 					{#if loading}
 						<div class="absolute inset-0 flex items-center justify-center bg-background/55 backdrop-blur-[1px] rounded-md transition-all">
 							<div class="flex flex-col items-center gap-2 text-indigo-500">
