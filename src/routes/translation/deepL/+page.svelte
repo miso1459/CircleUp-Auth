@@ -21,7 +21,7 @@
 	const LANG_MAP = {
 		'auto': '자동 감지 (Auto)',
 		'KO': '한국어 (Korean)',
-		'EN-US': '영어 (English)',
+		'EN': '영어 (English)',
 		'JA': '일본어 (Japanese)',
 		'ZH': '중국어 (Chinese)'
 	} as const;
@@ -72,13 +72,13 @@
 
 		// 소스 언어가 'auto'인 경우, 도착 언어로 이동할 수 없음 (도착어엔 auto가 없으므로)
 		// 따라서 감지된 소스 언어가 있고 그것이 지원 범위 내에 있다면 그것을 사용하고,
-		// 그렇지 않다면 기본값인 'EN-US'로 스왑함.
+		// 그렇지 않다면 기본값인 'EN'로 스왑함.
 		let newTgt: LangCode = tempSrc;
 		if (newTgt === 'auto') {
 			if (detectedSourceLang && detectedSourceLang in LANG_MAP) {
 				newTgt = detectedSourceLang as LangCode;
 			} else {
-				newTgt = 'EN-US';
+				newTgt = 'EN';
 			}
 		}
 
@@ -143,13 +143,13 @@
 					<div class="flex items-center gap-2">
 						<span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">출발어</span>
 						<Select.Root type="single" bind:value={sourceLang}>
-							<Select.Trigger class="h-9 w-[180px] text-xs font-medium">
+							<Select.Trigger class="h-9 w-45-xs font-medium">
 								{sourceLangLabel}
 							</Select.Trigger>
 							<Select.Content>
 								<Select.Item value="auto">자동 감지 (Auto)</Select.Item>
 								<Select.Item value="KO">한국어 (Korean)</Select.Item>
-								<Select.Item value="EN-US">영어 (English)</Select.Item>
+								<Select.Item value="EN">영어 (English)</Select.Item>
 								<Select.Item value="JA">일본어 (Japanese)</Select.Item>
 								<Select.Item value="ZH">중국어 (Chinese)</Select.Item>
 							</Select.Content>
@@ -207,12 +207,12 @@
 					<div class="flex items-center gap-2">
 						<span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">도착어</span>
 						<Select.Root type="single" bind:value={targetLang}>
-							<Select.Trigger class="h-9 w-[180px] text-xs font-medium">
+							<Select.Trigger class="h-9 w-45 text-xs font-medium">
 								{targetLangLabel}
 							</Select.Trigger>
 							<Select.Content>
 								<Select.Item value="KO">한국어 (Korean)</Select.Item>
-								<Select.Item value="EN-US">영어 (English)</Select.Item>
+								<Select.Item value="EN">영어 (English)</Select.Item>
 								<Select.Item value="JA">일본어 (Japanese)</Select.Item>
 								<Select.Item value="ZH">중국어 (Chinese)</Select.Item>
 							</Select.Content>
