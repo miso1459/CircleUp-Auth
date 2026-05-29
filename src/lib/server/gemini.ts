@@ -121,3 +121,38 @@ ${numbered}
 export function rowsToJson(rows: SentenceRow[]): string {
 	return JSON.stringify(rows, null, 2);
 }
+
+export async function generateSentencesFromPrompt(
+	prompt: string
+): Promise<SentenceRow[]> {
+	if (!prompt.trim()) {
+		throw new Error('프롬프트를 입력해 주세요.');
+	}
+
+	const apiKey = env.GEMINI_API_KEY;
+	if (!apiKey) {
+		throw new Error('GEMINI_API_KEY가 설정되지 않았습니다.');
+	}
+
+	const userMessage = `다음 지시사항에 따라 문장들을 생성해 주세요.
+
+[지시사항]
+${prompt.trim()}
+
+반드시 아래 JSON 배열 형식으로만 출력하세요. 다른 설명이나 마크다운 외 텍스트는 절대 금지합니다.
+[
+  { "index": 1, "original": "", "statement": "생성된 문장" }
+]`;
+
+	const genAI = new GoogleGenAI({ apiKey });
+	const response = await genAI.models.generateContent({
+		model: env.GEMINI_MODEL ?? 'gemini-2.0-flash',
+		contents: userMessage,
+	});
+
+	const text = response.text ?? '';
+	const parsed = extractJsonArray(text);
+
+	return normalizeRows(parsed, []);
+}
+
