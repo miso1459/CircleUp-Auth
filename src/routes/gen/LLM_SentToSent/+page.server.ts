@@ -6,6 +6,11 @@ import { config, sentences } from '$lib/server/db/schema';
 import { eq, inArray, like, desc } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 
+const LANG_INSTRUCTION: Record<string, string> = {
+	'en-US': '\n\n[Important] All generated sentences must be written in English (en-US) only.',
+	'ko-KR': '\n\n[중요] 생성되는 모든 문장은 반드시 한국어(ko-KR)로 작성해주세요.'
+};
+
 export const load = (async ({ locals, url, depends }) => {
 	depends('app:sentences');
 
@@ -110,7 +115,9 @@ export const actions = {
 				});
 
 			// 2. Gemini API 호출하여 입력 문장을 프롬프트에 따라 변환
-			const generatedRows = await transformSentencesWithPrompt([sentence], prompt);
+			// 언어 지시문을 프롬프트에 추가하여 대상 언어로 결과가 생성되도록 함
+			const langInstruction = LANG_INSTRUCTION[lang] || '';
+			const generatedRows = await transformSentencesWithPrompt([sentence], prompt + langInstruction);
 
 			if (generatedRows.length === 0) {
 				return fail(500, { error: '생성된 문장이 없습니다.' });
