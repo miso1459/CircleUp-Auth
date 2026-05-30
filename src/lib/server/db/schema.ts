@@ -32,6 +32,7 @@ export const sentences = sqliteTable('sentences', {
     tag: text('tag').default(''),
     file_tts: text('file_tts').default(''),
     file_image: text('file_image').default(''),
+    check_img: integer('check_img').default(0).notNull(),
     createdAt: integer('created_at', { mode: 'timestamp' })
         .notNull()
         .$defaultFn(() => new Date())

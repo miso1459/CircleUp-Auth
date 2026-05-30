@@ -1,0 +1,1 @@
+ALTER TABLE `sentences` ADD `check_img` integer DEFAULT 0 NOT NULL;
