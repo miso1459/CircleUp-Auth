@@ -78,6 +78,15 @@
 								{/snippet}
 							</NavigationMenu.Link>
 						</li>
+						<li>
+							<NavigationMenu.Link>
+								{#snippet child({ props })}
+									<a href={resolve('/llm/gen_1' as Pathname)} data-sveltekit-reload {...props}>
+										Generator 1
+									</a>
+								{/snippet}
+							</NavigationMenu.Link>
+						</li>
 					</ul>
 				</NavigationMenu.Content>
 			</NavigationMenu.Item>
@@ -163,15 +172,6 @@
 						<li>
 							<NavigationMenu.Link>
 								{#snippet child({ props })}
-									<a href={resolve('/gen/gen_1' as Pathname)} data-sveltekit-reload {...props}>
-										Generator 1
-									</a>
-								{/snippet}
-							</NavigationMenu.Link>
-						</li>
-						<li>
-							<NavigationMenu.Link>
-								{#snippet child({ props })}
 									<a href={resolve('/gen/LLM_Sent' as Pathname)} data-sveltekit-reload {...props}>
 										LLM Sent
 									</a>
@@ -201,6 +201,15 @@
 								{#snippet child({ props })}
 									<a href={resolve('/gen/Translation' as Pathname)} data-sveltekit-reload {...props}>
 										Translation
+									</a>
+								{/snippet}
+							</NavigationMenu.Link>
+						</li>
+						<li>
+							<NavigationMenu.Link>
+								{#snippet child({ props })}
+									<a href={resolve('/gen/SentToImage' as Pathname)} data-sveltekit-reload {...props}>
+										Sent To Image
 									</a>
 								{/snippet}
 							</NavigationMenu.Link>

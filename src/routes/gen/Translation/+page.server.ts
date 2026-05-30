@@ -5,6 +5,41 @@ import { sentences, sentences_tran, config } from '$lib/server/db/schema';
 import { eq, like, desc, or, and, isNotNull, ne, isNull, inArray, notInArray } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 
+async function translateSingle(text: string, targetLang: string) {
+	const apiKey = env.DEEPL_API_KEY;
+	if (!apiKey) {
+		return { error: 'DEEPL_API_KEY 미설정' };
+	}
+
+	const isFreeKey = apiKey.endsWith(':fx');
+	const apiUrl = isFreeKey
+		? 'https://api-free.deepl.com/v2/translate'
+		: 'https://api.deepl.com/v2/translate';
+
+	try {
+		const response = await fetch(apiUrl, {
+			method: 'POST',
+			headers: {
+				'Authorization': `DeepL-Auth-Key ${apiKey}`,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				text: [text],
+				target_lang: targetLang
+			})
+		});
+
+		if (!response.ok) {
+			return { error: `DeepL API 오류: ${response.status}` };
+		}
+
+		const data = await response.json();
+		return { text: data.translations[0].text };
+	} catch (err) {
+		return { error: err instanceof Error ? err.message : '번역 중 오류 발생' };
+	}
+}
+
 export const load = (async ({ locals, url, depends }) => {
 	depends('app:sentences');
 
@@ -178,64 +213,102 @@ export const actions = {
 			return fail(404, { error: '문장을 찾을 수 없습니다.' });
 		}
 
-		// DeepL API 호출
-		const apiKey = env.DEEPL_API_KEY;
-		if (!apiKey) {
-			return fail(500, { error: 'DEEPL_API_KEY 미설정' });
-		}
+		const result = await translateSingle(record.sent, targetLang);
+		if (result.error) return fail(500, { error: result.error });
 
-		const isFreeKey = apiKey.endsWith(':fx');
-		const url = isFreeKey
-			? 'https://api-free.deepl.com/v2/translate'
-			: 'https://api.deepl.com/v2/translate';
-
-		try {
-			const response = await fetch(url, {
-				method: 'POST',
-				headers: {
-					'Authorization': `DeepL-Auth-Key ${apiKey}`,
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					text: [record.sent],
-					target_lang: targetLang
-				})
+		// sentences_tran에 저장 (upsert)
+		await db
+			.insert(sentences_tran)
+			.values({
+				id: sentenceId,
+				lang: targetLang,
+				sent: result.text!
+			})
+			.onConflictDoUpdate({
+				target: [sentences_tran.id],
+				set: { lang: targetLang, sent: result.text! }
 			});
 
-			if (!response.ok) {
-				const errText = await response.text();
-				return fail(500, { error: `DeepL API 오류: ${response.status}` });
+		// config에 Trans_lang 저장
+		await db
+			.insert(config)
+			.values({ key: 'Trans_lang', value: targetLang })
+			.onConflictDoUpdate({
+				target: [config.key],
+				set: { value: targetLang }
+			});
+
+		return { success: true };
+	},
+
+	batchTranslate: async ({ request, locals, url }) => {
+		if (locals.user?.role !== 'admin') {
+			return fail(403, { error: 'Unauthorized' });
+		}
+
+		const formData = await request.formData();
+		const targetLang = String(formData.get('targetLang') ?? 'EN').trim();
+		const idsStr = String(formData.get('ids') || '');
+		const ids = idsStr.split(',').map(Number).filter(Boolean);
+
+		if (ids.length === 0) {
+			return fail(400, { error: '번역할 문장이 없습니다.' });
+		}
+
+		// 미번역 문장만 필터링
+		const translatedIds = await db
+			.select({ id: sentences_tran.id })
+			.from(sentences_tran);
+		const translatedIdSet = new Set(translatedIds.map(t => t.id));
+		const untranslatedIds = ids.filter(id => !translatedIdSet.has(id));
+
+		if (untranslatedIds.length === 0) {
+			return fail(400, { error: '모든 문장이 이미 번역되었습니다.' });
+		}
+
+		// 문장들 조회
+		const records = await db
+			.select({ id: sentences.id, sent: sentences.sent, lang: sentences.lang })
+			.from(sentences)
+			.where(inArray(sentences.id, untranslatedIds));
+
+		let successCount = 0;
+		let errorCount = 0;
+
+		for (const record of records) {
+			const result = await translateSingle(record.sent, targetLang);
+			if (result.error) {
+				errorCount++;
+				continue;
 			}
 
-			const data = await response.json();
-			const translatedText = data.translations[0].text;
-
-			// sentences_tran에 저장 (upsert)
-			await db
-				.insert(sentences_tran)
-				.values({
-					id: sentenceId,
-					lang: targetLang,
-					sent: translatedText
-				})
-				.onConflictDoUpdate({
-					target: [sentences_tran.id],
-					set: { lang: targetLang, sent: translatedText }
-				});
-
-			// config에 Trans_lang 저장
-			await db
-				.insert(config)
-				.values({ key: 'Trans_lang', value: targetLang })
-				.onConflictDoUpdate({
-					target: [config.key],
-					set: { value: targetLang }
-				});
-
-			return { success: true };
-		} catch (err) {
-			const message = err instanceof Error ? err.message : '번역 중 오류 발생';
-			return fail(500, { error: message });
+			try {
+				await db
+					.insert(sentences_tran)
+					.values({
+						id: record.id,
+						lang: targetLang,
+						sent: result.text!
+					})
+					.onConflictDoUpdate({
+						target: [sentences_tran.id],
+						set: { lang: targetLang, sent: result.text! }
+					});
+				successCount++;
+			} catch {
+				errorCount++;
+			}
 		}
+
+		// config에 Trans_lang 저장
+		await db
+			.insert(config)
+			.values({ key: 'Trans_lang', value: targetLang })
+			.onConflictDoUpdate({
+				target: [config.key],
+				set: { value: targetLang }
+			});
+
+		return { success: true, successCount, errorCount };
 	}
 } satisfies Actions;

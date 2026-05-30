@@ -46,6 +46,27 @@ export async function deleteSentence(event: RequestEvent) {
         }
     }
 
+    // 이미지 파일 삭제를 위해 file_image 조회
+    const [imageRecord] = await db.select({ file_image: sentences.file_image })
+        .from(sentences)
+        .where(eq(sentences.id, id))
+        .limit(1);
+
+    if (imageRecord?.file_image && imageRecord.file_image.trim()) {
+        const imgDir = env.IMG_DIR || process.env.IMG_DIR || 'static/IMG';
+        const imgDirFull = path.resolve(process.cwd(), imgDir);
+        const imgFilePath = path.join(imgDirFull, imageRecord.file_image);
+        try {
+            if (fs.existsSync(imgFilePath)) {
+                fs.unlinkSync(imgFilePath);
+            } else {
+                console.warn('Image file not found:', imgFilePath);
+            }
+        } catch (e) {
+            console.error('Failed to delete image file:', imgFilePath, e);
+        }
+    }
+
     // sentences_tran에서 해당 문장의 번역 데이터 삭제
     await db.delete(sentences_tran).where(eq(sentences_tran.id, id));
 

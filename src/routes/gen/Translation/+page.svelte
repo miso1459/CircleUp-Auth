@@ -28,8 +28,9 @@
 
 	let targetLang = $state((data.savedTransLang as string) || 'EN');
 	let selectedSentenceId = $state<number | null>(null);
-	let tranFilter = $state<'all' | 'translated' | 'not_translated'>(data.tranFilter || 'not_translated');
+	let tranFilter = $state<'all' | 'translated' | 'not_translated'>((data.tranFilter as 'all' | 'translated' | 'not_translated') || 'not_translated');
 	let loading = $state(false);
+	let batchLoading = $state(false);
 	let errorMessage = $state<string | null>(null);
 	let successMessage = $state<string | null>(null);
 
@@ -50,6 +51,14 @@
 		}
 		if (form?.success) {
 			errorMessage = null;
+			if (form?.successCount !== undefined) {
+				successMessage = `번역 완료: ${form.successCount}건 성공`;
+				if (form?.errorCount && form.errorCount > 0) {
+					successMessage += `, ${form.errorCount}건 실패`;
+				}
+			} else {
+				successMessage = null;
+			}
 		}
 	});
 
@@ -59,6 +68,18 @@
 		return async ({ result, update }: { result: { type: string; data?: Record<string, unknown> }; update: () => Promise<void> }) => {
 			await update();
 			loading = false;
+			if (result?.type === 'success' && result?.data?.success) {
+				await invalidate('app:sentences');
+			}
+		};
+	}
+
+	function onBatchTranslate() {
+		batchLoading = true;
+		errorMessage = null;
+		return async ({ result, update }: { result: { type: string; data?: Record<string, unknown> }; update: () => Promise<void> }) => {
+			await update();
+			batchLoading = false;
 			if (result?.type === 'success' && result?.data?.success) {
 				await invalidate('app:sentences');
 			}
@@ -168,6 +189,12 @@
 		<input type="hidden" name="targetLang" value={targetLang} />
 	</form>
 
+	<!-- 일괄 번역 폼 -->
+	<form method="POST" action="?/batchTranslate" use:enhance={onBatchTranslate} id="batch-translate-form">
+		<input type="hidden" name="targetLang" value={targetLang} />
+		<input type="hidden" name="ids" value={filteredSentences.map(s => s.id).join(',')} />
+	</form>
+
 	<!-- 저장된 문장 -->
 	<Card.Root class="border-muted">
 		<Card.Header>
@@ -178,7 +205,7 @@
 			<Card.Description>데이터베이스에 저장된 문장들입니다. (ID 역순, 최대 100개)</Card.Description>
 		</Card.Header>
 		<Card.Content class="space-y-4">
-			<!-- Translation 필터 -->
+			<!-- Translation 필터 및 일괄 번역 -->
 			<div class="flex items-center gap-4 text-sm">
 				<span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">Translation 필터</span>
 				<label class="flex items-center gap-2">
@@ -193,6 +220,25 @@
 					<input type="radio" name="tranFilter" value="not_translated" bind:group={tranFilter} onchange={handleSearch} />
 					미번역
 				</label>
+				{#if tranFilter === 'not_translated'}
+					<div class="ml-auto shrink-0">
+						<Button
+							type="submit"
+							form="batch-translate-form"
+							size="sm"
+							class="bg-indigo-600 hover:bg-indigo-700 text-white"
+							disabled={batchLoading || filteredSentences.length === 0}
+						>
+							{#if batchLoading}
+								<Loader2 class="size-4 animate-spin mr-2" />
+								일괄 번역 중...
+							{:else}
+								<Sparkles class="size-4 mr-2" />
+								일괄 번역 ({filteredSentences.length}건)
+							{/if}
+						</Button>
+					</div>
+				{/if}
 			</div>
 
 			<!-- 검색바 -->
