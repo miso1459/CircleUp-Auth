@@ -114,6 +114,7 @@ export const actions = {
 		const sentenceId = Number(formData.get('sentenceId'));
 		const voice = String(formData.get('voice') ?? '').trim();
 		const speed = Number(formData.get('speed') ?? 1.0);
+		const lang = String(formData.get('lang') ?? '').trim();
 
 		if (!sentenceId) {
 			return fail(400, { error: '문장을 선택해 주세요.' });
@@ -146,14 +147,14 @@ export const actions = {
 
 			const ttsResult = await generateTTS({
 				text: record.sent,
-				languageCode: record.lang,
+				languageCode: lang || record.lang,
 				voiceName: voice,
 				speakingRate: speed
 			});
 
 			await db
 				.update(sentences)
-				.set({ file_tts: ttsResult.filename, voice, speed: String(speed) })
+				.set({ file_tts: ttsResult.filename, voice, speed: String(speed), lang: lang || record.lang })
 				.where(eq(sentences.id, sentenceId));
 
 			return { success: true };

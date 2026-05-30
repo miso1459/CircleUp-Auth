@@ -31,7 +31,7 @@
 	let selectedVoice = $state('en-US-Neural2-F');
 	let rate = $state(1.0);
 	let selectedSentenceId = $state<number | null>(null);
-	let ttsFilter = $state<'all' | 'generated' | 'not_generated'>('not_generated');
+	let ttsFilter = $state<'all' | 'generated' | 'not_generated'>(data.ttsFilter || 'not_generated');
 	let loading = $state(false);
 	let errorMessage = $state<string | null>(null);
 
@@ -118,7 +118,9 @@
 	const langLabel = $derived(LANG_MAP[selectedLanguage] || '선택');
 
 	function handleSearch() {
-		const params = searchQuery.trim() ? `?search=${encodeURIComponent(searchQuery)}` : '';
+		const searchParam = searchQuery.trim() ? `search=${encodeURIComponent(searchQuery)}` : '';
+		const filterParam = `ttsFilter=${ttsFilter}`;
+		const params = searchParam ? `?${filterParam}&${searchParam}` : `?${filterParam}`;
 		window.location.href = `/gen/LLM_TTS${params}`;
 	}
 
@@ -171,6 +173,7 @@
 					<input type="hidden" name="sentenceId" value={selectedSentenceId} />
 					<input type="hidden" name="voice" value={selectedVoice} />
 					<input type="hidden" name="speed" value={rate} />
+					<input type="hidden" name="lang" value={selectedLanguage} />
 					<div class="grid grid-cols-2 gap-4">
 						<div class="space-y-2">
 							<label for="lang-select" class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">대상 언어</label>
@@ -208,24 +211,6 @@
 							<span class="text-xs text-muted-foreground">0.5×</span>
 							<input type="range" min="0.5" max="2.0" step="0.05" bind:value={rate} class="flex-1 h-2 accent-indigo-600" aria-label="말하기 속도" />
 							<span class="text-xs text-muted-foreground">2.0×</span>
-						</div>
-					</div>
-
-					<div class="space-y-2">
-						<div class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">TTS 필터</div>
-						<div class="flex gap-4">
-							<label class="flex items-center gap-2 text-sm">
-								<input type="radio" name="ttsFilter" value="all" bind:group={ttsFilter} />
-								전체
-							</label>
-							<label class="flex items-center gap-2 text-sm">
-								<input type="radio" name="ttsFilter" value="generated" bind:group={ttsFilter} />
-								생성
-							</label>
-							<label class="flex items-center gap-2 text-sm">
-								<input type="radio" name="ttsFilter" value="not_generated" bind:group={ttsFilter} />
-								미생성
-							</label>
 						</div>
 					</div>
 
@@ -285,6 +270,23 @@
 			<Card.Description>데이터베이스에 저장된 문장들입니다. (ID 역순, 최대 100개)</Card.Description>
 		</Card.Header>
 		<Card.Content class="space-y-4">
+			<!-- TTS 필터 -->
+			<div class="flex items-center gap-4 text-sm">
+				<span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">TTS 필터</span>
+				<label class="flex items-center gap-2">
+					<input type="radio" name="ttsFilter" value="all" bind:group={ttsFilter} onchange={handleSearch} />
+					전체
+				</label>
+				<label class="flex items-center gap-2">
+					<input type="radio" name="ttsFilter" value="generated" bind:group={ttsFilter} onchange={handleSearch} />
+					생성
+				</label>
+				<label class="flex items-center gap-2">
+					<input type="radio" name="ttsFilter" value="not_generated" bind:group={ttsFilter} onchange={handleSearch} />
+					미생성
+				</label>
+			</div>
+
 			<!-- 검색바 -->
 			<div class="flex items-center gap-2">
 				<div class="relative flex-1">
