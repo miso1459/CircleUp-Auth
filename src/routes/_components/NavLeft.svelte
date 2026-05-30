@@ -205,6 +205,15 @@
 								{/snippet}
 							</NavigationMenu.Link>
 						</li>
+						<li>
+							<NavigationMenu.Link>
+								{#snippet child({ props })}
+									<a href={resolve('/gen/Check' as Pathname)} data-sveltekit-reload {...props}>
+										Check
+									</a>
+								{/snippet}
+							</NavigationMenu.Link>
+						</li>
 					</ul>
 				</NavigationMenu.Content>
 			</NavigationMenu.Item>
