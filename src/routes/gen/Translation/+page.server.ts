@@ -13,7 +13,7 @@ export const load = (async ({ locals, url, depends }) => {
 	}
 
 	const searchQuery = url.searchParams.get('search') || '';
-	const ttsFilter = url.searchParams.get('ttsFilter') || 'not_generated';
+	const tranFilter = url.searchParams.get('tranFilter') || 'not_translated';
 	const ttsBaseUrl = env.TTS_BASE_URL || process.env.TTS_BASE_URL || 'http://localhost:5173/TTS';
 
 	// config에서 저장된 TTS 언어 및 음성 모델 조회
@@ -38,7 +38,7 @@ export const load = (async ({ locals, url, depends }) => {
 
 	let sentenceRows;
 
-	if (ttsFilter === 'all') {
+	if (tranFilter === 'all') {
 		if (searchQuery) {
 			sentenceRows = await db
 				.select({
@@ -69,47 +69,74 @@ export const load = (async ({ locals, url, depends }) => {
 				.orderBy(desc(sentences.id))
 				.limit(100);
 		}
-	} else if (ttsFilter === 'generated') {
-		sentenceRows = await db
-			.select({
-				id: sentences.id,
-				lang: sentences.lang,
-				voice: sentences.voice,
-				speed: sentences.speed,
-				sent: sentences.sent,
-				createdAt: sentences.createdAt,
-				file_tts: sentences.file_tts
-			})
-			.from(sentences)
-			.where(and(
-				like(sentences.sent, `%${searchQuery}%`),
-				isNotNull(sentences.file_tts),
-				ne(sentences.file_tts, '')
-			))
-			.orderBy(desc(sentences.id))
-			.limit(100);
+	} else if (tranFilter === 'translated') {
+		// 번역된 문장만 (sentences_tran에 존재)
+		const translatedIds = await db
+			.select({ id: sentences_tran.id })
+			.from(sentences_tran);
+		
+		if (translatedIds.length > 0) {
+			sentenceRows = await db
+				.select({
+					id: sentences.id,
+					lang: sentences.lang,
+					voice: sentences.voice,
+					speed: sentences.speed,
+					sent: sentences.sent,
+					createdAt: sentences.createdAt,
+					file_tts: sentences.file_tts
+				})
+				.from(sentences)
+				.where(and(
+					like(sentences.sent, `%${searchQuery}%`),
+					inArray(sentences.id, translatedIds.map(t => t.id))
+				))
+				.orderBy(desc(sentences.id))
+				.limit(100);
+		} else {
+			sentenceRows = [];
+		}
 	} else {
-		// not_generated (default)
-		sentenceRows = await db
-			.select({
-				id: sentences.id,
-				lang: sentences.lang,
-				voice: sentences.voice,
-				speed: sentences.speed,
-				sent: sentences.sent,
-				createdAt: sentences.createdAt,
-				file_tts: sentences.file_tts
-			})
-			.from(sentences)
-			.where(and(
-				like(sentences.sent, `%${searchQuery}%`),
-				or(
-					isNull(sentences.file_tts),
-					eq(sentences.file_tts, '')
-				)
-			))
-			.orderBy(desc(sentences.id))
-			.limit(100);
+		// not_translated (default)
+		const translatedIds = await db
+			.select({ id: sentences_tran.id })
+			.from(sentences_tran);
+		
+		if (translatedIds.length > 0) {
+			sentenceRows = await db
+				.select({
+					id: sentences.id,
+					lang: sentences.lang,
+					voice: sentences.voice,
+					speed: sentences.speed,
+					sent: sentences.sent,
+					createdAt: sentences.createdAt,
+					file_tts: sentences.file_tts
+				})
+				.from(sentences)
+				.where(and(
+					like(sentences.sent, `%${searchQuery}%`),
+					notInArray(sentences.id, translatedIds.map(t => t.id))
+				))
+				.orderBy(desc(sentences.id))
+				.limit(100);
+		} else {
+			// 번역된 것이 없으면 전체 조회
+			sentenceRows = await db
+				.select({
+					id: sentences.id,
+					lang: sentences.lang,
+					voice: sentences.voice,
+					speed: sentences.speed,
+					sent: sentences.sent,
+					createdAt: sentences.createdAt,
+					file_tts: sentences.file_tts
+				})
+				.from(sentences)
+				.where(like(sentences.sent, `%${searchQuery}%`))
+				.orderBy(desc(sentences.id))
+				.limit(100);
+		}
 	}
 
 	// 각 문장에 대한 번역 데이터 조회
@@ -133,7 +160,7 @@ export const load = (async ({ locals, url, depends }) => {
 		geminiConfigured: Boolean(env.GEMINI_API_KEY),
 		sentences: sentencesWithTrans,
 		searchQuery,
-		ttsFilter,
+		tranFilter,
 		ttsBaseUrl,
 		savedLang: savedConfigLang[0]?.value || 'en-US',
 		savedVoice: savedConfigVoice[0]?.value || 'en-US-Neural2-F',

@@ -28,7 +28,7 @@
 
 	let targetLang = $state((data.savedTransLang as string) || 'EN');
 	let selectedSentenceId = $state<number | null>(null);
-	let ttsFilter = $state<'all' | 'translated' | 'not_translated'>(data.ttsFilter || 'not_translated');
+	let tranFilter = $state<'all' | 'translated' | 'not_translated'>(data.tranFilter || 'not_translated');
 	let loading = $state(false);
 	let bulkLoading = $state(false);
 	let errorMessage = $state<string | null>(null);
@@ -39,9 +39,9 @@
 	const sentences = $derived(data.sentences);
 
 	const filteredSentences = $derived(sentences.filter((s) => {
-		if (ttsFilter === 'all') return true;
+		if (tranFilter === 'all') return true;
 		const hasTran = s.tran && s.tran !== '';
-		if (ttsFilter === 'translated') return hasTran;
+		if (tranFilter === 'translated') return hasTran;
 		return !hasTran;
 	}));
 
@@ -96,7 +96,7 @@
 
 	function handleSearch() {
 		const searchParam = searchQuery.trim() ? `search=${encodeURIComponent(searchQuery)}` : '';
-		const filterParam = `ttsFilter=${ttsFilter}`;
+		const filterParam = `tranFilter=${tranFilter}`;
 		const params = searchParam ? `?${filterParam}&${searchParam}` : `?${filterParam}`;
 		window.location.href = `/gen/Translation${params}`;
 	}
@@ -211,15 +211,15 @@
 			<div class="flex items-center gap-4 text-sm">
 				<span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">Translation 필터</span>
 				<label class="flex items-center gap-2">
-					<input type="radio" name="ttsFilter" value="all" bind:group={ttsFilter} onchange={handleSearch} />
+					<input type="radio" name="tranFilter" value="all" bind:group={tranFilter} onchange={handleSearch} />
 					전체
 				</label>
 				<label class="flex items-center gap-2">
-					<input type="radio" name="ttsFilter" value="translated" bind:group={ttsFilter} onchange={handleSearch} />
+					<input type="radio" name="tranFilter" value="translated" bind:group={tranFilter} onchange={handleSearch} />
 					번역됨
 				</label>
 				<label class="flex items-center gap-2">
-					<input type="radio" name="ttsFilter" value="not_translated" bind:group={ttsFilter} onchange={handleSearch} />
+					<input type="radio" name="tranFilter" value="not_translated" bind:group={tranFilter} onchange={handleSearch} />
 					미번역
 				</label>
 			</div>
@@ -242,7 +242,7 @@
 			</div>
 
 			<!-- 미번역 필터일 때 전체 번역 버튼 -->
-			{#if ttsFilter === 'not_translated'}
+			{#if tranFilter === 'not_translated'}
 				<form method="POST" action="?/translateAll" use:enhance={onTranslateAll} class="flex items-center gap-3 rounded-lg border border-indigo-200 bg-indigo-50/50 dark:border-indigo-800 dark:bg-indigo-950/20 p-3">
 					<input type="hidden" name="targetLang" value={targetLang} />
 					<Button
