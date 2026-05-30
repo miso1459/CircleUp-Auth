@@ -271,9 +271,8 @@
 				<Table.Header>
 					<Table.Row>
 						<Table.Head class="w-16">ID</Table.Head>
-						<Table.Head class="w-16">Lang</Table.Head>
-						<Table.Head>문장</Table.Head>
-						<Table.Head>번역</Table.Head>
+						<Table.Head class="w-20">Lang</Table.Head>
+						<Table.Head>문장 / 번역</Table.Head>
 						<Table.Head class="w-44">Created At</Table.Head>
 						<Table.Head class="w-20 sticky right-0 bg-background z-10 shadow-[-1px_0_0_0_var(--border)]">삭제</Table.Head>
 					</Table.Row>
@@ -281,24 +280,24 @@
 				<Table.Body>
 					{#if filteredSentences.length === 0}
 						<Table.Row>
-							<Table.Cell colspan={6} class="text-center text-muted-foreground py-8 text-sm">
+							<Table.Cell colspan={5} class="text-center text-muted-foreground py-8 text-sm">
 								저장된 문장이 없습니다.
 							</Table.Cell>
 						</Table.Row>
 					{:else}
 						{#each filteredSentences as s (s.id)}
+							<!-- 원문 행 -->
 							<Table.Row
 								class="hover:bg-muted/50 transition-colors cursor-pointer {selectedSentenceId === s.id ? 'bg-indigo-50 dark:bg-indigo-950/30' : ''}"
 								onclick={() => { selectedSentenceId = s.id; }}
 							>
-								<Table.Cell class="font-semibold text-muted-foreground text-xs">{s.id}</Table.Cell>
-								<Table.Cell class="text-xs font-mono">{s.lang}</Table.Cell>
+								<Table.Cell class="font-semibold text-muted-foreground text-xs align-top pt-3">{s.id}</Table.Cell>
+								<Table.Cell class="text-xs font-mono align-top pt-3">{s.lang}</Table.Cell>
 								<Table.Cell class="text-sm leading-relaxed break-words">{s.sent}</Table.Cell>
-								<Table.Cell class="text-sm leading-relaxed break-words text-muted-foreground">{s.tran || '-'}</Table.Cell>
-								<Table.Cell class="text-xs text-muted-foreground whitespace-nowrap">
+								<Table.Cell class="text-xs text-muted-foreground whitespace-nowrap align-top pt-3">
 									{new Date(s.createdAt).toLocaleString('ko-KR')}
 								</Table.Cell>
-								<Table.Cell class="sticky right-0 bg-background z-10 shadow-[-1px_0_0_0_var(--border)]">
+								<Table.Cell class="sticky right-0 bg-background z-10 shadow-[-1px_0_0_0_var(--border)] align-top pt-2">
 									<Button
 										size="sm"
 										variant="destructive"
@@ -306,6 +305,22 @@
 									>
 										삭제
 									</Button>
+								</Table.Cell>
+							</Table.Row>
+							<!-- 번역 결과 행 -->
+							<Table.Row class="bg-muted/20">
+								<Table.Cell colspan={2} class="text-xs font-semibold text-muted-foreground pl-4">
+									{#if s.tranLang}
+										<span class="inline-flex items-center gap-1">
+											<Languages class="size-3" />
+											{TARGET_LANG_MAP[s.tranLang as keyof typeof TARGET_LANG_MAP] || s.tranLang}
+										</span>
+									{:else}
+										<span class="text-muted-foreground/50">미번역</span>
+									{/if}
+								</Table.Cell>
+								<Table.Cell class="text-sm leading-relaxed break-words text-muted-foreground" colspan={3}>
+									{s.tran || '-'}
 								</Table.Cell>
 							</Table.Row>
 						{/each}
