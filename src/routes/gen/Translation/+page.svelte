@@ -30,7 +30,6 @@
 	let selectedSentenceId = $state<number | null>(null);
 	let tranFilter = $state<'all' | 'translated' | 'not_translated'>(data.tranFilter || 'not_translated');
 	let loading = $state(false);
-	let bulkLoading = $state(false);
 	let errorMessage = $state<string | null>(null);
 	let successMessage = $state<string | null>(null);
 
@@ -54,15 +53,6 @@
 		}
 	});
 
-	$effect(() => {
-		if (bulkLoading) {
-			const interval = setInterval(() => {
-				invalidate('app:sentences');
-			}, 2000);
-			return () => clearInterval(interval);
-		}
-	});
-
 	function onTranslate() {
 		loading = true;
 		errorMessage = null;
@@ -71,25 +61,6 @@
 			loading = false;
 			if (result?.type === 'success' && result?.data?.success) {
 				await invalidate('app:sentences');
-			}
-		};
-	}
-
-	function onTranslateAll() {
-		bulkLoading = true;
-		errorMessage = null;
-		successMessage = null;
-		return async ({ result, update }: { result: { type: string; data?: Record<string, unknown> }; update: () => Promise<void> }) => {
-			await update();
-			bulkLoading = false;
-			if (result?.type === 'success' && result?.data) {
-				const d = result.data;
-				const successCount = (d.successCount as number) ?? 0;
-				const failCount = (d.failCount as number) ?? 0;
-				successMessage = `번역 완료: ${successCount}개 성공, ${failCount}개 실패`;
-				await invalidate('app:sentences');
-			} else if (result?.type === 'failure') {
-				errorMessage = (result?.data?.error as string) || '일괄 번역 중 오류가 발생했습니다.';
 			}
 		};
 	}
@@ -240,30 +211,6 @@
 					<X class="size-4" />
 				</Button>
 			</div>
-
-			<!-- 미번역 필터일 때 전체 번역 버튼 -->
-			{#if tranFilter === 'not_translated'}
-				<form method="POST" action="?/translateAll" use:enhance={onTranslateAll} class="flex items-center gap-3 rounded-lg border border-indigo-200 bg-indigo-50/50 dark:border-indigo-800 dark:bg-indigo-950/20 p-3">
-					<input type="hidden" name="targetLang" value={targetLang} />
-					<Button
-						type="submit"
-						size="sm"
-						class="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md"
-						disabled={bulkLoading || filteredSentences.length === 0}
-					>
-						{#if bulkLoading}
-							<Loader2 class="size-4 animate-spin mr-2" />
-							전체 번역 중...
-						{:else}
-							<Languages class="size-4 mr-2" />
-							전체 번역
-						{/if}
-					</Button>
-					<span class="text-xs text-muted-foreground">
-						미번역 문장 {filteredSentences.length}개 대상
-					</span>
-				</form>
-			{/if}
 
 		<!-- 문장 테이블 -->
 		<div class="rounded-md border overflow-x-auto">
