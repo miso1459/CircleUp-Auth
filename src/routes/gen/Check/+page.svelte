@@ -1,10 +1,8 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
-	import * as Select from '$lib/components/ui/select/index.js';
 	import { invalidate } from '$app/navigation';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { 
@@ -12,26 +10,14 @@
 		Database, 
 		AlertTriangle, 
 		Search,
-		X,
-		Languages,
-		Loader2
+		X
 	} from '@lucide/svelte';
 
 	let { data, form }: PageProps = $props();
 
-	const TARGET_LANG_MAP = {
-		'KO': '한국어',
-		'EN': '영어',
-		'JA': '일본어',
-		'ZH': '중국어'
-	} as const;
-
 	let imgFilter = $state<'all' | 'checked' | 'unchecked'>((data.imgFilter as 'all' | 'checked' | 'unchecked') || 'unchecked');
 	let errorMessage = $state<string | null>(null);
 	let successMessage = $state<string | null>(null);
-	let targetLang = $state((data.savedTransLang as string) || 'EN');
-	let selectedSentenceId = $state<number | null>(null);
-	let loading = $state(false);
 
 	let searchQuery = $state(data.searchQuery);
 
@@ -51,18 +37,6 @@
 			errorMessage = null;
 		}
 	});
-
-	function onTranslate() {
-		loading = true;
-		errorMessage = null;
-		return async ({ result, update }: { result: { type: string; data?: Record<string, unknown> }; update: () => Promise<void> }) => {
-			await update();
-			loading = false;
-			if (result?.type === 'success' && result?.data?.success) {
-				await invalidate('app:sentences');
-			}
-		};
-	}
 
 	function handleSearch() {
 		const searchParam = searchQuery.trim() ? `search=${encodeURIComponent(searchQuery)}` : '';
@@ -128,56 +102,6 @@
 			<Card.Description>데이터베이스에 저장된 문장들입니다. (ID 역순, 최대 100개)</Card.Description>
 		</Card.Header>
 		<Card.Content class="space-y-4">
-			<!-- 선택된 문장 및 번역 -->
-			<div class="rounded-lg border border-muted bg-muted/30 p-4 space-y-3">
-				<div class="min-h-[4rem] text-sm leading-relaxed">
-					{#if selectedSentenceId !== null}
-						{@const selected = sentences.find(s => s.id === selectedSentenceId)}
-						{#if selected}
-							<p class="font-medium">{selected.sent}</p>
-							<p class="text-xs text-muted-foreground mt-1">ID: {selected.id} | Lang: {selected.lang}</p>
-						{:else}
-							<p class="text-muted-foreground">문장을 찾을 수 없습니다.</p>
-						{/if}
-					{:else}
-						<p class="text-muted-foreground">테이블에서 문장을 클릭하여 선택하세요.</p>
-					{/if}
-				</div>
-
-				<!-- 번역 설정 -->
-				<div class="flex items-center gap-3 pt-2 border-t">
-					<label class="text-xs font-semibold text-muted-foreground">대상 언어</label>
-					<Select.Root type="single" bind:value={targetLang}>
-						<Select.Trigger class="h-9 w-32 text-sm font-medium">
-							{TARGET_LANG_MAP[targetLang as keyof typeof TARGET_LANG_MAP] || targetLang}
-						</Select.Trigger>
-						<Select.Content>
-							{#each Object.entries(TARGET_LANG_MAP) as [code, label]}
-								<Select.Item value={code}>{label}</Select.Item>
-							{/each}
-						</Select.Content>
-					</Select.Root>
-					<form method="POST" action="?/translate" use:enhance={onTranslate} id="translate-form">
-						<input type="hidden" name="sentenceId" value={selectedSentenceId} />
-						<input type="hidden" name="targetLang" value={targetLang} />
-						<Button
-							type="submit"
-							size="sm"
-							class="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md"
-							disabled={loading || selectedSentenceId === null}
-						>
-							{#if loading}
-								<Loader2 class="size-4 animate-spin mr-2" />
-								번역 중...
-							{:else}
-								<Languages class="size-4 mr-2" />
-								번역
-							{/if}
-						</Button>
-					</form>
-				</div>
-			</div>
-
 			<!-- 이미지 체크 필터 -->
 			<div class="flex items-center gap-4 text-sm">
 				<span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">이미지 체크 필터</span>
@@ -235,10 +159,7 @@
 					{:else}
 						{#each filteredSentences as s (s.id)}
 							<!-- 원문 행 -->
-							<Table.Row 
-								class="hover:bg-muted/50 transition-colors cursor-pointer {selectedSentenceId === s.id ? 'bg-indigo-50 dark:bg-indigo-950/30' : ''}"
-								onclick={() => { selectedSentenceId = s.id; }}
-							>
+							<Table.Row class="hover:bg-muted/50 transition-colors">
 								<Table.Cell class="font-semibold text-muted-foreground text-xs align-top pt-3">{s.id}</Table.Cell>
 								<Table.Cell class="text-xs font-mono align-top pt-3">{s.lang}</Table.Cell>
 								<Table.Cell class="text-sm leading-relaxed break-words">{s.sent}</Table.Cell>
@@ -246,7 +167,7 @@
 									<input 
 										type="checkbox" 
 										checked={s.check_img === 1}
-										onchange={(e) => { e.stopPropagation(); toggleCheckImg(s.id, s.check_img); }}
+										onchange={() => toggleCheckImg(s.id, s.check_img)}
 										class="size-4"
 									/>
 								</Table.Cell>
@@ -257,27 +178,11 @@
 									<Button
 										size="sm"
 										variant="destructive"
-										onclick={(e) => { e.stopPropagation(); handleDeleteImage(s.id); }}
+										onclick={() => handleDeleteImage(s.id)}
 										disabled={!s.file_image}
 									>
 										삭제
 									</Button>
-								</Table.Cell>
-							</Table.Row>
-							<!-- 번역 결과 행 -->
-							<Table.Row class="bg-muted/20">
-								<Table.Cell colspan={2} class="text-xs font-semibold text-muted-foreground pl-4">
-									{#if s.tranLang}
-										<span class="inline-flex items-center gap-1">
-											<Languages class="size-3" />
-											{TARGET_LANG_MAP[s.tranLang as keyof typeof TARGET_LANG_MAP] || s.tranLang}
-										</span>
-									{:else}
-										<span class="text-muted-foreground/50">미번역</span>
-									{/if}
-								</Table.Cell>
-								<Table.Cell class="text-sm leading-relaxed break-words text-muted-foreground" colspan={4}>
-									{s.tran || '-'}
 								</Table.Cell>
 							</Table.Row>
 							<!-- 이미지 표시 행 -->
