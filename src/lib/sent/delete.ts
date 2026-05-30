@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { sentences } from '$lib/server/db/schema';
+import { sentences, sentences_tran } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { env } from '$env/dynamic/private';
 import fs from 'fs';
@@ -45,6 +45,9 @@ export async function deleteSentence(event: RequestEvent) {
             console.error('Failed to delete MP3 file:', filePath, e);
         }
     }
+
+    // sentences_tran에서 해당 문장의 번역 데이터 삭제
+    await db.delete(sentences_tran).where(eq(sentences_tran.id, id));
 
     await db.delete(sentences).where(eq(sentences.id, id));
     return json({ success: true });
