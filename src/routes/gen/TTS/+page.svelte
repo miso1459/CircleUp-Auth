@@ -27,13 +27,15 @@
 
 	type LangCode = keyof typeof LANG_MAP;
 
-	let selectedLanguage = $state<LangCode>('en-US');
-	let selectedVoice = $state('en-US-Neural2-F');
+	let selectedLanguage = $state<LangCode>((data.savedLang as LangCode) || 'en-US');
+	let selectedVoice = $state(data.savedVoice || 'en-US-Neural2-F');
 	let rate = $state(1.0);
 	let selectedSentenceId = $state<number | null>(null);
 	let ttsFilter = $state<'all' | 'generated' | 'not_generated'>(data.ttsFilter || 'not_generated');
 	let loading = $state(false);
+	let bulkLoading = $state(false);
 	let errorMessage = $state<string | null>(null);
+	let successMessage = $state<string | null>(null);
 
 	let searchQuery = $state(data.searchQuery);
 
@@ -87,7 +89,6 @@
 		}
 		if (form?.success) {
 			errorMessage = null;
-			selectedSentenceId = null;
 		}
 	});
 
@@ -109,9 +110,32 @@
 	function onSubmit() {
 		loading = true;
 		errorMessage = null;
-		return async ({ update }: { update: () => Promise<void> }) => {
+		return async ({ result, update }: { result: { type: string; data?: Record<string, unknown> }; update: () => Promise<void> }) => {
 			await update();
 			loading = false;
+			if (result?.type === 'success' && result?.data?.success && result?.data?.file_tts) {
+				playAudio(result.data.file_tts as string);
+				await invalidate('app:sentences');
+			}
+		};
+	}
+
+	function onSubmitAll() {
+		bulkLoading = true;
+		errorMessage = null;
+		successMessage = null;
+		return async ({ result, update }: { result: { type: string; data?: Record<string, unknown> }; update: () => Promise<void> }) => {
+			await update();
+			bulkLoading = false;
+			if (result?.type === 'success' && result?.data) {
+				const data = result.data;
+				const successCount = (data.successCount as number) ?? 0;
+				const failCount = (data.failCount as number) ?? 0;
+				successMessage = `TTS 생성 완료: ${successCount}개 성공, ${failCount}개 실패`;
+				await invalidate('app:sentences');
+			} else if (result?.type === 'failure') {
+				errorMessage = (result?.data?.error as string) || '일괄 생성 중 오류가 발생했습니다.';
+			}
 		};
 	}
 
@@ -121,13 +145,13 @@
 		const searchParam = searchQuery.trim() ? `search=${encodeURIComponent(searchQuery)}` : '';
 		const filterParam = `ttsFilter=${ttsFilter}`;
 		const params = searchParam ? `?${filterParam}&${searchParam}` : `?${filterParam}`;
-		window.location.href = `/gen/LLM_TTS${params}`;
+		window.location.href = `/gen/TTS${params}`;
 	}
 
 	async function handleDelete(id: number) {
 		if (!confirm('삭제하시겠습니까?')) return;
 		try {
-			const res = await fetch('/gen/LLM_TTS', {
+			const res = await fetch('/gen/TTS', {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ id })
@@ -150,7 +174,7 @@
 	<div class="space-y-1">
 		<h1 class="flex items-center gap-2 text-2xl font-bold tracking-tight">
 			<Sparkles class="size-6 text-indigo-500" />
-			LLM TTS Generator
+			TTS
 		</h1>
 		<p class="text-muted-foreground text-sm">
 			선택한 문장에 대해 TTS 음성을 생성하고 데이터베이스에 저장합니다.
@@ -304,67 +328,93 @@
 				</Button>
 			</div>
 
-			<!-- 문장 테이블 -->
-			<div class="rounded-md border">
-				<Table.Root>
-					<Table.Header>
+			<!-- 미생성 필터일 때 전체 생성 버튼 -->
+			{#if ttsFilter === 'not_generated'}
+				<form method="POST" action="?/processAll" use:enhance={onSubmitAll} class="flex items-center gap-3 rounded-lg border border-indigo-200 bg-indigo-50/50 dark:border-indigo-800 dark:bg-indigo-950/20 p-3">
+					<input type="hidden" name="voice" value={selectedVoice} />
+					<input type="hidden" name="speed" value={rate} />
+					<input type="hidden" name="lang" value={selectedLanguage} />
+					<Button
+						type="submit"
+						size="sm"
+						class="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md"
+						disabled={bulkLoading || filteredSentences.length === 0}
+					>
+						{#if bulkLoading}
+							<Loader2 class="size-4 animate-spin mr-2" />
+							TTS 일괄 생성 중...
+						{:else}
+							<Sparkles class="size-4 mr-2" />
+							전체 생성
+						{/if}
+					</Button>
+					<span class="text-xs text-muted-foreground">
+						미생성 문장 {filteredSentences.length}개 대상
+					</span>
+				</form>
+			{/if}
+
+		<!-- 문장 테이블 -->
+		<div class="rounded-md border overflow-x-auto">
+			<Table.Root>
+				<Table.Header>
+					<Table.Row>
+						<Table.Head class="w-16">ID</Table.Head>
+						<Table.Head class="w-16">Lang</Table.Head>
+						<Table.Head class="w-48">Voice</Table.Head>
+						<Table.Head class="w-16">Speed</Table.Head>
+						<Table.Head>문장</Table.Head>
+						<Table.Head class="w-44">Created At</Table.Head>
+					<Table.Head class="w-20 sticky right-20 bg-background z-10 shadow-[-1px_0_0_0_var(--border)]">재생</Table.Head>
+					<Table.Head class="w-20 sticky right-0 bg-background z-10 shadow-[-1px_0_0_0_var(--border)]">삭제</Table.Head>
+					</Table.Row>
+				</Table.Header>
+				<Table.Body>
+					{#if filteredSentences.length === 0}
 						<Table.Row>
-							<Table.Head class="w-16">ID</Table.Head>
-							<Table.Head class="w-16">Lang</Table.Head>
-							<Table.Head class="w-48">Voice</Table.Head>
-							<Table.Head class="w-16">Speed</Table.Head>
-							<Table.Head>문장</Table.Head>
-							<Table.Head class="w-44">Created At</Table.Head>
-							<Table.Head class="w-20">재생</Table.Head>
-							<Table.Head class="w-20">삭제</Table.Head>
+							<Table.Cell colspan={8} class="text-center text-muted-foreground py-8 text-sm">
+								저장된 문장이 없습니다.
+							</Table.Cell>
 						</Table.Row>
-					</Table.Header>
-					<Table.Body>
-						{#if filteredSentences.length === 0}
-							<Table.Row>
-								<Table.Cell colspan={8} class="text-center text-muted-foreground py-8 text-sm">
-									저장된 문장이 없습니다.
+					{:else}
+						{#each filteredSentences as s (s.id)}
+							<Table.Row
+								class="hover:bg-muted/50 transition-colors cursor-pointer {selectedSentenceId === s.id ? 'bg-indigo-50 dark:bg-indigo-950/30' : ''}"
+								onclick={() => { selectedSentenceId = s.id; }}
+							>
+								<Table.Cell class="font-semibold text-muted-foreground text-xs">{s.id}</Table.Cell>
+								<Table.Cell class="text-xs font-mono">{s.lang}</Table.Cell>
+								<Table.Cell class="text-xs text-muted-foreground max-w-48 truncate" title={s.voice ?? ''}>{s.voice ?? '-'}</Table.Cell>
+								<Table.Cell class="text-xs text-center font-semibold">{s.speed ?? '1.0'}</Table.Cell>
+								<Table.Cell class="text-sm leading-relaxed break-words">{s.sent}</Table.Cell>
+								<Table.Cell class="text-xs text-muted-foreground whitespace-nowrap">
+									{new Date(s.createdAt).toLocaleString('ko-KR')}
+								</Table.Cell>
+							<Table.Cell class="sticky right-20 bg-background z-10 shadow-[-1px_0_0_0_var(--border)]">
+								<Button
+									size="sm"
+									variant="outline"
+									disabled={!s.file_tts}
+									onclick={(e) => { e.stopPropagation(); playAudio(s.file_tts); }}
+								>
+									<Play class="size-4" />
+								</Button>
+							</Table.Cell>
+							<Table.Cell class="sticky right-0 bg-background z-10 shadow-[-1px_0_0_0_var(--border)]">
+									<Button
+										size="sm"
+										variant="destructive"
+										onclick={(e) => { e.stopPropagation(); handleDelete(s.id); }}
+									>
+										삭제
+									</Button>
 								</Table.Cell>
 							</Table.Row>
-						{:else}
-							{#each filteredSentences as s (s.id)}
-								<Table.Row
-									class="hover:bg-muted/50 transition-colors cursor-pointer {selectedSentenceId === s.id ? 'bg-indigo-50 dark:bg-indigo-950/30' : ''}"
-									onclick={() => { selectedSentenceId = s.id; }}
-								>
-									<Table.Cell class="font-semibold text-muted-foreground text-xs">{s.id}</Table.Cell>
-									<Table.Cell class="text-xs font-mono">{s.lang}</Table.Cell>
-									<Table.Cell class="text-xs text-muted-foreground max-w-48 truncate" title={s.voice ?? ''}>{s.voice ?? '-'}</Table.Cell>
-									<Table.Cell class="text-xs text-center font-semibold">{s.speed ?? '1.0'}</Table.Cell>
-									<Table.Cell class="text-sm leading-relaxed">{s.sent}</Table.Cell>
-									<Table.Cell class="text-xs text-muted-foreground whitespace-nowrap">
-										{new Date(s.createdAt).toLocaleString('ko-KR')}
-									</Table.Cell>
-									<Table.Cell>
-										<Button
-											size="sm"
-											variant="outline"
-											disabled={!s.file_tts}
-											onclick={(e) => { e.stopPropagation(); playAudio(s.file_tts); }}
-										>
-											<Play class="size-4" />
-										</Button>
-									</Table.Cell>
-									<Table.Cell>
-										<Button
-											size="sm"
-											variant="destructive"
-											onclick={(e) => { e.stopPropagation(); handleDelete(s.id); }}
-										>
-											삭제
-										</Button>
-									</Table.Cell>
-								</Table.Row>
-							{/each}
-						{/if}
-					</Table.Body>
-				</Table.Root>
-			</div>
+						{/each}
+					{/if}
+				</Table.Body>
+			</Table.Root>
+		</div>
 		</Card.Content>
 	</Card.Root>
 
@@ -373,6 +423,13 @@
 		<div class="bg-destructive/10 border-destructive/20 text-destructive flex items-start gap-2 rounded-lg border p-4 text-sm">
 			<AlertTriangle class="size-4 shrink-0 mt-0.5" />
 			<div>{errorMessage}</div>
+		</div>
+	{/if}
+
+	{#if successMessage}
+		<div class="bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400 flex items-start gap-2 rounded-lg border p-4 text-sm">
+			<Sparkles class="size-4 shrink-0 mt-0.5" />
+			<div>{successMessage}</div>
 		</div>
 	{/if}
 
