@@ -1,8 +1,8 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { db } from '$lib/server/db';
-import { sentences } from '$lib/server/db/schema';
-import { eq, like, desc, and } from 'drizzle-orm';
+import { sentences, sentences_tran } from '$lib/server/db/schema';
+import { eq, like, desc, and, inArray } from 'drizzle-orm';
 import fs from 'fs';
 import path from 'path';
 import type { Actions, PageServerLoad } from './$types';
@@ -80,8 +80,25 @@ export const load = (async ({ locals, url, depends }) => {
 			.limit(100);
 	}
 
+	// 각 문장에 대한 번역 데이터 조회
+	const sentenceIds = sentenceRows.map(s => s.id);
+	const translations = sentenceIds.length > 0
+		? await db
+			.select()
+			.from(sentences_tran)
+			.where(inArray(sentences_tran.id, sentenceIds))
+		: [];
+
+	// 문장별 번역 데이터 매핑
+	const translationMap = new Map(translations.map(t => [t.id, t]));
+	const sentencesWithTrans = sentenceRows.map(s => ({
+		...s,
+		tran: translationMap.get(s.id)?.sent || null,
+		tranLang: translationMap.get(s.id)?.lang || null
+	}));
+
 	return {
-		sentences: sentenceRows,
+		sentences: sentencesWithTrans,
 		searchQuery,
 		imgFilter,
 		imgBaseUrl

@@ -10,7 +10,8 @@
 		Database, 
 		AlertTriangle, 
 		Search,
-		X
+		X,
+		Languages
 	} from '@lucide/svelte';
 
 	let { data, form }: PageProps = $props();
@@ -183,6 +184,22 @@
 									>
 										삭제
 									</Button>
+								</Table.Cell>
+							</Table.Row>
+							<!-- 번역 결과 행 -->
+							<Table.Row class="bg-muted/20">
+								<Table.Cell colspan={2} class="text-xs font-semibold text-muted-foreground pl-4">
+									{#if s.tranLang}
+										<span class="inline-flex items-center gap-1">
+											<Languages class="size-3" />
+											{s.tranLang}
+										</span>
+									{:else}
+										<span class="text-muted-foreground/50">미번역</span>
+									{/if}
+								</Table.Cell>
+								<Table.Cell class="text-sm leading-relaxed break-words text-muted-foreground" colspan={4}>
+									{s.tran || '-'}
 								</Table.Cell>
 							</Table.Row>
 							<!-- 이미지 표시 행 -->
