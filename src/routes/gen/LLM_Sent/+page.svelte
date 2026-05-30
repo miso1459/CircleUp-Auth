@@ -30,7 +30,7 @@
 
 	type LangCode = keyof typeof LANG_MAP;
 
-	let prompt = $state('영어 회화에서 자주 쓰이는 유용한 문장 10개 만들어줘.');
+	let prompt = $state('');
 	let lang = $state<LangCode>('en-US');
 	let loading = $state(false);
 	let errorMessage = $state<string | null>(null);

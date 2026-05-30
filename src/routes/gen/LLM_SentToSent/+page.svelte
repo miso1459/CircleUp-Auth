@@ -30,7 +30,7 @@
 
 	type LangCode = keyof typeof LANG_MAP;
 
-	let prompt = $state('입력된 문장을 더 자연스럽고 유창한 표현으로 바꿔줘.');
+	let prompt = $state('');
 	let sentence = $state('');
 	let lang = $state<LangCode>('en-US');
 	let loading = $state(false);

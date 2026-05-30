@@ -32,3 +32,6 @@ project.inlang/cache/
 static/
 
 graphify-out/
+.omo/
+tmp*
+dev*.log
