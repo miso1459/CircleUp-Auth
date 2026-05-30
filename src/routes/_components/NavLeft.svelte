@@ -196,6 +196,15 @@
 								{/snippet}
 							</NavigationMenu.Link>
 						</li>
+						<li>
+							<NavigationMenu.Link>
+								{#snippet child({ props })}
+									<a href={resolve('/gen/Translation' as Pathname)} data-sveltekit-reload {...props}>
+										Translation
+									</a>
+								{/snippet}
+							</NavigationMenu.Link>
+						</li>
 					</ul>
 				</NavigationMenu.Content>
 			</NavigationMenu.Item>
