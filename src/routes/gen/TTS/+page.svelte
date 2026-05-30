@@ -92,6 +92,15 @@
 		}
 	});
 
+	$effect(() => {
+		if (bulkLoading) {
+			const interval = setInterval(() => {
+				invalidate('app:sentences');
+			}, 2000);
+			return () => clearInterval(interval);
+		}
+	});
+
 	let audioUrl = $state('');
 	let audioPlayer = $state<HTMLAudioElement | null>(null);
 
