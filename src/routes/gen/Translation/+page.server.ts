@@ -76,6 +76,7 @@ export const load = (async ({ locals, url, depends }) => {
 			.from(sentences_tran);
 		
 		if (translatedIds.length > 0) {
+			const ids = translatedIds.map(t => t.id);
 			sentenceRows = await db
 				.select({
 					id: sentences.id,
@@ -89,7 +90,7 @@ export const load = (async ({ locals, url, depends }) => {
 				.from(sentences)
 				.where(and(
 					like(sentences.sent, `%${searchQuery}%`),
-					inArray(sentences.id, translatedIds.map(t => t.id))
+					inArray(sentences.id, ids)
 				))
 				.orderBy(desc(sentences.id))
 				.limit(100);
@@ -103,6 +104,7 @@ export const load = (async ({ locals, url, depends }) => {
 			.from(sentences_tran);
 		
 		if (translatedIds.length > 0) {
+			const ids = translatedIds.map(t => t.id);
 			sentenceRows = await db
 				.select({
 					id: sentences.id,
@@ -116,7 +118,7 @@ export const load = (async ({ locals, url, depends }) => {
 				.from(sentences)
 				.where(and(
 					like(sentences.sent, `%${searchQuery}%`),
-					notInArray(sentences.id, translatedIds.map(t => t.id))
+					notInArray(sentences.id, ids)
 				))
 				.orderBy(desc(sentences.id))
 				.limit(100);
