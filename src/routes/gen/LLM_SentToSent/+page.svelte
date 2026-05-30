@@ -260,7 +260,10 @@
 							</Table.Row>
 						{:else}
 							{#each sentences as s (s.id)}
-								<Table.Row class="hover:bg-muted/50 transition-colors">
+								<Table.Row
+									class="hover:bg-muted/50 transition-colors cursor-pointer"
+									onclick={() => { sentence = s.sent; }}
+								>
 									<Table.Cell class="font-semibold text-muted-foreground text-xs">{s.id}</Table.Cell>
 									<Table.Cell class="text-xs font-mono">{s.lang}</Table.Cell>
 									<Table.Cell class="text-xs text-muted-foreground max-w-48 truncate" title={s.voice}>{s.voice}</Table.Cell>
@@ -270,7 +273,11 @@
 										{new Date(s.createdAt).toLocaleString('ko-KR')}
 									</Table.Cell>
 									<Table.Cell>
-										<Button size="sm" variant="destructive" onclick={() => handleDelete(s.id)}>
+										<Button
+											size="sm"
+											variant="destructive"
+											onclick={(e) => { e.stopPropagation(); handleDelete(s.id); }}
+										>
 											삭제
 										</Button>
 									</Table.Cell>
