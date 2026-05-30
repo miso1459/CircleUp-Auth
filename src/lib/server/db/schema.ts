@@ -37,5 +37,14 @@ export const sentences = sqliteTable('sentences', {
         .$defaultFn(() => new Date())
 });
 
+export const sentences_tran = sqliteTable('sentences_tran', {
+    id: integer('id').primaryKey(),
+    lang: text('lang').notNull(),
+    sent: text('sent').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+        .notNull()
+        .$defaultFn(() => new Date())
+});
+
 export * from './auth.schema';
 
