@@ -140,9 +140,7 @@
 		}
 	}
 
-	function handleFilterChange() {
-		// 클라이언트 사이드 필터링은 reactive derived가 처리
-	}
+
 </script>
 
 <div class="space-y-6 p-6">
@@ -217,15 +215,15 @@
 						<div class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">TTS 필터</div>
 						<div class="flex gap-4">
 							<label class="flex items-center gap-2 text-sm">
-								<input type="radio" name="ttsFilter" value="all" bind:group={ttsFilter} onchange={handleFilterChange} />
+								<input type="radio" name="ttsFilter" value="all" bind:group={ttsFilter} />
 								전체
 							</label>
 							<label class="flex items-center gap-2 text-sm">
-								<input type="radio" name="ttsFilter" value="generated" bind:group={ttsFilter} onchange={handleFilterChange} />
+								<input type="radio" name="ttsFilter" value="generated" bind:group={ttsFilter} />
 								생성
 							</label>
 							<label class="flex items-center gap-2 text-sm">
-								<input type="radio" name="ttsFilter" value="not_generated" bind:group={ttsFilter} onchange={handleFilterChange} />
+								<input type="radio" name="ttsFilter" value="not_generated" bind:group={ttsFilter} />
 								미생성
 							</label>
 						</div>
@@ -322,7 +320,7 @@
 					<Table.Body>
 						{#if filteredSentences.length === 0}
 							<Table.Row>
-								<Table.Cell colspan="8" class="text-center text-muted-foreground py-8 text-sm">
+								<Table.Cell colspan={8} class="text-center text-muted-foreground py-8 text-sm">
 									저장된 문장이 없습니다.
 								</Table.Cell>
 							</Table.Row>
