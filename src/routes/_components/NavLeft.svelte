@@ -7,7 +7,7 @@
 </script>
 
 <NavigationMenu.Root class="relative" viewport={false}>
-	<NavigationMenu.List>
+	<NavigationMenu.List class="flex flex-row overflow-x-auto" style="scrollbar-width: thin; scrollbar-color: var(--muted) transparent;">
 		<NavigationMenu.Item>
 			<NavigationMenu.Link href={resolve('/' as Pathname)} data-sveltekit-reload>
 				Home
