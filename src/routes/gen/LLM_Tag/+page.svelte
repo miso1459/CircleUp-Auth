@@ -25,7 +25,7 @@
 
 	let prompt = $state('');
 	let selectedSentenceId = $state<number | null>(null);
-	let tagFilter = $state<'all' | 'generated' | 'not-generated'>('not-generated');
+	let tagFilter = $state<'all' | 'generated' | 'not-generated'>((data.tagFilter as 'all' | 'generated' | 'not-generated') || 'not-generated');
 	let loading = $state(false);
 	let batchLoading = $state(false);
 	let clearTagLoading = $state(false);
