@@ -293,7 +293,15 @@
 				</div>
 			</Card.Content>
 		</Card.Root>
-	</div>
+</div>
+
+	<!-- 일괄 생성 폼 -->
+	<form method="POST" action="?/processAll" use:enhance={onSubmitAll} id="batch-tts-form">
+		<input type="hidden" name="ids" value={filteredSentences.map(s => s.id).join(',')} />
+		<input type="hidden" name="voice" value={selectedVoice} />
+		<input type="hidden" name="speed" value={rate} />
+		<input type="hidden" name="lang" value={selectedLanguage} />
+	</form>
 
 	<!-- 저장된 문장 -->
 	<Card.Root class="border-muted">
@@ -320,6 +328,25 @@
 					<input type="radio" name="ttsFilter" value="not_generated" bind:group={ttsFilter} onchange={handleSearch} />
 					미생성
 				</label>
+				{#if ttsFilter === 'not_generated'}
+					<div class="ml-auto shrink-0">
+						<Button
+							type="submit"
+							form="batch-tts-form"
+							size="sm"
+							class="bg-indigo-600 hover:bg-indigo-700 text-white"
+							disabled={bulkLoading || filteredSentences.length === 0}
+						>
+							{#if bulkLoading}
+								<Loader2 class="size-4 animate-spin mr-2" />
+								일괄 생성 중...
+							{:else}
+								<Sparkles class="size-4 mr-2" />
+								일괄 생성 ({filteredSentences.length}건)
+							{/if}
+						</Button>
+					</div>
+				{/if}
 			</div>
 
 			<!-- 검색바 -->
@@ -338,33 +365,6 @@
 					<X class="size-4" />
 				</Button>
 			</div>
-
-			<!-- 미생성 필터일 때 일괄 생성 버튼 -->
-			{#if ttsFilter === 'not_generated'}
-				<form method="POST" action="?/processAll" use:enhance={onSubmitAll} class="flex items-center gap-3 rounded-lg border border-indigo-200 bg-indigo-50/50 dark:border-indigo-800 dark:bg-indigo-950/20 p-3">
-					<input type="hidden" name="ids" value={filteredSentences.map(s => s.id).join(',')} />
-					<input type="hidden" name="voice" value={selectedVoice} />
-					<input type="hidden" name="speed" value={rate} />
-					<input type="hidden" name="lang" value={selectedLanguage} />
-					<Button
-						type="submit"
-						size="sm"
-						class="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md"
-						disabled={bulkLoading || filteredSentences.length === 0}
-					>
-						{#if bulkLoading}
-							<Loader2 class="size-4 animate-spin mr-2" />
-							TTS 일괄 생성 중...
-						{:else}
-							<Sparkles class="size-4 mr-2" />
-							일괄 생성
-						{/if}
-					</Button>
-					<span class="text-xs text-muted-foreground">
-						미생성 문장 {filteredSentences.length}개 대상
-					</span>
-				</form>
-			{/if}
 
 		<!-- 문장 테이블 -->
 		<div class="rounded-md border overflow-x-auto">
