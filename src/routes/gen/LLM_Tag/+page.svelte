@@ -6,90 +6,105 @@
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
-	import * as Select from '$lib/components/ui/select/index.js';
 	import { invalidate } from '$app/navigation';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { 
 		Loader2, 
 		Sparkles, 
 		FileJson, 
-		Languages, 
+		Tag, 
 		Database, 
 		AlertTriangle, 
 		CheckCircle2,
 		Search,
-		X
+		X,
+		Trash2
 	} from '@lucide/svelte';
 
 	let { data, form }: PageProps = $props();
 
-	const LANG_MAP = {
-		'en-US': '영어 (English)',
-		'ko-KR': '한국어 (Korean)'
-	} as const;
-
-	type LangCode = keyof typeof LANG_MAP;
-
 	let prompt = $state('');
-	let sentence = $state('');
-	let lang = $state<LangCode>('en-US');
+	let selectedSentenceId = $state<number | null>(null);
+	let tagFilter = $state<'all' | 'generated' | 'not-generated'>('all');
 	let loading = $state(false);
+	let batchLoading = $state(false);
+	let clearTagLoading = $state(false);
 	let errorMessage = $state<string | null>(null);
-
-	let generatedRows = $state<{ index: number; original: string; statement: string }[]>([]);
-	let insertedCount = $state<number | null>(null);
-	let duplicateCount = $state<number | null>(null);
-
-	// 초기 로드 시 DB에서 불러온 프롬프트와 언어를 할당하되, 로컬에서 입력할 때는 종속적 반응을 제거
-	$effect(() => {
-		untrack(() => {
-			if (data.savedPrompt) {
-				prompt = data.savedPrompt;
-			}
-			if (data.savedLang) {
-				lang = data.savedLang as LangCode;
-			}
-		});
-	});
-
-	$effect(() => {
-		if (form?.success) {
-			generatedRows = form.rows ?? [];
-			insertedCount = form.insertedCount ?? 0;
-			duplicateCount = form.duplicateCount ?? 0;
-			errorMessage = null;
-		}
-		if (form?.error) {
-			errorMessage = form.error;
-		}
-	});
-
-	function onSubmit() {
-		loading = true;
-		errorMessage = null;
-		insertedCount = null;
-		duplicateCount = null;
-		return async ({ update }: { update: () => Promise<void> }) => {
-			await update();
-			loading = false;
-		};
-	}
-
-	const langLabel = $derived(LANG_MAP[lang] || '선택');
+	let successMessage = $state<string | null>(null);
+	let clearTagId = $state<number | null>(null);
 
 	let searchQuery = $state(data.searchQuery);
 
 	const sentences = $derived(data.sentences);
 
+	const filteredSentences = $derived(sentences.filter((s) => {
+		if (tagFilter === 'all') return true;
+		const hasTag = s.tag && s.tag !== '';
+		if (tagFilter === 'generated') return hasTag;
+		return !hasTag; // not-generated
+	}));
+
+	// 초기 로드 시 DB에서 불러온 프롬프트를 할당하되, 로컬에서 입력할 때는 종속적 반응을 제거
+	$effect(() => {
+		untrack(() => {
+			if (data.savedPrompt) {
+				prompt = data.savedPrompt;
+			}
+		});
+	});
+
+	$effect(() => {
+		if (form?.error) {
+			errorMessage = form.error;
+		}
+		if (form?.success) {
+			errorMessage = null;
+			if (form?.successCount !== undefined) {
+				successMessage = `태그 생성 완료: ${form.successCount}건 성공`;
+				if (form?.errorCount && form.errorCount > 0) {
+					successMessage += `, ${form.errorCount}건 실패`;
+				}
+			} else {
+				successMessage = null;
+			}
+		}
+	});
+
+	function onGenerateTag() {
+		loading = true;
+		errorMessage = null;
+		return async ({ result, update }: { result: { type: string; data?: Record<string, unknown> }; update: () => Promise<void> }) => {
+			await update();
+			loading = false;
+			if (result?.type === 'success' && result?.data?.success) {
+				await invalidate('app:sentences');
+			}
+		};
+	}
+
+	function onBatchGenerateTags() {
+		batchLoading = true;
+		errorMessage = null;
+		return async ({ result, update }: { result: { type: string; data?: Record<string, unknown> }; update: () => Promise<void> }) => {
+			await update();
+			batchLoading = false;
+			if (result?.type === 'success' && result?.data?.success) {
+				await invalidate('app:sentences');
+			}
+		};
+	}
+
 	function handleSearch() {
-		const params = searchQuery.trim() ? `?search=${encodeURIComponent(searchQuery)}` : '';
-		window.location.href = `/gen/LLM_SentToSent${params}`;
+		const searchParam = searchQuery.trim() ? `search=${encodeURIComponent(searchQuery)}` : '';
+		const filterParam = `tagFilter=${tagFilter}`;
+		const params = searchParam ? `?${filterParam}&${searchParam}` : `?${filterParam}`;
+		window.location.href = `/gen/LLM_Tag${params}`;
 	}
 
 	async function handleDelete(id: number) {
 		if (!confirm('삭제하시겠습니까?')) return;
 		try {
-			const res = await fetch('/gen/LLM_SentToSent', {
+			const res = await fetch('/gen/LLM_Tag', {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ id })
@@ -103,6 +118,29 @@
 			errorMessage = e instanceof Error ? e.message : '알 수 없는 오류';
 		}
 	}
+
+	function onClearTag() {
+		clearTagLoading = true;
+		errorMessage = null;
+		return async ({ result, update }: { result: { type: string; data?: Record<string, unknown> }; update: () => Promise<void> }) => {
+			await update();
+			clearTagLoading = false;
+			clearTagId = null;
+			if (result?.type === 'success' && result?.data?.success) {
+				await invalidate('app:sentences');
+			}
+		};
+	}
+
+	function handleClearTag(id: number) {
+		if (!confirm('태그를 삭제하시겠습니까?')) return;
+		clearTagId = id;
+		// hidden form을 통해 제출
+		const form = document.getElementById('clear-tag-form') as HTMLFormElement;
+		if (form) {
+			form.requestSubmit();
+		}
+	}
 </script>
 
 <div class="space-y-6 p-6">
@@ -110,10 +148,10 @@
 	<div class="space-y-1">
 		<h1 class="flex items-center gap-2 text-2xl font-bold tracking-tight">
 			<Sparkles class="size-6 text-indigo-500" />
-			LLM Sentence To Sentence
+			LLM Tag Generation
 		</h1>
 		<p class="text-muted-foreground text-sm">
-			입력한 문장을 Google Gemini API를 활용하여 프롬프트에 따라 변환하고 데이터베이스에 저장합니다.
+			선택한 문장에 대해 Google Gemini API를 활용하여 태그를 생성하고 데이터베이스에 저장합니다.
 		</p>
 		{#if !data.geminiConfigured}
 			<div class="bg-destructive/10 border-destructive/20 text-destructive flex items-start gap-2 rounded-lg border p-3.5 text-sm mt-3">
@@ -121,7 +159,7 @@
 				<div>
 					<p class="font-semibold">Gemini API Key 미설정</p>
 					<p class="text-muted-foreground mt-0.5">
-						<code>GEMINI_API_KEY</code>가 설정되지 않았습니다. 문장을 생성하려면 <code>.env</code> 파일에 API 키를 추가해 주세요.
+						<code>GEMINI_API_KEY</code>가 설정되지 않았습니다. 태그를 생성하려면 <code>.env</code> 파일에 API 키를 추가해 주세요.
 					</p>
 				</div>
 			</div>
@@ -129,86 +167,92 @@
 	</div>
 
 	<!-- 메인 폼 및 설정 카드 -->
-	<div class="grid gap-6 lg:grid-cols-3">
-		<!-- 1. 문장 입력, 프롬프트 및 설정 (좌측 1/3) -->
-		<Card.Root class="lg:col-span-1 border-muted">
+	<div class="grid gap-6">
+		<!-- 선택된 문장 (전체 너비) -->
+		<Card.Root class="border-muted">
 			<Card.Header>
 				<Card.Title class="text-base flex items-center gap-2">
-					<Languages class="size-4 text-indigo-500" />
-					생성 설정
+					<Database class="size-4 text-indigo-500" />
+					선택된 문장
 				</Card.Title>
-				<Card.Description>변환할 문장과 언어를 설정합니다.</Card.Description>
-			</Card.Header>
-			<Card.Content>
-				<form method="POST" action="?/process" use:enhance={onSubmit} id="generator-form" class="space-y-4">
-					<input type="hidden" name="lang" value={lang} />
-					<input type="hidden" name="sentence" value={sentence} />
-					<div class="space-y-2">
-						<label for="sentence-input" class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">문장 1</label>
-						<Textarea
-							id="sentence-input"
-							form="generator-form"
-							name="sentence"
-							bind:value={sentence}
-							placeholder="변환할 문장을 입력하세요."
-							class="w-full min-h-20 resize-none border-muted focus-visible:ring-indigo-500 text-sm leading-relaxed"
-						/>
-					</div>
-					<div class="space-y-2">
-						<label for="lang-select" class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">대상 언어</label>
-						<Select.Root type="single" bind:value={lang}>
-							<Select.Trigger id="lang-select" class="h-10 w-full text-sm font-medium">
-								{langLabel}
-							</Select.Trigger>
-							<Select.Content>
-								<Select.Item value="en-US">영어 (English)</Select.Item>
-								<Select.Item value="ko-KR">한국어 (Korean)</Select.Item>
-							</Select.Content>
-						</Select.Root>
-					</div>
-
-					<div class="pt-2">
-						<Button
-							type="submit"
-							class="w-full py-5 text-sm font-semibold shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-all duration-200"
-							disabled={loading || !sentence.trim() || !prompt.trim() || !data.geminiConfigured}
-						>
-							{#if loading}
-								<Loader2 class="size-4 animate-spin mr-2" />
-								생성 및 저장 중...
-							{:else}
-								<Sparkles class="size-4 mr-2" />
-								문장 변환하기
-							{/if}
-						</Button>
-					</div>
-				</form>
-			</Card.Content>
-		</Card.Root>
-
-		<!-- 2. 프롬프트 입력 (우측 2/3) -->
-		<Card.Root class="lg:col-span-2 border-muted">
-			<Card.Header>
-				<Card.Title class="text-base flex items-center gap-2">
-					<FileJson class="size-4 text-indigo-500" />
-					프롬프트 지시사항
-				</Card.Title>
-				<Card.Description>Gemini가 입력된 문장을 어떻게 변환할지 구체적으로 지시합니다.</Card.Description>
+				<Card.Description>테이블에서 문장을 클릭하여 선택하세요.</Card.Description>
 			</Card.Header>
 			<Card.Content class="space-y-3">
-				<Textarea
-					form="generator-form"
-					name="prompt"
-					bind:value={prompt}
-					placeholder="예: 입력된 문장을 더 자연스럽고 유창한 영어 표현으로 변환해줘."
-					class="w-full min-h-40 resize-none border-muted focus-visible:ring-indigo-500 text-sm leading-relaxed"
-				/>
-				<p class="text-xs text-muted-foreground">
-					프롬프트 입력 완료 후 왼쪽의 <strong>[문장 변환하기]</strong> 버튼을 클릭하세요. 생성 시 기존 데이터베이스의 중복 문장은 자동으로 제외됩니다.
-				</p>
+				<div class="min-h-[6rem] rounded-lg border border-muted bg-muted/30 p-4 text-sm leading-relaxed">
+					{#if selectedSentenceId !== null}
+						{@const selected = sentences.find(s => s.id === selectedSentenceId)}
+						{#if selected}
+							<p class="font-medium">{selected.sent}</p>
+							<p class="text-xs text-muted-foreground mt-2">ID: {selected.id} | Lang: {selected.lang}</p>
+						{:else}
+							<p class="text-muted-foreground">문장을 찾을 수 없습니다.</p>
+						{/if}
+					{:else}
+						<p class="text-muted-foreground">문장을 선택해 주세요.</p>
+					{/if}
+				</div>
+
+				<!-- 태그 생성 설정 -->
+				<div class="flex items-center gap-3 pt-3 border-t">
+					<Button
+						type="submit"
+						form="tag-generate-form"
+						size="sm"
+						class="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md"
+						disabled={loading || selectedSentenceId === null || !prompt.trim()}
+					>
+						{#if loading}
+							<Loader2 class="size-4 animate-spin mr-2" />
+							생성 중...
+						{:else}
+							<Sparkles class="size-4 mr-2" />
+							Tag 생성하기
+						{/if}
+					</Button>
+				</div>
 			</Card.Content>
 		</Card.Root>
 	</div>
+
+	<!-- 숨겨진 태그 생성 폼 -->
+	<form method="POST" action="?/process" use:enhance={onGenerateTag} id="tag-generate-form">
+		<input type="hidden" name="selectedSentenceId" value={selectedSentenceId} />
+		<input type="hidden" name="prompt" value={prompt} />
+	</form>
+
+	<!-- 일괄 태그 생성 폼 -->
+	<form method="POST" action="?/batchGenerateTags" use:enhance={onBatchGenerateTags} id="batch-tag-generate-form">
+		<input type="hidden" name="prompt" value={prompt} />
+		<input type="hidden" name="ids" value={filteredSentences.map(s => s.id).join(',')} />
+	</form>
+
+	<!-- 태그 삭제 폼 -->
+	<form method="POST" action="?/clearTag" use:enhance={onClearTag} id="clear-tag-form">
+		<input type="hidden" name="sentenceId" value={clearTagId} />
+	</form>
+
+	<!-- 프롬프트 입력 -->
+	<Card.Root class="border-muted">
+		<Card.Header>
+			<Card.Title class="text-base flex items-center gap-2">
+				<FileJson class="size-4 text-indigo-500" />
+				프롬프트 지시사항
+			</Card.Title>
+			<Card.Description>Gemini가 문장에 어떤 태그를 생성할지 구체적으로 지시합니다.</Card.Description>
+		</Card.Header>
+		<Card.Content class="space-y-3">
+			<Textarea
+				form="tag-generate-form"
+				name="prompt"
+				bind:value={prompt}
+				placeholder="예: 입력된 문장에 적합한 태그를 3~5개 생성해줘."
+				class="w-full min-h-32 resize-none border-muted focus-visible:ring-indigo-500 text-sm leading-relaxed"
+			/>
+			<p class="text-xs text-muted-foreground">
+				프롬프트 입력 완료 후 위의 <strong>[Tag 생성하기]</strong> 버튼을 클릭하세요.
+			</p>
+		</Card.Content>
+	</Card.Root>
 
 	<!-- 저장된 문장 -->
 	<Card.Root class="border-muted">
@@ -220,6 +264,42 @@
 			<Card.Description>데이터베이스에 저장된 문장들입니다. (ID 역순, 최대 100개)</Card.Description>
 		</Card.Header>
 		<Card.Content class="space-y-4">
+			<!-- Tag 필터 및 일괄 태그 생성 -->
+			<div class="flex items-center gap-4 text-sm">
+				<span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">Tag 필터</span>
+				<label class="flex items-center gap-2">
+					<input type="radio" name="tagFilter" value="all" bind:group={tagFilter} onchange={handleSearch} />
+					전체
+				</label>
+				<label class="flex items-center gap-2">
+					<input type="radio" name="tagFilter" value="generated" bind:group={tagFilter} onchange={handleSearch} />
+					생성됨
+				</label>
+				<label class="flex items-center gap-2">
+					<input type="radio" name="tagFilter" value="not-generated" bind:group={tagFilter} onchange={handleSearch} />
+					미생성
+				</label>
+				{#if tagFilter === 'not-generated'}
+					<div class="ml-auto shrink-0">
+						<Button
+							type="submit"
+							form="batch-tag-generate-form"
+							size="sm"
+							class="bg-indigo-600 hover:bg-indigo-700 text-white"
+							disabled={batchLoading || filteredSentences.length === 0 || !prompt.trim()}
+						>
+							{#if batchLoading}
+								<Loader2 class="size-4 animate-spin mr-2" />
+								일괄 태그 생성 중...
+							{:else}
+								<Sparkles class="size-4 mr-2" />
+								일괄 태그 생성 ({filteredSentences.length}건)
+							{/if}
+						</Button>
+					</div>
+				{/if}
+			</div>
+
 			<!-- 검색바 -->
 			<div class="flex items-center gap-2">
 				<div class="relative flex-1">
@@ -237,42 +317,39 @@
 				</Button>
 			</div>
 
-			<!-- 문장 테이블 -->
-			<div class="rounded-md border">
+			<!-- 문장 테이블 (2행 레이아웃: 문장 행 + 태그 행) -->
+			<div class="rounded-md border overflow-x-auto">
 				<Table.Root>
 					<Table.Header>
 						<Table.Row>
 							<Table.Head class="w-16">ID</Table.Head>
-							<Table.Head class="w-16">Lang</Table.Head>
-							<Table.Head class="w-48">Voice</Table.Head>
-							<Table.Head class="w-16">Speed</Table.Head>
-							<Table.Head>문장</Table.Head>
+							<Table.Head class="w-20">Lang</Table.Head>
+							<Table.Head>문장 / 태그</Table.Head>
 							<Table.Head class="w-44">Created At</Table.Head>
-							<Table.Head class="w-20">삭제</Table.Head>
+							<Table.Head class="w-20 sticky right-0 bg-background z-10 shadow-[-1px_0_0_0_var(--border)]">삭제</Table.Head>
 						</Table.Row>
 					</Table.Header>
 					<Table.Body>
-						{#if sentences.length === 0}
+						{#if filteredSentences.length === 0}
 							<Table.Row>
-								<Table.Cell colspan="7" class="text-center text-muted-foreground py-8 text-sm">
+								<Table.Cell colspan={5} class="text-center text-muted-foreground py-8 text-sm">
 									저장된 문장이 없습니다.
 								</Table.Cell>
 							</Table.Row>
 						{:else}
-							{#each sentences as s (s.id)}
+							{#each filteredSentences as s (s.id)}
+								<!-- 원문 행 -->
 								<Table.Row
-									class="hover:bg-muted/50 transition-colors cursor-pointer"
-									onclick={() => { sentence = s.sent; }}
+									class="hover:bg-muted/50 transition-colors cursor-pointer {selectedSentenceId === s.id ? 'bg-indigo-50 dark:bg-indigo-950/30' : ''}"
+									onclick={() => { selectedSentenceId = s.id; }}
 								>
-									<Table.Cell class="font-semibold text-muted-foreground text-xs">{s.id}</Table.Cell>
-									<Table.Cell class="text-xs font-mono">{s.lang}</Table.Cell>
-									<Table.Cell class="text-xs text-muted-foreground max-w-48 truncate" title={s.voice}>{s.voice}</Table.Cell>
-									<Table.Cell class="text-xs text-center font-semibold">{s.speed ?? '1.0'}</Table.Cell>
-									<Table.Cell class="text-sm leading-relaxed">{s.sent}</Table.Cell>
-									<Table.Cell class="text-xs text-muted-foreground whitespace-nowrap">
+									<Table.Cell class="font-semibold text-muted-foreground text-xs align-top pt-3">{s.id}</Table.Cell>
+									<Table.Cell class="text-xs font-mono align-top pt-3">{s.lang}</Table.Cell>
+									<Table.Cell class="text-sm leading-relaxed break-words">{s.sent}</Table.Cell>
+									<Table.Cell class="text-xs text-muted-foreground whitespace-nowrap align-top pt-3">
 										{new Date(s.createdAt).toLocaleString('ko-KR')}
 									</Table.Cell>
-									<Table.Cell>
+									<Table.Cell class="sticky right-0 bg-background z-10 shadow-[-1px_0_0_0_var(--border)] align-top pt-2">
 										<Button
 											size="sm"
 											variant="destructive"
@@ -280,6 +357,33 @@
 										>
 											삭제
 										</Button>
+									</Table.Cell>
+								</Table.Row>
+								<!-- 태그 결과 행 -->
+								<Table.Row class="bg-muted/20">
+									<Table.Cell colspan={2} class="text-xs font-semibold text-muted-foreground pl-4">
+										<span class="inline-flex items-center gap-1">
+											<Tag class="size-3" />
+											태그
+										</span>
+									</Table.Cell>
+									<Table.Cell class="text-sm leading-relaxed break-words text-muted-foreground" colspan={2}>
+										{#if s.tag && s.tag !== ''}
+											{s.tag}
+										{:else}
+											<span class="text-muted-foreground/50">미생성</span>
+										{/if}
+									</Table.Cell>
+									<Table.Cell class="sticky right-0 bg-background z-10 shadow-[-1px_0_0_0_var(--border)]">
+										{#if s.tag && s.tag !== ''}
+											<Button
+												size="sm"
+												variant="destructive"
+												onclick={(e) => { e.stopPropagation(); handleClearTag(s.id); }}
+											>
+												<Trash2 class="size-3" />
+											</Button>
+										{/if}
 									</Table.Cell>
 								</Table.Row>
 							{/each}
@@ -298,68 +402,10 @@
 		</div>
 	{/if}
 
-	{#if insertedCount !== null && duplicateCount !== null}
-		<div class="bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-950/50 flex items-start gap-3 rounded-lg p-4 text-sm transition-all">
-			<CheckCircle2 class="size-5 text-indigo-500 shrink-0 mt-0.5" />
-			<div>
-				<h3 class="font-semibold text-indigo-900 dark:text-indigo-200">데이터베이스 저장 결과</h3>
-				<p class="text-indigo-700 dark:text-indigo-300 mt-1">
-					새로 생성된 문장 중 <strong class="text-indigo-900 dark:text-indigo-100">{insertedCount}</strong>개가 <code>sentences</code> 테이블에 저장되었습니다.
-					{#if duplicateCount > 0}
-						<span class="text-muted-foreground ml-1 font-normal text-xs">(중복으로 제외된 문장: {duplicateCount}개)</span>
-					{/if}
-				</p>
-			</div>
-		</div>
-	{/if}
-
-	<!-- 결과 테이블 및 JSON -->
-	{#if generatedRows.length > 0}
-		<div class="grid gap-6 lg:grid-cols-3">
-			<!-- 결과 문장 테이블 (2/3) -->
-			<Card.Root class="lg:col-span-2 border-muted">
-				<Card.Header>
-					<Card.Title class="text-base flex items-center gap-2">
-						<Database class="size-4 text-indigo-500" />
-						생성된 문장 목록
-					</Card.Title>
-					<Card.Description>Gemini가 생성해 낸 문장들입니다.</Card.Description>
-				</Card.Header>
-				<Card.Content>
-					<div class="rounded-md border">
-						<Table.Root>
-							<Table.Header>
-								<Table.Row>
-									<Table.Head class="w-16">번호</Table.Head>
-									<Table.Head>문장 (Statement)</Table.Head>
-								</Table.Row>
-							</Table.Header>
-							<Table.Body>
-								{#each generatedRows as row (row.index)}
-									<Table.Row class="hover:bg-muted/50 transition-colors">
-										<Table.Cell class="font-semibold text-muted-foreground">{row.index}</Table.Cell>
-										<Table.Cell class="font-medium text-foreground text-sm leading-relaxed">{row.statement}</Table.Cell>
-									</Table.Row>
-								{/each}
-							</Table.Body>
-						</Table.Root>
-					</div>
-				</Card.Content>
-			</Card.Root>
-
-			<!-- 원본 JSON 뷰 (1/3) -->
-			<Card.Root class="lg:col-span-1 border-muted flex flex-col h-full">
-				<Card.Header>
-					<Card.Title class="text-base flex items-center gap-2">
-						<FileJson class="size-4 text-indigo-500" />
-						Gemini RAW JSON
-					</Card.Title>
-					<Card.Description>LLM이 반환한 데이터의 원본 JSON 결과입니다.</Card.Description>
-				</Card.Header>
-				<Card.Content class="flex-1 flex flex-col">
-					<pre class="bg-muted/50 dark:bg-muted/30 max-h-95 overflow-auto rounded-lg border p-4 font-mono text-xs leading-relaxed text-indigo-600 dark:text-indigo-400 select-all flex-1">{JSON.stringify(generatedRows, null, 2)}</pre>
-				</Card.Content>
-			</Card.Root>
+	{#if successMessage}
+		<div class="bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400 flex items-start gap-2 rounded-lg border p-4 text-sm">
+			<CheckCircle2 class="size-4 shrink-0 mt-0.5" />
+			<div>{successMessage}</div>
 		</div>
 	{/if}
 </div>
