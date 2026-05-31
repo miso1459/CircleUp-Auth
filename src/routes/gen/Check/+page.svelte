@@ -11,7 +11,8 @@
 		AlertTriangle, 
 		Search,
 		X,
-		Languages
+		Languages,
+		Tag
 	} from '@lucide/svelte';
 
 	let { data, form }: PageProps = $props();
@@ -200,6 +201,22 @@
 								</Table.Cell>
 								<Table.Cell class="text-sm leading-relaxed break-words text-muted-foreground" colspan={4}>
 									{s.tran || '-'}
+								</Table.Cell>
+							</Table.Row>
+							<!-- 태그 결과 행 -->
+							<Table.Row class="bg-muted/20">
+								<Table.Cell colspan={2} class="text-xs font-semibold text-muted-foreground pl-4">
+									<span class="inline-flex items-center gap-1">
+										<Tag class="size-3" />
+										태그
+									</span>
+								</Table.Cell>
+								<Table.Cell class="text-sm leading-relaxed break-words text-muted-foreground" colspan={4}>
+									{#if s.tag && s.tag !== ''}
+										{s.tag}
+									{:else}
+										<span class="text-muted-foreground/50">미생성</span>
+									{/if}
 								</Table.Cell>
 							</Table.Row>
 							<!-- 이미지 표시 행 -->
