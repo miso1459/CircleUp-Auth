@@ -339,7 +339,7 @@
 				</Button>
 			</div>
 
-			<!-- 미생성 필터일 때 전체 생성 버튼 -->
+			<!-- 미생성 필터일 때 일괄 생성 버튼 -->
 			{#if ttsFilter === 'not_generated'}
 				<form method="POST" action="?/processAll" use:enhance={onSubmitAll} class="flex items-center gap-3 rounded-lg border border-indigo-200 bg-indigo-50/50 dark:border-indigo-800 dark:bg-indigo-950/20 p-3">
 					<input type="hidden" name="ids" value={filteredSentences.map(s => s.id).join(',')} />
@@ -357,7 +357,7 @@
 							TTS 일괄 생성 중...
 						{:else}
 							<Sparkles class="size-4 mr-2" />
-							전체 생성
+							일괄 생성
 						{/if}
 					</Button>
 					<span class="text-xs text-muted-foreground">
