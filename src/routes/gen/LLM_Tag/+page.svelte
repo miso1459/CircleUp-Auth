@@ -167,9 +167,9 @@
 	</div>
 
 	<!-- 메인 폼 및 설정 카드 -->
-	<div class="grid gap-6 lg:grid-cols-5">
-		<!-- 선택된 문장 (좌측 2/5) -->
-		<Card.Root class="lg:col-span-2 border-muted">
+	<div class="grid gap-6 sm:grid-cols-3">
+		<!-- 선택된 문장 (좌측 1/3) -->
+		<Card.Root class="sm:col-span-1 border-muted">
 			<Card.Header>
 				<Card.Title class="text-base flex items-center gap-2">
 					<Database class="size-4 text-indigo-500" />
@@ -193,12 +193,11 @@
 				</div>
 
 				<!-- 태그 생성 설정 -->
-				<div class="flex items-center gap-3 pt-3 border-t">
+				<div class="pt-2">
 					<Button
 						type="submit"
 						form="tag-generate-form"
-						size="sm"
-						class="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md"
+						class="w-full py-5 text-sm font-semibold shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-all duration-200"
 						disabled={loading || selectedSentenceId === null || !prompt.trim()}
 					>
 						{#if loading}
@@ -213,8 +212,8 @@
 			</Card.Content>
 		</Card.Root>
 
-		<!-- 프롬프트 입력 (우측 3/5) -->
-		<Card.Root class="lg:col-span-3 border-muted">
+		<!-- 프롬프트 입력 (우측 2/3) -->
+		<Card.Root class="sm:col-span-2 border-muted">
 			<Card.Header>
 				<Card.Title class="text-base flex items-center gap-2">
 					<FileJson class="size-4 text-indigo-500" />
@@ -228,10 +227,10 @@
 					name="prompt"
 					bind:value={prompt}
 					placeholder="예: 입력된 문장에 적합한 태그를 3~5개 생성해줘."
-					class="w-full min-h-32 resize-none border-muted focus-visible:ring-indigo-500 text-sm leading-relaxed"
+					class="w-full min-h-40 resize-none border-muted focus-visible:ring-indigo-500 text-sm leading-relaxed"
 				/>
 				<p class="text-xs text-muted-foreground">
-					프롬프트 입력 완료 후 위의 <strong>[Tag 생성하기]</strong> 버튼을 클릭하세요.
+					프롬프트 입력 완료 후 왼쪽의 <strong>[Tag 생성하기]</strong> 버튼을 클릭하세요.
 				</p>
 			</Card.Content>
 		</Card.Root>
