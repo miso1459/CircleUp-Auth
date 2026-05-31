@@ -14,7 +14,36 @@
 		const trigger = document.getElementById(triggerId);
 		if (!trigger) return '';
 		const rect = trigger.getBoundingClientRect();
-		return `position:fixed; top:${rect.bottom + 4}px; left:${rect.left}px; z-index:9999;`;
+		const viewportHeight = window.innerHeight;
+		const viewportWidth = window.innerWidth;
+		const MARGIN = 8;
+		const MAX_HEIGHT = viewportHeight - MARGIN * 2;
+
+		// 아래쪽 여유 공간
+		const spaceBelow = viewportHeight - rect.bottom - MARGIN;
+		// 위쪽 여유 공간
+		const spaceAbove = rect.top - MARGIN;
+
+		let topStyle: string;
+		let maxHeightStyle: string;
+
+		if (spaceBelow >= 100 || spaceBelow >= spaceAbove) {
+			// 아래로 열기
+			const availableHeight = Math.min(spaceBelow, MAX_HEIGHT);
+			topStyle = `top:${rect.bottom + 4}px`;
+			maxHeightStyle = `max-height:${availableHeight}px`;
+		} else {
+			// 위로 열기 (flip)
+			const availableHeight = Math.min(spaceAbove, MAX_HEIGHT);
+			topStyle = `bottom:${viewportHeight - rect.top + 4}px; top:auto`;
+			maxHeightStyle = `max-height:${availableHeight}px`;
+		}
+
+		// 오른쪽 넘침 방지
+		const left = Math.min(rect.left, viewportWidth - MARGIN);
+		const leftStyle = `left:${left}px`;
+
+		return `position:fixed; ${topStyle}; ${leftStyle}; z-index:9999; ${maxHeightStyle}; overflow-y:auto;`;
 	}
 
 	function handleTriggerEnter(menuId: string, triggerId: string) {
@@ -57,6 +86,8 @@
 					>Docs</NavigationMenu.Trigger>
 					{#if openMenu === 'docs'}
 						<div
+							role="menu"
+							tabindex="-1"
 							style={contentStyles['trigger-docs']}
 							class="rounded-md border bg-popover shadow-md"
 							onmouseenter={handleContentEnter}
@@ -85,6 +116,8 @@
 					>LLM</NavigationMenu.Trigger>
 					{#if openMenu === 'llm'}
 						<div
+							role="menu"
+							tabindex="-1"
 							style={contentStyles['trigger-llm']}
 							class="rounded-md border bg-popover shadow-md"
 							onmouseenter={handleContentEnter}
@@ -149,6 +182,8 @@
 					>Translation</NavigationMenu.Trigger>
 					{#if openMenu === 'translation'}
 						<div
+							role="menu"
+							tabindex="-1"
 							style={contentStyles['trigger-translation']}
 							class="rounded-md border bg-popover shadow-md"
 							onmouseenter={handleContentEnter}
@@ -177,6 +212,8 @@
 					>TTS</NavigationMenu.Trigger>
 					{#if openMenu === 'tts'}
 						<div
+							role="menu"
+							tabindex="-1"
 							style={contentStyles['trigger-tts']}
 							class="rounded-md border bg-popover shadow-md"
 							onmouseenter={handleContentEnter}
@@ -214,6 +251,8 @@
 					>Flip Clock</NavigationMenu.Trigger>
 					{#if openMenu === 'flipclock'}
 						<div
+							role="menu"
+							tabindex="-1"
 							style={contentStyles['trigger-flipclock']}
 							class="rounded-md border bg-popover shadow-md"
 							onmouseenter={handleContentEnter}
@@ -260,6 +299,8 @@
 					>Generator</NavigationMenu.Trigger>
 					{#if openMenu === 'generator'}
 						<div
+							role="menu"
+							tabindex="-1"
 							style={contentStyles['trigger-generator']}
 							class="rounded-md border bg-popover shadow-md"
 							onmouseenter={handleContentEnter}
