@@ -40,3 +40,5 @@ scenario*.png
 qa*.png
 baseline.png
 src/routes/qa-test*
+test-results/
+tests/
