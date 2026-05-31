@@ -25,7 +25,7 @@
 
 	let prompt = $state('');
 	let selectedSentenceId = $state<number | null>(null);
-	let tagFilter = $state<'all' | 'generated' | 'not-generated'>('all');
+	let tagFilter = $state<'all' | 'generated' | 'not-generated'>('not-generated');
 	let loading = $state(false);
 	let batchLoading = $state(false);
 	let clearTagLoading = $state(false);
@@ -167,9 +167,9 @@
 	</div>
 
 	<!-- 메인 폼 및 설정 카드 -->
-	<div class="grid gap-6">
-		<!-- 선택된 문장 (전체 너비) -->
-		<Card.Root class="border-muted">
+	<div class="grid gap-6 lg:grid-cols-5">
+		<!-- 선택된 문장 (좌측 2/5) -->
+		<Card.Root class="lg:col-span-2 border-muted">
 			<Card.Header>
 				<Card.Title class="text-base flex items-center gap-2">
 					<Database class="size-4 text-indigo-500" />
@@ -212,6 +212,29 @@
 				</div>
 			</Card.Content>
 		</Card.Root>
+
+		<!-- 프롬프트 입력 (우측 3/5) -->
+		<Card.Root class="lg:col-span-3 border-muted">
+			<Card.Header>
+				<Card.Title class="text-base flex items-center gap-2">
+					<FileJson class="size-4 text-indigo-500" />
+					프롬프트 지시사항
+				</Card.Title>
+				<Card.Description>Gemini가 문장에 어떤 태그를 생성할지 구체적으로 지시합니다.</Card.Description>
+			</Card.Header>
+			<Card.Content class="space-y-3">
+				<Textarea
+					form="tag-generate-form"
+					name="prompt"
+					bind:value={prompt}
+					placeholder="예: 입력된 문장에 적합한 태그를 3~5개 생성해줘."
+					class="w-full min-h-32 resize-none border-muted focus-visible:ring-indigo-500 text-sm leading-relaxed"
+				/>
+				<p class="text-xs text-muted-foreground">
+					프롬프트 입력 완료 후 위의 <strong>[Tag 생성하기]</strong> 버튼을 클릭하세요.
+				</p>
+			</Card.Content>
+		</Card.Root>
 	</div>
 
 	<!-- 숨겨진 태그 생성 폼 -->
@@ -231,28 +254,6 @@
 		<input type="hidden" name="sentenceId" value={clearTagId} />
 	</form>
 
-	<!-- 프롬프트 입력 -->
-	<Card.Root class="border-muted">
-		<Card.Header>
-			<Card.Title class="text-base flex items-center gap-2">
-				<FileJson class="size-4 text-indigo-500" />
-				프롬프트 지시사항
-			</Card.Title>
-			<Card.Description>Gemini가 문장에 어떤 태그를 생성할지 구체적으로 지시합니다.</Card.Description>
-		</Card.Header>
-		<Card.Content class="space-y-3">
-			<Textarea
-				form="tag-generate-form"
-				name="prompt"
-				bind:value={prompt}
-				placeholder="예: 입력된 문장에 적합한 태그를 3~5개 생성해줘."
-				class="w-full min-h-32 resize-none border-muted focus-visible:ring-indigo-500 text-sm leading-relaxed"
-			/>
-			<p class="text-xs text-muted-foreground">
-				프롬프트 입력 완료 후 위의 <strong>[Tag 생성하기]</strong> 버튼을 클릭하세요.
-			</p>
-		</Card.Content>
-	</Card.Root>
 
 	<!-- 저장된 문장 -->
 	<Card.Root class="border-muted">
