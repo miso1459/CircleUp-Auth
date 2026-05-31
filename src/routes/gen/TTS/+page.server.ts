@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { db } from '$lib/server/db';
 import { sentences } from '$lib/server/db/schema';
-import { eq, like, desc, or, and, isNotNull, ne, isNull } from 'drizzle-orm';
+import { eq, like, desc, or, and, isNotNull, ne, isNull, inArray } from 'drizzle-orm';
 import { generateTTS } from '$lib/server/tts';
 import { config } from '$lib/server/db/schema';
 import fs from 'fs';
@@ -202,94 +202,99 @@ export const actions = {
 		}
 
 		const formData = await request.formData();
+		const idsStr = String(formData.get('ids') || '');
 		const voice = String(formData.get('voice') ?? '').trim();
 		const speed = Number(formData.get('speed') ?? 1.0);
 		const lang = String(formData.get('lang') ?? '').trim();
 
-		try {
-			// 미생성 문장 조회 (file_tts IS NULL OR file_tts = '')
-			const records = await db
-				.select({
-					id: sentences.id,
-					sent: sentences.sent,
-					file_tts: sentences.file_tts,
-					lang: sentences.lang
-				})
-				.from(sentences)
-				.where(
-					or(
-						isNull(sentences.file_tts),
-						eq(sentences.file_tts, '')
-					)
-				)
-				.orderBy(desc(sentences.id))
-				.limit(100);
+		const ids = idsStr.split(',').map(Number).filter(Boolean);
 
-			if (records.length === 0) {
-				return fail(400, { error: '처리할 미생성 문장이 없습니다.' });
-			}
-
-			const ttsDir = env.TTS_DIR || process.env.TTS_DIR || 'static/TTS';
-			const ttsDirFull = path.resolve(process.cwd(), ttsDir);
-			let successCount = 0;
-			let failCount = 0;
-			const errors: string[] = [];
-
-			for (const record of records) {
-				try {
-					// 기존 MP3 파일 삭제
-					if (record.file_tts && record.file_tts.trim()) {
-						const filePath = path.join(ttsDirFull, record.file_tts);
-						try {
-							if (fs.existsSync(filePath)) {
-								fs.unlinkSync(filePath);
-							}
-						} catch (e) {
-							console.error('Failed to delete MP3 file:', filePath, e);
-						}
-					}
-
-					const ttsResult = await generateTTS({
-						text: record.sent,
-						languageCode: lang || record.lang,
-						voiceName: voice,
-						speakingRate: speed
-					});
-
-					await db
-						.update(sentences)
-						.set({ file_tts: ttsResult.filename, voice, speed: String(speed), lang: lang || record.lang })
-						.where(eq(sentences.id, record.id));
-
-					successCount++;
-				} catch (err) {
-					const message = err instanceof Error ? err.message : 'TTS 생성 중 오류가 발생했습니다.';
-					errors.push(`ID ${record.id}: ${message}`);
-					failCount++;
-				}
-			}
-
-			// TTS 설정 저장 (루프 밖에서 한 번만)
-			await db
-				.insert(config)
-				.values({ key: 'TTS_Lang', value: lang })
-				.onConflictDoUpdate({
-					target: config.key,
-					set: { value: lang }
-				});
-
-			await db
-				.insert(config)
-				.values({ key: 'TTS_Voice', value: voice })
-				.onConflictDoUpdate({
-					target: config.key,
-					set: { value: voice }
-				});
-
-			return { success: true, successCount, failCount, errors };
-		} catch (err) {
-			const message = err instanceof Error ? err.message : '전체 TTS 생성 중 오류가 발생했습니다.';
-			return fail(500, { error: message });
+		if (ids.length === 0) {
+			return fail(400, { error: '생성할 문장이 없습니다.' });
 		}
+
+		// 이미 생성된 문장 필터링
+		const existingRecords = await db
+			.select({ id: sentences.id, file_tts: sentences.file_tts })
+			.from(sentences)
+			.where(inArray(sentences.id, ids));
+
+		const existingTtsIds = new Set(
+			existingRecords.filter(r => r.file_tts && r.file_tts.trim()).map(r => r.id)
+		);
+		const ungeneratedIds = ids.filter(id => !existingTtsIds.has(id));
+
+		if (ungeneratedIds.length === 0) {
+			return fail(400, { error: '모든 문장의 TTS가 이미 생성되었습니다.' });
+		}
+
+		const records = await db
+			.select({
+				id: sentences.id,
+				sent: sentences.sent,
+				file_tts: sentences.file_tts,
+				lang: sentences.lang
+			})
+			.from(sentences)
+			.where(inArray(sentences.id, ungeneratedIds));
+
+		const ttsDir = env.TTS_DIR || process.env.TTS_DIR || 'static/TTS';
+		const ttsDirFull = path.resolve(process.cwd(), ttsDir);
+		let successCount = 0;
+		let errorCount = 0;
+		const errors: string[] = [];
+
+		for (const record of records) {
+			try {
+				// 기존 MP3 파일 삭제
+				if (record.file_tts && record.file_tts.trim()) {
+					const filePath = path.join(ttsDirFull, record.file_tts);
+					try {
+						if (fs.existsSync(filePath)) {
+							fs.unlinkSync(filePath);
+						}
+					} catch (e) {
+						console.error('Failed to delete MP3 file:', filePath, e);
+					}
+				}
+
+				const ttsResult = await generateTTS({
+					text: record.sent,
+					languageCode: lang || record.lang,
+					voiceName: voice,
+					speakingRate: speed
+				});
+
+				await db
+					.update(sentences)
+					.set({ file_tts: ttsResult.filename, voice, speed: String(speed), lang: lang || record.lang })
+					.where(eq(sentences.id, record.id));
+
+				successCount++;
+			} catch (err) {
+				const message = err instanceof Error ? err.message : 'TTS 생성 중 오류가 발생했습니다.';
+				errors.push(`ID ${record.id}: ${message}`);
+				errorCount++;
+			}
+		}
+
+		// TTS 설정 저장
+		await db
+			.insert(config)
+			.values({ key: 'TTS_Lang', value: lang })
+			.onConflictDoUpdate({
+				target: config.key,
+				set: { value: lang }
+			});
+
+		await db
+			.insert(config)
+			.values({ key: 'TTS_Voice', value: voice })
+			.onConflictDoUpdate({
+				target: config.key,
+				set: { value: voice }
+			});
+
+		return { success: true, successCount, errorCount };
 	}
 } satisfies Actions;

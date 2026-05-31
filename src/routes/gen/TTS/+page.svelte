@@ -136,11 +136,13 @@
 		return async ({ result, update }: { result: { type: string; data?: Record<string, unknown> }; update: () => Promise<void> }) => {
 			await update();
 			bulkLoading = false;
-			if (result?.type === 'success' && result?.data) {
-				const data = result.data;
-				const successCount = (data.successCount as number) ?? 0;
-				const failCount = (data.failCount as number) ?? 0;
-				successMessage = `TTS 생성 완료: ${successCount}개 성공, ${failCount}개 실패`;
+			if (result?.type === 'success' && result?.data?.success) {
+				const successCount = (result.data.successCount as number) ?? 0;
+				const errorCount = (result.data.errorCount as number) ?? 0;
+				successMessage = `TTS 생성 완료: ${successCount}건 성공`;
+				if (errorCount > 0) {
+					successMessage += `, ${errorCount}건 실패`;
+				}
 				await invalidate('app:sentences');
 			} else if (result?.type === 'failure') {
 				errorMessage = (result?.data?.error as string) || '일괄 생성 중 오류가 발생했습니다.';
@@ -340,6 +342,7 @@
 			<!-- 미생성 필터일 때 전체 생성 버튼 -->
 			{#if ttsFilter === 'not_generated'}
 				<form method="POST" action="?/processAll" use:enhance={onSubmitAll} class="flex items-center gap-3 rounded-lg border border-indigo-200 bg-indigo-50/50 dark:border-indigo-800 dark:bg-indigo-950/20 p-3">
+					<input type="hidden" name="ids" value={filteredSentences.map(s => s.id).join(',')} />
 					<input type="hidden" name="voice" value={selectedVoice} />
 					<input type="hidden" name="speed" value={rate} />
 					<input type="hidden" name="lang" value={selectedLanguage} />
