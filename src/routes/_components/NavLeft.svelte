@@ -7,7 +7,7 @@
 </script>
 
 <NavigationMenu.Root class="relative" viewport={false}>
-	<NavigationMenu.List class="flex flex-row overflow-x-auto" style="scrollbar-width: thin; scrollbar-color: var(--muted) transparent;">
+	<NavigationMenu.List class="scrollbar-container flex flex-row flex-wrap overflow-x-auto relative">
 		<NavigationMenu.Item>
 			<NavigationMenu.Link href={resolve('/' as Pathname)} data-sveltekit-reload>
 				Home
@@ -238,3 +238,20 @@
 		{/if}
 	</NavigationMenu.List>
 </NavigationMenu.Root>
+
+<style>
+	.scrollbar-container {
+		scrollbar-width: thin;
+		scrollbar-color: var(--muted) transparent;
+	}
+	.scrollbar-container::-webkit-scrollbar {
+		height: 6px;
+	}
+	.scrollbar-container::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	.scrollbar-container::-webkit-scrollbar-thumb {
+		background-color: var(--muted);
+		border-radius: 3px;
+	}
+</style>
