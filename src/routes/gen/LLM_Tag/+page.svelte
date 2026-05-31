@@ -167,9 +167,9 @@
 	</div>
 
 	<!-- 메인 폼 및 설정 카드 -->
-	<div class="grid gap-6 sm:grid-cols-3">
-		<!-- 선택된 문장 (좌측 1/3) -->
-		<Card.Root class="sm:col-span-1 border-muted">
+	<div class="grid gap-6 lg:grid-cols-3">
+		<!-- 생성 설정 (좌측 1/3) -->
+		<Card.Root class="lg:col-span-1 border-muted">
 			<Card.Header>
 				<Card.Title class="text-base flex items-center gap-2">
 					<Database class="size-4 text-indigo-500" />
@@ -213,7 +213,7 @@
 		</Card.Root>
 
 		<!-- 프롬프트 입력 (우측 2/3) -->
-		<Card.Root class="sm:col-span-2 border-muted">
+		<Card.Root class="lg:col-span-2 border-muted">
 			<Card.Header>
 				<Card.Title class="text-base flex items-center gap-2">
 					<FileJson class="size-4 text-indigo-500" />
@@ -222,13 +222,13 @@
 				<Card.Description>Gemini가 문장에 어떤 태그를 생성할지 구체적으로 지시합니다.</Card.Description>
 			</Card.Header>
 			<Card.Content class="space-y-3">
-				<Textarea
-					form="tag-generate-form"
-					name="prompt"
-					bind:value={prompt}
-					placeholder="예: 입력된 문장에 적합한 태그를 3~5개 생성해줘."
-					class="w-full min-h-40 resize-none border-muted focus-visible:ring-indigo-500 text-sm leading-relaxed"
-				/>
+			<Textarea
+				form="tag-generate-form"
+				name="prompt"
+				bind:value={prompt}
+				placeholder="예: 입력된 문장에 적합한 태그를 3~5개 생성해줘."
+				class="w-full resize-none border-muted focus-visible:ring-indigo-500 text-lg leading-relaxed max-h-[calc(5*1.5rem)] overflow-y-auto"
+			/>
 				<p class="text-xs text-muted-foreground">
 					프롬프트 입력 완료 후 왼쪽의 <strong>[Tag 생성하기]</strong> 버튼을 클릭하세요.
 				</p>

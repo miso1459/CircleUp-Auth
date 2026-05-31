@@ -22,7 +22,7 @@ export const load = (async ({ locals, url, depends }) => {
 
 	// URL 검색 파라미터 처리
 	const searchQuery = url.searchParams.get('search') || '';
-	const tagFilter = url.searchParams.get('tagFilter') || 'all';
+	const tagFilter = url.searchParams.get('tagFilter') || 'not-generated';
 
 	// sentences 테이블 조회 (tag 필드 포함, ID 역순, 최대 100개)
 	let sentenceRows;
