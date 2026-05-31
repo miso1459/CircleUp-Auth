@@ -7,7 +7,8 @@
 </script>
 
 <NavigationMenu.Root class="relative" viewport={false}>
-	<NavigationMenu.List class="scrollbar-container flex flex-row flex-wrap overflow-x-auto relative">
+	<div class="scrollbar-container overflow-x-auto">
+		<NavigationMenu.List class="flex flex-row flex-wrap relative">
 		<NavigationMenu.Item>
 			<NavigationMenu.Link href={resolve('/' as Pathname)} data-sveltekit-reload>
 				Home
@@ -237,6 +238,7 @@
 			</NavigationMenu.Item>
 		{/if}
 	</NavigationMenu.List>
+	</div>
 </NavigationMenu.Root>
 
 <style>

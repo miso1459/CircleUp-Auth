@@ -35,3 +35,8 @@ graphify-out/
 .omo/
 tmp*
 dev*.log
+login-clicked.png
+scenario*.png
+qa*.png
+baseline.png
+src/routes/qa-test*
