@@ -190,6 +190,15 @@
 						<li>
 							<NavigationMenu.Link>
 								{#snippet child({ props })}
+									<a href={resolve('/gen/LLM_Tag' as Pathname)} data-sveltekit-reload {...props}>
+										LLM Tag
+									</a>
+								{/snippet}
+							</NavigationMenu.Link>
+						</li>
+						<li>
+							<NavigationMenu.Link>
+								{#snippet child({ props })}
 									<a href={resolve('/gen/TTS' as Pathname)} data-sveltekit-reload {...props}>
 										TTS
 									</a>
