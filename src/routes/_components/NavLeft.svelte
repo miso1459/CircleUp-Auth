@@ -5,10 +5,10 @@
 
 	let { data } = $props();
 
-	// 열려있는 메뉴 추적
 	let openMenu = $state<string | null>(null);
+	let closeTimer = $state<ReturnType<typeof setTimeout> | null>(null);
+	let contentStyles = $state<Record<string, string>>({});
 
-	// 각 Trigger의 DOM 위치를 기반으로 Content 위치 계산
 	function getContentStyle(triggerId: string): string {
 		if (typeof document === 'undefined') return '';
 		const trigger = document.getElementById(triggerId);
@@ -17,10 +17,26 @@
 		return `position:fixed; top:${rect.bottom + 4}px; left:${rect.left}px; z-index:9999;`;
 	}
 
-	let contentStyles = $state<Record<string, string>>({});
-
-	function updatePosition(triggerId: string) {
+	function handleTriggerEnter(menuId: string, triggerId: string) {
+		if (closeTimer) {
+			clearTimeout(closeTimer);
+			closeTimer = null;
+		}
 		contentStyles[triggerId] = getContentStyle(triggerId);
+		openMenu = menuId;
+	}
+
+	function handleLeave() {
+		closeTimer = setTimeout(() => {
+			openMenu = null;
+		}, 150);
+	}
+
+	function handleContentEnter() {
+		if (closeTimer) {
+			clearTimeout(closeTimer);
+			closeTimer = null;
+		}
 	}
 </script>
 
@@ -36,10 +52,16 @@
 				<NavigationMenu.Item class="relative">
 					<NavigationMenu.Trigger
 						id="trigger-docs"
-						onclick={() => { updatePosition('trigger-docs'); openMenu = openMenu === 'docs' ? null : 'docs'; }}
+						onmouseenter={() => handleTriggerEnter('docs', 'trigger-docs')}
+						onmouseleave={handleLeave}
 					>Docs</NavigationMenu.Trigger>
 					{#if openMenu === 'docs'}
-						<div style={contentStyles['trigger-docs']} class="rounded-md border bg-popover shadow-md">
+						<div
+							style={contentStyles['trigger-docs']}
+							class="rounded-md border bg-popover shadow-md"
+							onmouseenter={handleContentEnter}
+							onmouseleave={handleLeave}
+						>
 							<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
 								<li>
 									<NavigationMenu.Link>
@@ -58,10 +80,16 @@
 				<NavigationMenu.Item class="relative">
 					<NavigationMenu.Trigger
 						id="trigger-llm"
-						onclick={() => { updatePosition('trigger-llm'); openMenu = openMenu === 'llm' ? null : 'llm'; }}
+						onmouseenter={() => handleTriggerEnter('llm', 'trigger-llm')}
+						onmouseleave={handleLeave}
 					>LLM</NavigationMenu.Trigger>
 					{#if openMenu === 'llm'}
-						<div style={contentStyles['trigger-llm']} class="rounded-md border bg-popover shadow-md">
+						<div
+							style={contentStyles['trigger-llm']}
+							class="rounded-md border bg-popover shadow-md"
+							onmouseenter={handleContentEnter}
+							onmouseleave={handleLeave}
+						>
 							<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
 								<li>
 									<NavigationMenu.Link>
@@ -116,10 +144,16 @@
 				<NavigationMenu.Item class="relative">
 					<NavigationMenu.Trigger
 						id="trigger-translation"
-						onclick={() => { updatePosition('trigger-translation'); openMenu = openMenu === 'translation' ? null : 'translation'; }}
+						onmouseenter={() => handleTriggerEnter('translation', 'trigger-translation')}
+						onmouseleave={handleLeave}
 					>Translation</NavigationMenu.Trigger>
 					{#if openMenu === 'translation'}
-						<div style={contentStyles['trigger-translation']} class="rounded-md border bg-popover shadow-md">
+						<div
+							style={contentStyles['trigger-translation']}
+							class="rounded-md border bg-popover shadow-md"
+							onmouseenter={handleContentEnter}
+							onmouseleave={handleLeave}
+						>
 							<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
 								<li>
 									<NavigationMenu.Link>
@@ -138,10 +172,16 @@
 				<NavigationMenu.Item class="relative">
 					<NavigationMenu.Trigger
 						id="trigger-tts"
-						onclick={() => { updatePosition('trigger-tts'); openMenu = openMenu === 'tts' ? null : 'tts'; }}
+						onmouseenter={() => handleTriggerEnter('tts', 'trigger-tts')}
+						onmouseleave={handleLeave}
 					>TTS</NavigationMenu.Trigger>
 					{#if openMenu === 'tts'}
-						<div style={contentStyles['trigger-tts']} class="rounded-md border bg-popover shadow-md">
+						<div
+							style={contentStyles['trigger-tts']}
+							class="rounded-md border bg-popover shadow-md"
+							onmouseenter={handleContentEnter}
+							onmouseleave={handleLeave}
+						>
 							<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
 								<li>
 									<NavigationMenu.Link>
@@ -169,10 +209,16 @@
 				<NavigationMenu.Item class="relative">
 					<NavigationMenu.Trigger
 						id="trigger-flipclock"
-						onclick={() => { updatePosition('trigger-flipclock'); openMenu = openMenu === 'flipclock' ? null : 'flipclock'; }}
+						onmouseenter={() => handleTriggerEnter('flipclock', 'trigger-flipclock')}
+						onmouseleave={handleLeave}
 					>Flip Clock</NavigationMenu.Trigger>
 					{#if openMenu === 'flipclock'}
-						<div style={contentStyles['trigger-flipclock']} class="rounded-md border bg-popover shadow-md">
+						<div
+							style={contentStyles['trigger-flipclock']}
+							class="rounded-md border bg-popover shadow-md"
+							onmouseenter={handleContentEnter}
+							onmouseleave={handleLeave}
+						>
 							<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
 								<li>
 									<NavigationMenu.Link>
@@ -209,10 +255,16 @@
 				<NavigationMenu.Item class="relative">
 					<NavigationMenu.Trigger
 						id="trigger-generator"
-						onclick={() => { updatePosition('trigger-generator'); openMenu = openMenu === 'generator' ? null : 'generator'; }}
+						onmouseenter={() => handleTriggerEnter('generator', 'trigger-generator')}
+						onmouseleave={handleLeave}
 					>Generator</NavigationMenu.Trigger>
 					{#if openMenu === 'generator'}
-						<div style={contentStyles['trigger-generator']} class="rounded-md border bg-popover shadow-md">
+						<div
+							style={contentStyles['trigger-generator']}
+							class="rounded-md border bg-popover shadow-md"
+							onmouseenter={handleContentEnter}
+							onmouseleave={handleLeave}
+						>
 							<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
 								<li>
 									<NavigationMenu.Link>
@@ -285,11 +337,3 @@
 		</NavigationMenu.List>
 	</NavigationMenu.Root>
 </div>
-
-<!-- 외부 클릭시 메뉴 닫기 -->
-<svelte:window onclick={(e) => {
-	const target = e.target as HTMLElement;
-	if (!target.closest('[id^="trigger-"]') && !target.closest('.bg-popover')) {
-		openMenu = null;
-	}
-}} />
