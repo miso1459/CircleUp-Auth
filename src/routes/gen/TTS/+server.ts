@@ -1,6 +1,6 @@
 import type { RequestHandler } from './$types';
-import { deleteSentence } from '$lib/sent/delete';
+import { deleteTTSFile } from '$lib/sent/deleteTTS';
 
 export const DELETE: RequestHandler = async (event) => {
-    return deleteSentence(event);
+    return deleteTTSFile(event);
 };
