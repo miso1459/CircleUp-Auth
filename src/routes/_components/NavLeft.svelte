@@ -69,9 +69,8 @@
 	}
 </script>
 
-<div class="relative w-full">
-	<NavigationMenu.Root class="w-full max-w-none" viewport={false}>
-		<NavigationMenu.List class="flex flex-wrap gap-1">
+<NavigationMenu.Root class="relative" viewport={false}>
+		<NavigationMenu.List class="flex flex-wrap justify-start gap-1">
 			<NavigationMenu.Item>
 				<NavigationMenu.Link href={resolve('/' as Pathname)} data-sveltekit-reload>
 					Home
@@ -376,5 +375,4 @@
 				</NavigationMenu.Item>
 			{/if}
 		</NavigationMenu.List>
-	</NavigationMenu.Root>
-</div>
+</NavigationMenu.Root>
