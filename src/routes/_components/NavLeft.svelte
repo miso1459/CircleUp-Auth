@@ -6,7 +6,7 @@
 	let { data } = $props();
 </script>
 
-<NavigationMenu.Root class="relative" viewport={false}>
+<NavigationMenu.Root viewport={false}>
 	<div class="scrollbar-container overflow-x-auto">
 		<NavigationMenu.List class="flex flex-row flex-wrap relative">
 		<NavigationMenu.Item>
@@ -17,13 +17,13 @@
 		{#if data?.role == 'admin'}
 			<NavigationMenu.Item>
 				<NavigationMenu.Trigger>Docs</NavigationMenu.Trigger>
-				<NavigationMenu.Content>
-					<ul class="grid w-75 gap-4 p-2">
-						<li>
-							<NavigationMenu.Link>
-								{#snippet child({ props })}
-									<a
-										href={resolve('/doc/ContentsEditor' as Pathname)}
+			<NavigationMenu.Content class="z-50">
+				<ul class="grid w-75 gap-4 p-2">
+					<li>
+						<NavigationMenu.Link>
+							{#snippet child({ props })}
+								<a
+									href={resolve('/doc/ContentsEditor' as Pathname)}
 										data-sveltekit-reload
 										{...props}
 									>
@@ -37,7 +37,7 @@
 			</NavigationMenu.Item>
 			<NavigationMenu.Item>
 				<NavigationMenu.Trigger>LLM</NavigationMenu.Trigger>
-				<NavigationMenu.Content>
+				<NavigationMenu.Content class="z-50">
 					<ul class="grid w-75 gap-4 p-2">
 						<li>
 							<NavigationMenu.Link>
@@ -93,7 +93,7 @@
 			</NavigationMenu.Item>
 			<NavigationMenu.Item>
 				<NavigationMenu.Trigger>Translation</NavigationMenu.Trigger>
-				<NavigationMenu.Content>
+				<NavigationMenu.Content class="z-50">
 					<ul class="grid w-75 gap-4 p-2">
 						<li>
 							<NavigationMenu.Link>
@@ -109,7 +109,7 @@
 			</NavigationMenu.Item>
 			<NavigationMenu.Item>
 				<NavigationMenu.Trigger>TTS</NavigationMenu.Trigger>
-				<NavigationMenu.Content>
+				<NavigationMenu.Content class="z-50">
 					<ul class="grid w-75 gap-4 p-2">
 						<li>
 							<NavigationMenu.Link>
@@ -134,7 +134,7 @@
 			</NavigationMenu.Item>
 			<NavigationMenu.Item>
 				<NavigationMenu.Trigger>Flip Clock</NavigationMenu.Trigger>
-				<NavigationMenu.Content>
+				<NavigationMenu.Content class="z-50">
 					<ul class="grid w-75 gap-4 p-2">
 						<li>
 							<NavigationMenu.Link>
@@ -168,7 +168,7 @@
 			</NavigationMenu.Item>
 			<NavigationMenu.Item>
 				<NavigationMenu.Trigger>Generator</NavigationMenu.Trigger>
-				<NavigationMenu.Content>
+				<NavigationMenu.Content class="z-50">
 					<ul class="grid w-75 gap-4 p-2">
 						<li>
 							<NavigationMenu.Link>
