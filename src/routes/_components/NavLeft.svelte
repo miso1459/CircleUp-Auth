@@ -316,6 +316,12 @@
 					LLM Sent All
 				</NavigationMenu.Link>
 			</NavigationMenu.Item>
+
+			<NavigationMenu.Item>
+				<NavigationMenu.Link href={resolve('/TempPgm/LLM_Tag' as Pathname)} data-sveltekit-reload>
+					TempPGM
+				</NavigationMenu.Link>
+			</NavigationMenu.Item>
 		{/if}
 	</NavigationMenu.List>
 </NavigationMenu.Root>
