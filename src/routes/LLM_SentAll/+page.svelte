@@ -7,8 +7,6 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as Select from '$lib/components/ui/select/index.js';
-	import { invalidate } from '$app/navigation';
-	import { Input } from '$lib/components/ui/input/index.js';
 	import { 
 		Loader2, 
 		Sparkles, 
@@ -16,9 +14,7 @@
 		Languages, 
 		Database, 
 		AlertTriangle, 
-		CheckCircle2,
-		Search,
-		X
+		CheckCircle2
 	} from '@lucide/svelte';
 
 	let { data, form }: PageProps = $props();
@@ -82,32 +78,6 @@
 
 	const langLabel = $derived(LANG_MAP[lang] || '선택');
 
-	let searchQuery = $state(data.searchQuery);
-
-	const sentences = $derived(data.sentences);
-
-	function handleSearch() {
-		const params = searchQuery.trim() ? `?search=${encodeURIComponent(searchQuery)}` : '';
-		window.location.href = `/gen/LLM_SentToSent${params}`;
-	}
-
-	async function handleDelete(id: number) {
-		if (!confirm('삭제하시겠습니까?')) return;
-		try {
-			const res = await fetch('/gen/LLM_SentToSent', {
-				method: 'DELETE',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ id })
-			});
-			if (!res.ok) {
-				const err = await res.json();
-				throw new Error(err.message || '삭제 오류');
-			}
-			await invalidate('app:sentences');
-		} catch (e: unknown) {
-			errorMessage = e instanceof Error ? e.message : '알 수 없는 오류';
-		}
-	}
 </script>
 
 <div class="space-y-6 p-6">
@@ -115,7 +85,7 @@
 	<div class="space-y-1">
 		<h1 class="flex items-center gap-2 text-2xl font-bold tracking-tight">
 			<Sparkles class="size-6 text-indigo-500" />
-			LLM Sentence To Sentence
+			LLM Sentence All
 		</h1>
 		<p class="text-muted-foreground text-sm">
 			입력한 문장을 Google Gemini API를 활용하여 프롬프트에 따라 변환하고 데이터베이스에 저장합니다.
@@ -214,86 +184,6 @@
 			</Card.Content>
 		</Card.Root>
 	</div>
-
-	<!-- 저장된 문장 -->
-	<Card.Root class="border-muted">
-		<Card.Header>
-			<Card.Title class="text-base flex items-center gap-2">
-				<Database class="size-4 text-indigo-500" />
-				저장된 문장
-			</Card.Title>
-			<Card.Description>데이터베이스에 저장된 문장들입니다. (ID 역순, 최대 100개)</Card.Description>
-		</Card.Header>
-		<Card.Content class="space-y-4">
-			<!-- 검색바 -->
-			<div class="flex items-center gap-2">
-				<div class="relative flex-1">
-					<Input
-						bind:value={searchQuery}
-						placeholder="문장 검색..."
-						class="pl-9 h-9 text-sm"
-						onkeydown={(e) => e.key === 'Enter' && handleSearch()}
-					/>
-					<Search class="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-				</div>
-				<Button size="sm" onclick={handleSearch}>검색</Button>
-				<Button size="sm" variant="outline" onclick={() => { searchQuery = ''; handleSearch(); }}>
-					<X class="size-4" />
-				</Button>
-			</div>
-
-			<!-- 문장 테이블 -->
-			<div class="rounded-md border">
-				<Table.Root>
-					<Table.Header>
-						<Table.Row>
-							<Table.Head class="w-16">ID</Table.Head>
-							<Table.Head class="w-16">Lang</Table.Head>
-							<Table.Head class="w-48">Voice</Table.Head>
-							<Table.Head class="w-16">Speed</Table.Head>
-							<Table.Head>문장</Table.Head>
-							<Table.Head class="w-44">Created At</Table.Head>
-							<Table.Head class="w-20">삭제</Table.Head>
-						</Table.Row>
-					</Table.Header>
-					<Table.Body>
-						{#if sentences.length === 0}
-							<Table.Row>
-								<Table.Cell colspan="7" class="text-center text-muted-foreground py-8 text-sm">
-									저장된 문장이 없습니다.
-								</Table.Cell>
-							</Table.Row>
-						{:else}
-							{#each sentences as s (s.id)}
-								<Table.Row
-									class="hover:bg-muted/50 transition-colors cursor-pointer"
-									onclick={() => { sentence = s.sent; }}
-								>
-									<Table.Cell class="font-semibold text-muted-foreground text-xs">{s.id}</Table.Cell>
-									<Table.Cell class="text-xs font-mono">{s.lang}</Table.Cell>
-									<Table.Cell class="text-xs text-muted-foreground max-w-48 truncate" title={s.voice}>{s.voice}</Table.Cell>
-									<Table.Cell class="text-xs text-center font-semibold">{s.speed ?? '1.0'}</Table.Cell>
-									<Table.Cell class="text-sm leading-relaxed">{s.sent}</Table.Cell>
-									<Table.Cell class="text-xs text-muted-foreground whitespace-nowrap">
-										{new Date(s.createdAt).toLocaleString('ko-KR')}
-									</Table.Cell>
-									<Table.Cell>
-										<Button
-											size="sm"
-											variant="destructive"
-											onclick={(e) => { e.stopPropagation(); handleDelete(s.id); }}
-										>
-											삭제
-										</Button>
-									</Table.Cell>
-								</Table.Row>
-							{/each}
-						{/if}
-					</Table.Body>
-				</Table.Root>
-			</div>
-		</Card.Content>
-	</Card.Root>
 
 	<!-- 피드백 메시지 -->
 	{#if errorMessage}
