@@ -159,7 +159,8 @@ export const actions = {
 				success: true,
 				rows: generatedRows,
 				insertedCount: newStatements.length,
-				duplicateCount
+				duplicateCount,
+				savedPrompt: prompt
 			};
 		} catch (err) {
 			const message = err instanceof Error ? err.message : 'LLM 처리 중 오류가 발생했습니다.';

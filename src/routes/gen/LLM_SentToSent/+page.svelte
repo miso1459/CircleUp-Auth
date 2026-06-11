@@ -58,6 +58,7 @@
 			insertedCount = form.insertedCount ?? 0;
 			duplicateCount = form.duplicateCount ?? 0;
 			errorMessage = null;
+			prompt = form.savedPrompt ?? prompt;
 			const rows = form.rows ?? [];
 			if (rows.length > 0) {
 				sentence = rows[rows.length - 1].statement;
