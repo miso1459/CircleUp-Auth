@@ -44,7 +44,7 @@
 		const searchParam = searchQuery.trim() ? `search=${encodeURIComponent(searchQuery)}` : '';
 		const filterParam = `imgFilter=${imgFilter}`;
 		const params = searchParam ? `?${filterParam}&${searchParam}` : `?${filterParam}`;
-		window.location.href = `/gen/Check${params}`;
+		window.location.href = `/Function/gen/Check${params}`;
 	}
 
 	async function handleDeleteImage(id: number) {

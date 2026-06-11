@@ -90,7 +90,7 @@
 		const searchParam = searchQuery.trim() ? `search=${encodeURIComponent(searchQuery)}` : '';
 		const filterParam = `tranFilter=${tranFilter}`;
 		const params = searchParam ? `?${filterParam}&${searchParam}` : `?${filterParam}`;
-		window.location.href = `/gen/Translation${params}`;
+		window.location.href = `/Function/gen/Translation${params}`;
 	}
 
 	async function handleDelete(id: number) {

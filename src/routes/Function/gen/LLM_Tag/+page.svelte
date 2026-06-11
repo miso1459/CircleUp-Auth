@@ -98,7 +98,7 @@
 		const searchParam = searchQuery.trim() ? `search=${encodeURIComponent(searchQuery)}` : '';
 		const filterParam = `tagFilter=${tagFilter}`;
 		const params = searchParam ? `?${filterParam}&${searchParam}` : `?${filterParam}`;
-		window.location.href = `/gen/LLM_Tag${params}`;
+		window.location.href = `/Function/gen/LLM_Tag${params}`;
 	}
 
 	async function handleDelete(id: number) {

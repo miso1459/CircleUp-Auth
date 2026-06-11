@@ -76,7 +76,7 @@
 		searchLoading = true;
 		copySuccess = null;
 		const params = searchQuery.trim() ? `?search=${encodeURIComponent(searchQuery)}` : '';
-		window.location.href = `/llm/SentToImage3${params}`;
+		window.location.href = `/Function/llm/SentToImage3${params}`;
 	}
 
 	// 검색어 초기화

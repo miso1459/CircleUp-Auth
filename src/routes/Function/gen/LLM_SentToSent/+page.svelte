@@ -88,7 +88,7 @@
 
 	function handleSearch() {
 		const params = searchQuery.trim() ? `?search=${encodeURIComponent(searchQuery)}` : '';
-		window.location.href = `/gen/LLM_SentToSent${params}`;
+		window.location.href = `/Function/gen/LLM_SentToSent${params}`;
 	}
 
 	async function handleDelete(id: number) {

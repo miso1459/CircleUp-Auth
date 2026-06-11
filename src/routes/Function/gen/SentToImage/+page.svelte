@@ -73,7 +73,7 @@
 		searchLoading = true;
 		copySuccess = null;
 		const params = searchQuery.trim() ? `?search=${encodeURIComponent(searchQuery)}` : '';
-		window.location.href = `/gen/SentToImage${params}`;
+		window.location.href = `/Function/gen/SentToImage${params}`;
 	}
 
 	// 검색어 초기화

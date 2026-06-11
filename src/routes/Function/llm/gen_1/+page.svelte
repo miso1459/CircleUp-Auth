@@ -113,7 +113,7 @@
 
   async function handleSearch() {
     const params = searchQuery.trim() ? `?search=${encodeURIComponent(searchQuery)}` : '';
-    window.location.href = `/llm/gen_1${params}`;
+    window.location.href = `/Function/llm/gen_1${params}`;
   }
 
   async function handleDelete(id: number) {

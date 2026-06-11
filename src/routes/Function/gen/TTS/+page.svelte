@@ -156,7 +156,7 @@
 		const searchParam = searchQuery.trim() ? `search=${encodeURIComponent(searchQuery)}` : '';
 		const filterParam = `ttsFilter=${ttsFilter}`;
 		const params = searchParam ? `?${filterParam}&${searchParam}` : `?${filterParam}`;
-		window.location.href = `/gen/TTS${params}`;
+		window.location.href = `/Function/gen/TTS${params}`;
 	}
 
 	async function handleDelete(id: number) {
