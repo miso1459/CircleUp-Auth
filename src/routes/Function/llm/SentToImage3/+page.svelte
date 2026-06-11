@@ -82,7 +82,7 @@
 	// 검색어 초기화
 	function clearSearch() {
 		searchQuery = '';
-		window.location.href = '/llm/SentToImage3';
+		window.location.href = '/Function/llm/SentToImage3';
 	}
 
 	// 문장 복사 (저장된 문서 가장 상단의 문장을 문장 입력 영역에 설정)

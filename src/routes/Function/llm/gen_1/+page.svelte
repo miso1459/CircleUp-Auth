@@ -63,7 +63,7 @@
     errorMsg = '';
 
     try {
-      const res = await fetch('/llm/gen_1', {
+      const res = await fetch('/Function/llm/gen_1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -101,7 +101,7 @@
         await invalidateAll();
       } else {
         console.warn('[gen_1] no inserted in response, reloading...', result);
-        window.location.href = '/llm/gen_1';
+        window.location.href = '/Function/llm/gen_1';
       }
     } catch (e: unknown) {
       console.error('[gen_1] generate error:', e);
@@ -119,7 +119,7 @@
   async function handleDelete(id: number) {
     if (!confirm('삭제하시겠습니까?')) return;
     try {
-      const res = await fetch('/llm/gen_1', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+      const res = await fetch('/Function/llm/gen_1', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.message || '삭제 오류');

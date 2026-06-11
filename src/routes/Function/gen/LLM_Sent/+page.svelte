@@ -88,7 +88,7 @@
 	async function handleDelete(id: number) {
 		if (!confirm('삭제하시겠습니까?')) return;
 		try {
-			const res = await fetch('/gen/LLM_Sent', {
+			const res = await fetch('/Function/gen/LLM_Sent', {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ id })

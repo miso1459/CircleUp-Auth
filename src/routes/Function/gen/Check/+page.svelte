@@ -52,7 +52,7 @@
 		try {
 			const formData = new FormData();
 			formData.append('id', String(id));
-			const res = await fetch('/gen/Check?/deleteImage', {
+			const res = await fetch('/Function/gen/Check?/deleteImage', {
 				method: 'POST',
 				headers: { 'X-SvelteKit-Action': 'true' },
 				body: formData
@@ -69,7 +69,7 @@
 		formData.append('id', String(id));
 		formData.append('check_img', String(currentValue === 0 ? 1 : 0));
 		try {
-			const res = await fetch('/gen/Check?/toggleCheckImg', {
+			const res = await fetch('/Function/gen/Check?/toggleCheckImg', {
 				method: 'POST',
 				headers: { 'X-SvelteKit-Action': 'true' },
 				body: formData

@@ -126,7 +126,7 @@
 								<li>
 									<NavigationMenu.Link>
 										{#snippet child(props)}
-											<a href={resolve('/llm/SentToSent' as Pathname)} data-sveltekit-reload {...props}>
+											<a href={resolve('/Function/llm/SentToSent' as Pathname)} data-sveltekit-reload {...props}>
 												Gen Sentence to Sentence
 											</a>
 										{/snippet}
@@ -135,7 +135,7 @@
 								<li>
 									<NavigationMenu.Link>
 										{#snippet child(props)}
-											<a href={resolve('/llm/SentToImage' as Pathname)} data-sveltekit-reload {...props}>
+											<a href={resolve('/Function/llm/SentToImage' as Pathname)} data-sveltekit-reload {...props}>
 												Sentence to Image
 											</a>
 										{/snippet}
@@ -144,7 +144,7 @@
 								<li>
 									<NavigationMenu.Link>
 										{#snippet child(props)}
-											<a href={resolve('/llm/SentToImage2' as Pathname)} data-sveltekit-reload {...props}>
+											<a href={resolve('/Function/llm/SentToImage2' as Pathname)} data-sveltekit-reload {...props}>
 												Gen Sentence to Image 2
 											</a>
 										{/snippet}
@@ -153,7 +153,7 @@
 								<li>
 									<NavigationMenu.Link>
 										{#snippet child(props)}
-											<a href={resolve('/llm/SentToImage3' as Pathname)} data-sveltekit-reload {...props}>
+											<a href={resolve('/Function/llm/SentToImage3' as Pathname)} data-sveltekit-reload {...props}>
 												Gen Sentence to Image 3
 											</a>
 										{/snippet}
@@ -162,7 +162,7 @@
 								<li>
 									<NavigationMenu.Link>
 										{#snippet child(props)}
-											<a href={resolve('/llm/gen_1' as Pathname)} data-sveltekit-reload {...props}>
+											<a href={resolve('/Function/llm/gen_1' as Pathname)} data-sveltekit-reload {...props}>
 												Generator 1
 											</a>
 										{/snippet}
@@ -192,7 +192,7 @@
 								<li>
 									<NavigationMenu.Link>
 										{#snippet child(props)}
-											<a href={resolve('/translation/deepL' as Pathname)} data-sveltekit-reload {...props}>
+											<a href={resolve('/Function/translation/deepL' as Pathname)} data-sveltekit-reload {...props}>
 												DeepL
 											</a>
 										{/snippet}
@@ -231,7 +231,7 @@
 								<li>
 									<NavigationMenu.Link>
 										{#snippet child(props)}
-											<a href={resolve('/tts/SentToTTS_Google' as Pathname)} data-sveltekit-reload {...props}>
+											<a href={resolve('/Function/tts/SentToTTS_Google' as Pathname)} data-sveltekit-reload {...props}>
 												Gen Sentence to Voice Google
 											</a>
 										{/snippet}
@@ -309,7 +309,7 @@
 								<li>
 									<NavigationMenu.Link>
 										{#snippet child(props)}
-											<a href={resolve('/gen/LLM_Sent' as Pathname)} data-sveltekit-reload {...props}>
+											<a href={resolve('/Function/gen/LLM_Sent' as Pathname)} data-sveltekit-reload {...props}>
 												LLM Sent
 											</a>
 										{/snippet}
@@ -318,7 +318,7 @@
 								<li>
 									<NavigationMenu.Link>
 										{#snippet child(props)}
-											<a href={resolve('/gen/LLM_SentToSent' as Pathname)} data-sveltekit-reload {...props}>
+											<a href={resolve('/Function/gen/LLM_SentToSent' as Pathname)} data-sveltekit-reload {...props}>
 												LLM Sent To Sent
 											</a>
 										{/snippet}
@@ -327,7 +327,7 @@
 								<li>
 									<NavigationMenu.Link>
 										{#snippet child(props)}
-											<a href={resolve('/gen/LLM_Tag' as Pathname)} data-sveltekit-reload {...props}>
+											<a href={resolve('/Function/gen/LLM_Tag' as Pathname)} data-sveltekit-reload {...props}>
 												LLM Tag
 											</a>
 										{/snippet}
@@ -336,7 +336,7 @@
 								<li>
 									<NavigationMenu.Link>
 										{#snippet child(props)}
-											<a href={resolve('/gen/TTS' as Pathname)} data-sveltekit-reload {...props}>
+											<a href={resolve('/Function/gen/TTS' as Pathname)} data-sveltekit-reload {...props}>
 												TTS
 											</a>
 										{/snippet}
@@ -345,7 +345,7 @@
 								<li>
 									<NavigationMenu.Link>
 										{#snippet child(props)}
-											<a href={resolve('/gen/Translation' as Pathname)} data-sveltekit-reload {...props}>
+											<a href={resolve('/Function/gen/Translation' as Pathname)} data-sveltekit-reload {...props}>
 												Translation
 											</a>
 										{/snippet}
@@ -354,7 +354,7 @@
 								<li>
 									<NavigationMenu.Link>
 										{#snippet child(props)}
-											<a href={resolve('/gen/SentToImage' as Pathname)} data-sveltekit-reload {...props}>
+											<a href={resolve('/Function/gen/SentToImage' as Pathname)} data-sveltekit-reload {...props}>
 												Sent To Image
 											</a>
 										{/snippet}
@@ -363,7 +363,7 @@
 								<li>
 									<NavigationMenu.Link>
 										{#snippet child(props)}
-											<a href={resolve('/gen/Check' as Pathname)} data-sveltekit-reload {...props}>
+											<a href={resolve('/Function/gen/Check' as Pathname)} data-sveltekit-reload {...props}>
 												Check
 											</a>
 										{/snippet}

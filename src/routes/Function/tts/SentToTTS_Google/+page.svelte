@@ -89,7 +89,7 @@
     isGenerating = true;
 
     try {
-      const response = await fetch('/tts/SentToTTS_Google', {
+      const response = await fetch('/Function/tts/SentToTTS_Google', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -235,7 +235,7 @@
 
     if (filenames.length > 0) {
       try {
-        const res = await fetch('/tts/SentToTTS_Google', {
+        const res = await fetch('/Function/tts/SentToTTS_Google', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ filenames })
