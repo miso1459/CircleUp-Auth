@@ -182,7 +182,7 @@
 								생성 및 저장 중...
 							{:else}
 								<Sparkles class="size-4 mr-2" />
-								문장 변환하기
+								문장 생성하기
 							{/if}
 						</Button>
 					</div>
@@ -208,7 +208,7 @@
 					class="w-full min-h-40 resize-none border-muted focus-visible:ring-indigo-500 text-sm leading-relaxed"
 				/>
 				<p class="text-xs text-muted-foreground">
-					프롬프트 입력 완료 후 왼쪽의 <strong>[문장 변환하기]</strong> 버튼을 클릭하세요. 생성 시 기존 데이터베이스의 중복 문장은 자동으로 제외됩니다.
+					프롬프트 입력 완료 후 왼쪽의 <strong>[문장 생성하기]</strong> 버튼을 클릭하세요. 생성 시 기존 데이터베이스의 중복 문장은 자동으로 제외됩니다.
 				</p>
 			</Card.Content>
 		</Card.Root>
