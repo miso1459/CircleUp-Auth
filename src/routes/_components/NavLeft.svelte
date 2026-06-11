@@ -322,6 +322,12 @@
 					TempPGM
 				</NavigationMenu.Link>
 			</NavigationMenu.Item>
+
+			<NavigationMenu.Item>
+				<NavigationMenu.Link href={resolve('/TempPgm/TTS' as Pathname)} data-sveltekit-reload>
+					TempPGM2
+				</NavigationMenu.Link>
+			</NavigationMenu.Item>
 		{/if}
 	</NavigationMenu.List>
 </NavigationMenu.Root>
