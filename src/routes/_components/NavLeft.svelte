@@ -312,7 +312,7 @@
 			</NavigationMenu.Item>
 
 			<NavigationMenu.Item>
-				<NavigationMenu.Link href={resolve('/Function/gen/LLM_SentAll' as Pathname)} data-sveltekit-reload>
+				<NavigationMenu.Link href={resolve('/LLM_SentAll' as Pathname)} data-sveltekit-reload>
 					LLM Sent All
 				</NavigationMenu.Link>
 			</NavigationMenu.Item>
