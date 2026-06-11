@@ -58,6 +58,10 @@
 			insertedCount = form.insertedCount ?? 0;
 			duplicateCount = form.duplicateCount ?? 0;
 			errorMessage = null;
+			const rows = form.rows ?? [];
+			if (rows.length > 0) {
+				sentence = rows[rows.length - 1].statement;
+			}
 		}
 		if (form?.error) {
 			errorMessage = form.error;
@@ -171,7 +175,7 @@
 						<Button
 							type="submit"
 							class="w-full py-5 text-sm font-semibold shadow-lg bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-all duration-200"
-							disabled={loading || !sentence.trim() || !prompt.trim() || !data.geminiConfigured}
+							disabled={loading || !prompt.trim() || !data.geminiConfigured}
 						>
 							{#if loading}
 								<Loader2 class="size-4 animate-spin mr-2" />

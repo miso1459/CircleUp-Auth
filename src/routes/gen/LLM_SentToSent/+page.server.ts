@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
-import { transformSentencesWithPrompt } from '$lib/server/gemini';
+import { transformSentencesWithPrompt, generateSentencesFromPrompt } from '$lib/server/gemini';
 import { db } from '$lib/server/db';
 import { config, sentences } from '$lib/server/db/schema';
 import { eq, inArray, like, desc } from 'drizzle-orm';
@@ -89,9 +89,6 @@ export const actions = {
 		if (!lang) {
 			return fail(400, { error: '언어 코드를 입력해 주세요.' });
 		}
-		if (!sentence) {
-			return fail(400, { error: '변환할 문장을 입력해 주세요.' });
-		}
 		if (!env.GEMINI_API_KEY) {
 			return fail(500, { error: 'GEMINI_API_KEY 환경 변수를 설정해 주세요.' });
 		}
@@ -117,7 +114,9 @@ export const actions = {
 			// 2. Gemini API 호출하여 입력 문장을 프롬프트에 따라 변환
 			// 언어 지시문을 프롬프트에 추가하여 대상 언어로 결과가 생성되도록 함
 			const langInstruction = LANG_INSTRUCTION[lang] || '';
-			const generatedRows = await transformSentencesWithPrompt([sentence], prompt + langInstruction);
+			const generatedRows = sentence
+				? await transformSentencesWithPrompt([sentence], prompt + langInstruction)
+				: await generateSentencesFromPrompt(prompt + langInstruction);
 
 			if (generatedRows.length === 0) {
 				return fail(500, { error: '생성된 문장이 없습니다.' });
