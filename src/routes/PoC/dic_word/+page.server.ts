@@ -7,7 +7,7 @@ import { eq, inArray, like, desc } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load = (async ({ locals, url, depends }) => {
-	depends('app:sentences');
+	depends('app:dicword');
 
 	if (locals.user?.role !== 'admin') {
 		throw redirect(303, '/');
@@ -23,43 +23,47 @@ export const load = (async ({ locals, url, depends }) => {
 	// URL 검색 파라미터 처리
 	const searchQuery = url.searchParams.get('search') || '';
 
-	// sentences 테이블 조회 (ID 역순, 최대 100개)
-	let sentenceRows;
+	// dic_word 테이블 조회 (생성일 역순, 최대 100개)
+	let wordRows;
 	if (searchQuery) {
-		sentenceRows = await db
+		wordRows = await db
 			.select({
-				id: sentences.id,
-				lang: sentences.lang,
-				voice: sentences.voice,
-				speed: sentences.speed,
-				sent: sentences.sent,
-				createdAt: sentences.createdAt,
-				file_tts: sentences.file_tts
+				word: dicWord.word,
+				mp3_url: dicWord.mp3_url,
+				core_meaning: dicWord.core_meaning,
+				ipa: dicWord.ipa,
+				pos: dicWord.pos,
+				level: dicWord.level,
+				frequency: dicWord.frequency,
+				check_core: dicWord.check_core,
+				createdAt: dicWord.createdAt
 			})
-			.from(sentences)
-			.where(like(sentences.sent, `%${searchQuery}%`))
-			.orderBy(desc(sentences.id))
+			.from(dicWord)
+			.where(like(dicWord.word, `%${searchQuery}%`))
+			.orderBy(desc(dicWord.createdAt))
 			.limit(100);
 	} else {
-		sentenceRows = await db
+		wordRows = await db
 			.select({
-				id: sentences.id,
-				lang: sentences.lang,
-				voice: sentences.voice,
-				speed: sentences.speed,
-				sent: sentences.sent,
-				createdAt: sentences.createdAt,
-				file_tts: sentences.file_tts
+				word: dicWord.word,
+				mp3_url: dicWord.mp3_url,
+				core_meaning: dicWord.core_meaning,
+				ipa: dicWord.ipa,
+				pos: dicWord.pos,
+				level: dicWord.level,
+				frequency: dicWord.frequency,
+				check_core: dicWord.check_core,
+				createdAt: dicWord.createdAt
 			})
-			.from(sentences)
-			.orderBy(desc(sentences.id))
+			.from(dicWord)
+			.orderBy(desc(dicWord.createdAt))
 			.limit(100);
 	}
 
 	return {
 		geminiConfigured: Boolean(env.GEMINI_API_KEY),
 		savedPrompt: savedConfigPrompt[0]?.value || '',
-		sentences: sentenceRows,
+		dicWords: wordRows,
 		searchQuery
 	};
 }) satisfies PageServerLoad;
