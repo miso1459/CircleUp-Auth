@@ -226,8 +226,8 @@
 				<Table.Root>
 					<Table.Header>
 						<Table.Row>
-							<Table.Head>Word</Table.Head>
-							<Table.Head class="w-32">Core Meaning</Table.Head>
+							<Table.Head class="w-24">Word</Table.Head>
+							<Table.Head>Core Meaning</Table.Head>
 							<Table.Head class="w-24">IPA</Table.Head>
 							<Table.Head class="w-16">POS</Table.Head>
 							<Table.Head class="w-16">Level</Table.Head>
@@ -248,8 +248,8 @@
 									class="hover:bg-muted/50 transition-colors cursor-pointer"
 									onclick={() => { sentence = w.word; }}
 								>
-									<Table.Cell class="font-semibold text-sm">{w.word}</Table.Cell>
-									<Table.Cell class="text-xs text-muted-foreground max-w-32 truncate" title={w.core_meaning}>{w.core_meaning || '-'}</Table.Cell>
+									<Table.Cell class="font-semibold text-sm max-w-24 truncate">{w.word}</Table.Cell>
+									<Table.Cell class="text-xs text-muted-foreground" title={w.core_meaning}>{w.core_meaning || '-'}</Table.Cell>
 									<Table.Cell class="text-xs font-mono">{w.ipa || '-'}</Table.Cell>
 									<Table.Cell class="text-xs">{w.pos || '-'}</Table.Cell>
 									<Table.Cell class="text-xs">{w.level || '-'}</Table.Cell>
