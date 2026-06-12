@@ -350,10 +350,61 @@
 				{/if}
 			</NavigationMenu.Item>
 
-			<NavigationMenu.Item>
-				<NavigationMenu.Link href={resolve('/TempPgm/TTS' as Pathname)} data-sveltekit-reload>
-					TempPGM
-				</NavigationMenu.Link>
+			<NavigationMenu.Item class="relative">
+				<NavigationMenu.Trigger
+					id="trigger-temppgm"
+					onmouseenter={() => handleTriggerEnter('temppgm', 'trigger-temppgm')}
+					onmouseleave={handleLeave}
+				>TempPGM</NavigationMenu.Trigger>
+				{#if openMenu === 'temppgm'}
+					<div
+						role="menu"
+						tabindex="-1"
+						style={contentStyles['trigger-temppgm']}
+						class="rounded-md border bg-popover shadow-md"
+						onmouseenter={handleContentEnter}
+						onmouseleave={handleLeave}
+					>
+						<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/TempPgm/Check' as Pathname)} data-sveltekit-reload {...props}>
+											Check
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/TempPgm/LLM_Tag' as Pathname)} data-sveltekit-reload {...props}>
+											LLM Tag
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/TempPgm/Translation' as Pathname)} data-sveltekit-reload {...props}>
+											Translation
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/TempPgm/TTS' as Pathname)} data-sveltekit-reload {...props}>
+											TTS
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+						</ul>
+					</div>
+				{/if}
 			</NavigationMenu.Item>
 		{/if}
 	</NavigationMenu.List>

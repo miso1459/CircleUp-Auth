@@ -57,7 +57,7 @@
 			<!-- Quick Editor Action (Floating Button style) -->
 			<div class="flex justify-center mt-2">
 				<a 
-					href={resolve('/doc/ContentsEditor' as Pathname)} 
+					href={resolve('/PoC/Doc/ContentsEditor' as Pathname)} 
 					class="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-2xl text-sm font-semibold transition-all duration-300 transform hover:scale-[1.02] shadow-md shadow-slate-900/10 dark:shadow-none cursor-pointer"
 				>
 					<span>대표 문서 수정하기</span>
