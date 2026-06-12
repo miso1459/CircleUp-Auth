@@ -29,7 +29,8 @@
 		geminiConfigured = true,
 		compact = false,
 		form,
-		sentence = $bindable('')
+		sentence = $bindable(''),
+		onGenerateComplete
 	}: {
 		savedPrompt: string;
 		savedLang: string;
@@ -44,6 +45,7 @@
 			savedPrompt?: string;
 		} | null;
 		sentence?: string;
+		onGenerateComplete?: () => void;
 	} = $props();
 
 	let prompt = $state('');
@@ -88,9 +90,12 @@
 		errorMessage = null;
 		insertedCount = null;
 		duplicateCount = null;
-		return async ({ update }: { update: () => Promise<void> }) => {
+		return async ({ result, update }: { result: { type: string; data?: Record<string, unknown> }; update: () => Promise<void> }) => {
 			await update();
 			loading = false;
+			if (result?.type === 'success') {
+				onGenerateComplete?.();
+			}
 		};
 	}
 
