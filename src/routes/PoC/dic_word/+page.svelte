@@ -87,12 +87,12 @@
 
 	function handleSearch() {
 		const params = searchQuery.trim() ? `?search=${encodeURIComponent(searchQuery)}` : '';
-		window.location.href = `/Function/gen/LLM_SentToSent${params}`;
+		window.location.href = `${window.location.pathname}${params}`;
 	}
 
 	async function toggleCheckCore(word: string, checked: boolean) {
 		try {
-			const res = await fetch('/Function/gen/LLM_SentToSent', {
+			const res = await fetch(window.location.pathname, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ word, check_core: checked })
@@ -106,7 +106,7 @@
 	async function handleDelete(word: string) {
 		if (!confirm('삭제하시겠습니까?')) return;
 		try {
-			const res = await fetch('/Function/gen/LLM_SentToSent', {
+			const res = await fetch(window.location.pathname, {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ word })
