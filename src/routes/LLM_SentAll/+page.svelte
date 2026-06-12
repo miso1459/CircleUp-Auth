@@ -116,8 +116,10 @@
 				pipelineAudioUrl = `${data.ttsBaseUrl}/${updatedTop.file_tts}`;
 				await tick();
 				setTimeout(() => {
-					pipelineAudioPlayer?.load();
-					pipelineAudioPlayer?.play().catch((e: Error) => console.warn('pipeline playAudio:', e));
+					if (pipelineAudioPlayer) {
+						pipelineAudioPlayer.load();
+						pipelineAudioPlayer.play().catch((e: Error) => console.error('pipeline playAudio:', e));
+					}
 				}, 100);
 			}
 

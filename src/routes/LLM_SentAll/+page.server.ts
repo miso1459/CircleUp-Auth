@@ -6,8 +6,9 @@ import { translateSingle } from '$lib/server/translate';
 import { db } from '$lib/server/db';
 import { config, sentences, sentences_tran } from '$lib/server/db/schema';
 import { eq, inArray, like, desc, and, ne } from 'drizzle-orm';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
+
 import type { Actions, PageServerLoad } from './$types';
 
 const LANG_INSTRUCTION: Record<string, string> = {
@@ -35,8 +36,10 @@ export const load = (async ({ locals, url, depends }) => {
 		.where(eq(config.key, 'LLM_Sent_Lang'))
 		.limit(1);
 
+	
+
 	// TTS 설정
-	const ttsBaseUrl = env.TTS_BASE_URL || process.env.TTS_BASE_URL || 'http://localhost:5173/TTS';
+	const ttsBaseUrl = env.TTS_BASE_URL || 'http://localhost:5173/TTS';
 
 	const savedConfigVoice = await db
 		.select()
@@ -58,8 +61,10 @@ export const load = (async ({ locals, url, depends }) => {
 		.where(eq(config.key, 'LLM_Tag'))
 		.limit(1);
 
-	// Check 설정
-	const imgBaseUrl = (env.IMG_BASE_URL || process.env.IMG_BASE_URL || 'http://localhost:5173/IMG_files').replace(/\/+$/, '');
+	
+
+	// 이미지 설정
+	const imgBaseUrl = (env.IMG_BASE_URL || 'http://localhost:5173/IMG_files').replace(/\/+$/, '');
 
 	// URL 검색 파라미터 처리
 	const searchQuery = url.searchParams.get('search') || '';
@@ -255,7 +260,7 @@ export const actions = {
 
 			// 기존 MP3 파일 삭제
 			if (record.file_tts && record.file_tts.trim()) {
-				const ttsDir = env.TTS_DIR || process.env.TTS_DIR || 'static/TTS';
+				const ttsDir = env.TTS_DIR || 'static/TTS';
 				const ttsDirFull = path.resolve(process.cwd(), ttsDir);
 				const filePath = path.join(ttsDirFull, record.file_tts);
 				try {
@@ -344,7 +349,7 @@ export const actions = {
 			.from(sentences)
 			.where(inArray(sentences.id, ungeneratedIds));
 
-		const ttsDir = env.TTS_DIR || process.env.TTS_DIR || 'static/TTS';
+		const ttsDir = env.TTS_DIR || 'static/TTS';
 		const ttsDirFull = path.resolve(process.cwd(), ttsDir);
 		let successCount = 0;
 		let errorCount = 0;
@@ -433,7 +438,7 @@ export const actions = {
 			.insert(sentences_tran)
 			.values({ id: sentenceId, lang: targetLang, sent: result.text! })
 			.onConflictDoUpdate({
-				target: [sentences_tran.id],
+				target: sentences_tran.id,
 				set: { lang: targetLang, sent: result.text! }
 			});
 
@@ -441,7 +446,7 @@ export const actions = {
 			.insert(config)
 			.values({ key: 'Trans_lang', value: targetLang })
 			.onConflictDoUpdate({
-				target: [config.key],
+				target: config.key,
 				set: { value: targetLang }
 			});
 
@@ -491,11 +496,12 @@ export const actions = {
 					.insert(sentences_tran)
 					.values({ id: record.id, lang: targetLang, sent: result.text! })
 					.onConflictDoUpdate({
-						target: [sentences_tran.id],
+						target: sentences_tran.id,
 						set: { lang: targetLang, sent: result.text! }
 					});
 				successCount++;
-			} catch {
+			} catch (err) {
+				console.error('Batch translate item failed:', err);
 				errorCount++;
 			}
 		}
@@ -504,7 +510,7 @@ export const actions = {
 			.insert(config)
 			.values({ key: 'Trans_lang', value: targetLang })
 			.onConflictDoUpdate({
-				target: [config.key],
+				target: config.key,
 				set: { value: targetLang }
 			});
 
@@ -631,7 +637,8 @@ export const actions = {
 					.where(eq(sentences.id, record.id));
 
 				successCount++;
-			} catch {
+			} catch (err) {
+				console.error('Batch tag generation failed:', err);
 				errorCount++;
 			}
 		}
@@ -696,7 +703,7 @@ export const actions = {
 			.limit(1);
 
 		if (record?.file_image && record.file_image.trim()) {
-			const imgDir = env.IMG_DIR || process.env.IMG_DIR || 'static/IMG';
+			const imgDir = env.IMG_DIR || 'static/IMG';
 			const imgDirFull = path.resolve(process.cwd(), imgDir);
 			const imgFilePath = path.join(imgDirFull, record.file_image);
 			try {
@@ -740,7 +747,7 @@ export const actions = {
 
 		// MP3 파일 삭제
 		if (record.file_tts && record.file_tts.trim()) {
-			const ttsDir = env.TTS_DIR || process.env.TTS_DIR || 'static/TTS';
+			const ttsDir = env.TTS_DIR || 'static/TTS';
 			const ttsDirFull = path.resolve(process.cwd(), ttsDir);
 			const ttsPath = path.join(ttsDirFull, record.file_tts);
 			try {
@@ -752,7 +759,7 @@ export const actions = {
 
 		// 이미지 파일 삭제
 		if (record.file_image && record.file_image.trim()) {
-			const imgDir = env.IMG_DIR || process.env.IMG_DIR || 'static/IMG';
+			const imgDir = env.IMG_DIR || 'static/IMG';
 			const imgDirFull = path.resolve(process.cwd(), imgDir);
 			const imgPath = path.join(imgDirFull, record.file_image);
 			try {
