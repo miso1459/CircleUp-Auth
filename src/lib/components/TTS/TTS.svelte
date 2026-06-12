@@ -150,6 +150,11 @@
 </script>
 
 <div class="space-y-6">
+	<!-- DEBUG: TTS component rendered -->
+	<div class="rounded-lg border-2 border-red-500 bg-red-50 dark:bg-red-950 p-3 mb-4">
+		<p class="text-sm font-bold text-red-600">TTS Component Loaded</p>
+		<p class="text-xs text-red-500">data.ttsBaseUrl: {data.ttsBaseUrl || 'default'}</p>
+	</div>
 	<Accordion.Root type="single" bind:value={accordionValue}>
 		<Accordion.Item value="tts-section">
 			<Accordion.Trigger class="text-2xl font-bold tracking-tight py-4">
