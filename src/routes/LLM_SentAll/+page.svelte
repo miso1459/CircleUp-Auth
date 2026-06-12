@@ -3,6 +3,7 @@
 	import LLMSentPanel from '$lib/components/LLMSentPanel.svelte';
 	import TTSPanel from '$lib/components/TTSPanel.svelte';
 	import TranslationPanel from '$lib/components/TranslationPanel.svelte';
+	import LLMTagPanel from '$lib/components/LLMTagPanel.svelte';
 
 	let { data, form }: PageProps = $props();
 </script>
@@ -24,3 +25,11 @@
 />
 
 <TranslationPanel sentences={data.sentences} savedTransLang={data.savedTransLang} {form} />
+
+<LLMTagPanel
+	sentences={data.sentences}
+	savedPrompt={data.savedTagPrompt}
+	geminiConfigured={data.geminiConfigured}
+	formAction="?/tagProcess"
+	{form}
+/>

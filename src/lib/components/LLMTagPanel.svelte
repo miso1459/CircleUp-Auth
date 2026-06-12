@@ -25,11 +25,13 @@
 		sentences = [],
 		savedPrompt = '',
 		geminiConfigured = true,
+		formAction = '?/process',
 		form
 	}: {
 		sentences: Sentence[];
 		savedPrompt: string;
 		geminiConfigured: boolean;
+		formAction?: string;
 		form?: { error?: string; success?: boolean; successCount?: number; errorCount?: number } | null;
 	} = $props();
 
@@ -176,7 +178,7 @@
 					</div>
 
 					<!-- 숨겨진 태그 생성 폼 -->
-					<form method="POST" action="?/process" use:enhance={onGenerateTag} id="tag-generate-form">
+					<form method="POST" action={formAction} use:enhance={onGenerateTag} id="tag-generate-form">
 						<input type="hidden" name="selectedSentenceId" value={selectedSentenceId} />
 						<input type="hidden" name="prompt" value={prompt} />
 					</form>
