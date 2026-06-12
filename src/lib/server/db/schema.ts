@@ -47,5 +47,21 @@ export const sentences_tran = sqliteTable('sentences_tran', {
         .$defaultFn(() => new Date())
 });
 
+export const dicWord = sqliteTable('dic_word', {
+	word: text('word').primaryKey(),
+	mp3_url: text('mp3_url').default(''),
+	core_meaning: text('core_meaning').default(''),
+	ipa: text('ipa').default(''),
+	pos: text('pos').default(''),
+	level: text('level').default(''),
+	frequency: text('frequency').default(''),
+	senses: text('senses').default('[]'),
+	phrasal_verbs: text('phrasal_verbs').default('[]'),
+	check_core: integer('check_core').default(0).notNull(),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.$defaultFn(() => new Date())
+});
+
 export * from './auth.schema';
 
