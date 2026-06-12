@@ -714,5 +714,60 @@ export const actions = {
 			.where(eq(sentences.id, id));
 
 		return { success: true };
+	},
+	deleteAll: async ({ request, locals }) => {
+		if (locals.user?.role !== 'admin') {
+			return fail(403, { error: 'Unauthorized' });
+		}
+
+		const formData = await request.formData();
+		const id = Number(formData.get('id'));
+
+		if (!id) {
+			return fail(400, { error: 'ID가 필요합니다.' });
+		}
+
+		// 문장 + MP3 + 이미지 정보 조회
+		const [record] = await db
+			.select({ file_tts: sentences.file_tts, file_image: sentences.file_image })
+			.from(sentences)
+			.where(eq(sentences.id, id))
+			.limit(1);
+
+		if (!record) {
+			return fail(404, { error: '문장을 찾을 수 없습니다.' });
+		}
+
+		// MP3 파일 삭제
+		if (record.file_tts && record.file_tts.trim()) {
+			const ttsDir = env.TTS_DIR || process.env.TTS_DIR || 'static/TTS';
+			const ttsDirFull = path.resolve(process.cwd(), ttsDir);
+			const ttsPath = path.join(ttsDirFull, record.file_tts);
+			try {
+				if (fs.existsSync(ttsPath)) fs.unlinkSync(ttsPath);
+			} catch (e) {
+				console.error('Failed to delete MP3 file:', ttsPath, e);
+			}
+		}
+
+		// 이미지 파일 삭제
+		if (record.file_image && record.file_image.trim()) {
+			const imgDir = env.IMG_DIR || process.env.IMG_DIR || 'static/IMG';
+			const imgDirFull = path.resolve(process.cwd(), imgDir);
+			const imgPath = path.join(imgDirFull, record.file_image);
+			try {
+				if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
+			} catch (e) {
+				console.error('Failed to delete image file:', imgPath, e);
+			}
+		}
+
+		// 번역 데이터 삭제
+		await db.delete(sentences_tran).where(eq(sentences_tran.id, id));
+
+		// 문장 삭제
+		await db.delete(sentences).where(eq(sentences.id, id));
+
+		return { success: true };
 	}
 } satisfies Actions;

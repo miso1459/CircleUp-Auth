@@ -12,7 +12,8 @@
 		X,
 		Languages,
 		Tag,
-		Play
+		Play,
+		Trash2
 	} from '@lucide/svelte';
 
 	interface Sentence {
@@ -110,6 +111,23 @@
 		}
 	}
 
+	async function handleDeleteAll(id: number) {
+		if (!confirm('정말로 삭제하시겠습니까?\n\n문장, 태그, MP3, 이미지가 모두 삭제됩니다.')) return;
+		try {
+			const formData = new FormData();
+			formData.append('id', String(id));
+			const res = await fetch('?/deleteAll', {
+				method: 'POST',
+				headers: { 'X-SvelteKit-Action': 'true' },
+				body: formData
+			});
+			if (!res.ok) throw new Error('전체 삭제 실패');
+			await invalidate('app:sentences');
+		} catch (e: unknown) {
+			errorMessage = e instanceof Error ? e.message : '알 수 없는 오류';
+		}
+	}
+
 	async function toggleCheckImg(id: number, currentValue: number) {
 		const formData = new FormData();
 		formData.append('id', String(id));
@@ -194,14 +212,15 @@
 						<Table.Head>문장</Table.Head>
 						<Table.Head class="w-20">체크</Table.Head>
 						<Table.Head class="w-44">Created At</Table.Head>
-						<Table.Head class="w-20 sticky right-20 bg-background z-10 shadow-[-1px_0_0_0_var(--border)]">재생</Table.Head>
-						<Table.Head class="w-20 sticky right-0 bg-background z-10 shadow-[-1px_0_0_0_var(--border)]">이미지삭제</Table.Head>
+						<Table.Head class="w-20 sticky right-40 bg-background z-10 shadow-[-1px_0_0_0_var(--border)]">재생</Table.Head>
+						<Table.Head class="w-20 sticky right-20 bg-background z-10 shadow-[-1px_0_0_0_var(--border)]">이미지삭제</Table.Head>
+						<Table.Head class="w-20 sticky right-0 bg-background z-10 shadow-[-1px_0_0_0_var(--border)]">전체삭제</Table.Head>
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
 					{#if filteredSentences.length === 0}
 						<Table.Row>
-							<Table.Cell colspan={7} class="text-center text-muted-foreground py-8 text-sm">
+							<Table.Cell colspan={8} class="text-center text-muted-foreground py-8 text-sm">
 								저장된 문장이 없습니다.
 							</Table.Cell>
 						</Table.Row>
@@ -227,7 +246,7 @@
 								<Table.Cell class="text-xs text-muted-foreground whitespace-nowrap align-top pt-3">
 									{new Date(s.createdAt).toLocaleString('ko-KR')}
 								</Table.Cell>
-								<Table.Cell class="sticky right-20 bg-background z-10 shadow-[-1px_0_0_0_var(--border)] align-top pt-2">
+								<Table.Cell class="sticky right-40 bg-background z-10 shadow-[-1px_0_0_0_var(--border)] align-top pt-2">
 									<Button
 										size="sm"
 										variant="outline"
@@ -237,14 +256,23 @@
 										<Play class="size-4" />
 									</Button>
 								</Table.Cell>
+								<Table.Cell class="sticky right-20 bg-background z-10 shadow-[-1px_0_0_0_var(--border)] align-top pt-2">
+									<Button
+										size="sm"
+										variant="destructive"
+										onclick={(e) => { e.stopPropagation(); handleDeleteImage(s.id); }}
+										disabled={!s.file_image}
+									>
+										삭제
+									</Button>
+								</Table.Cell>
 								<Table.Cell class="sticky right-0 bg-background z-10 shadow-[-1px_0_0_0_var(--border)] align-top pt-2">
 									<Button
 										size="sm"
 										variant="destructive"
-										onclick={() => handleDeleteImage(s.id)}
-										disabled={!s.file_image}
+										onclick={(e) => { e.stopPropagation(); handleDeleteAll(s.id); }}
 									>
-										삭제
+										<Trash2 class="size-4" />
 									</Button>
 								</Table.Cell>
 							</Table.Row>
@@ -260,7 +288,7 @@
 										<span class="text-muted-foreground/50">미번역</span>
 									{/if}
 								</Table.Cell>
-								<Table.Cell class="text-sm leading-relaxed break-words text-muted-foreground" colspan={5}>
+								<Table.Cell class="text-sm leading-relaxed break-words text-muted-foreground" colspan={6}>
 									{s.tran || '-'}
 								</Table.Cell>
 							</Table.Row>
@@ -272,7 +300,7 @@
 										태그
 									</span>
 								</Table.Cell>
-								<Table.Cell class="text-sm leading-relaxed break-words text-muted-foreground" colspan={5}>
+								<Table.Cell class="text-sm leading-relaxed break-words text-muted-foreground" colspan={6}>
 									{#if s.tag && s.tag !== ''}
 										{s.tag}
 									{:else}
@@ -283,7 +311,7 @@
 							<!-- 이미지 표시 행 -->
 							{#if s.file_image}
 								<Table.Row class="bg-muted/10">
-									<Table.Cell colspan={7}>
+									<Table.Cell colspan={8}>
 										<img
 											src="{imgBaseUrl}/{s.file_image}"
 											alt="Sentence {s.id}"
