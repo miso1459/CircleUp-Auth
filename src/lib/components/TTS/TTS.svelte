@@ -14,10 +14,10 @@
 	} from '@lucide/svelte';
 
 	interface Props {
-		data: {
-			ttsBaseUrl: string;
-			savedLang: string;
-			savedVoice: string;
+		data?: {
+			ttsBaseUrl?: string;
+			savedLang?: string;
+			savedVoice?: string;
 		};
 		form?: {
 			error?: string;
@@ -38,7 +38,7 @@
 	}
 
 	let {
-		data,
+		data = {},
 		form = null,
 		sentences,
 		selectedSentenceId = null,
@@ -108,7 +108,8 @@
 
 	function playAudio(filename: string | null) {
 		if (!filename) return;
-		const fullUrl = `${data.ttsBaseUrl}/${filename}`;
+		const ttsBaseUrl = data.ttsBaseUrl || 'http://localhost:5173/TTS';
+		const fullUrl = `${ttsBaseUrl}/${filename}`;
 		audioUrl = fullUrl;
 		setTimeout(() => {
 			if (audioPlayer) {
