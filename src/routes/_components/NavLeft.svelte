@@ -79,6 +79,99 @@
 		{#if data?.role == 'admin'}
 			<NavigationMenu.Item class="relative">
 				<NavigationMenu.Trigger
+					id="trigger-draft"
+					onmouseenter={() => handleTriggerEnter('draft', 'trigger-draft')}
+					onmouseleave={handleLeave}
+				>Draft</NavigationMenu.Trigger>
+				{#if openMenu === 'draft'}
+					<div
+						role="menu"
+						tabindex="-1"
+						style={contentStyles['trigger-draft']}
+						class="rounded-md border bg-popover shadow-md"
+						onmouseenter={handleContentEnter}
+						onmouseleave={handleLeave}
+					>
+						<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/Draft/SentToSent' as Pathname)} data-sveltekit-reload {...props}>
+											Gen Sentence to Sentence
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/Draft/SentToImage' as Pathname)} data-sveltekit-reload {...props}>
+											Sentence to Image
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/Draft/SentToImage2' as Pathname)} data-sveltekit-reload {...props}>
+											Gen Sentence to Image 2
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/Draft/SentToImage3' as Pathname)} data-sveltekit-reload {...props}>
+											Gen Sentence to Image 3
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/Draft/gen_1' as Pathname)} data-sveltekit-reload {...props}>
+											Generator 1
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/Draft/deepL' as Pathname)} data-sveltekit-reload {...props}>
+											DeepL
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/Draft/SentToTTS' as Pathname)} data-sveltekit-reload {...props}>
+											Gen Sentence to Voice
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/Draft/SentToTTS_Google' as Pathname)} data-sveltekit-reload {...props}>
+											Gen Sentence to Voice Google
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+						</ul>
+					</div>
+				{/if}
+			</NavigationMenu.Item>
+
+			<NavigationMenu.Item class="relative">
+				<NavigationMenu.Trigger
 					id="trigger-docs"
 					onmouseenter={() => handleTriggerEnter('docs', 'trigger-docs')}
 					onmouseleave={handleLeave}
@@ -93,11 +186,41 @@
 						onmouseleave={handleLeave}
 					>
 						<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
-<li>
+							<li>
 								<NavigationMenu.Link>
 									{#snippet child(props)}
-										<a href={resolve('/Goods/LLM_SentAll' as Pathname)} data-sveltekit-reload {...props}>
-											LLM Sent All
+										<a href={resolve('/doc/ContentsEditor' as Pathname)} data-sveltekit-reload {...props}>
+											ContentsEditor
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+						</ul>
+					</div>
+				{/if}
+			</NavigationMenu.Item>
+
+			<NavigationMenu.Item class="relative">
+				<NavigationMenu.Trigger
+					id="trigger-flipclock"
+					onmouseenter={() => handleTriggerEnter('flipclock', 'trigger-flipclock')}
+					onmouseleave={handleLeave}
+				>Flip Clock</NavigationMenu.Trigger>
+				{#if openMenu === 'flipclock'}
+					<div
+						role="menu"
+						tabindex="-1"
+						style={contentStyles['trigger-flipclock']}
+						class="rounded-md border bg-popover shadow-md"
+						onmouseenter={handleContentEnter}
+						onmouseleave={handleLeave}
+					>
+						<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/flipclock/flipclock_Nomal' as Pathname)} data-sveltekit-reload {...props}>
+											Flip Clock Nomal
 										</a>
 									{/snippet}
 								</NavigationMenu.Link>
@@ -105,8 +228,17 @@
 							<li>
 								<NavigationMenu.Link>
 									{#snippet child(props)}
-										<a href={resolve('/Goods/SentToImage' as Pathname)} data-sveltekit-reload {...props}>
-											Sent To Image
+										<a href={resolve('/flipclock/flipclock_word' as Pathname)} data-sveltekit-reload {...props}>
+											Flip Clock Word
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/flipclock/flipclock_card' as Pathname)} data-sveltekit-reload {...props}>
+											Flip Clock Card
 										</a>
 									{/snippet}
 								</NavigationMenu.Link>
@@ -132,78 +264,6 @@
 						onmouseleave={handleLeave}
 					>
 						<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
-							<li>
-								<NavigationMenu.Link>
-									{#snippet child(props)}
-										<a href={resolve('/Function/llm/SentToSent' as Pathname)} data-sveltekit-reload {...props}>
-											Gen Sentence to Sentence
-										</a>
-									{/snippet}
-								</NavigationMenu.Link>
-							</li>
-							<li>
-								<NavigationMenu.Link>
-									{#snippet child(props)}
-										<a href={resolve('/Function/llm/SentToImage' as Pathname)} data-sveltekit-reload {...props}>
-											Sentence to Image
-										</a>
-									{/snippet}
-								</NavigationMenu.Link>
-							</li>
-							<li>
-								<NavigationMenu.Link>
-									{#snippet child(props)}
-										<a href={resolve('/Function/llm/SentToImage2' as Pathname)} data-sveltekit-reload {...props}>
-											Gen Sentence to Image 2
-										</a>
-									{/snippet}
-								</NavigationMenu.Link>
-							</li>
-							<li>
-								<NavigationMenu.Link>
-									{#snippet child(props)}
-										<a href={resolve('/Function/llm/SentToImage3' as Pathname)} data-sveltekit-reload {...props}>
-											Gen Sentence to Image 3
-										</a>
-									{/snippet}
-								</NavigationMenu.Link>
-							</li>
-							<li>
-								<NavigationMenu.Link>
-									{#snippet child(props)}
-										<a href={resolve('/Function/llm/gen_1' as Pathname)} data-sveltekit-reload {...props}>
-											Generator 1
-										</a>
-									{/snippet}
-								</NavigationMenu.Link>
-							</li>
-							<li>
-								<NavigationMenu.Link>
-									{#snippet child(props)}
-										<a href={resolve('/Function/translation/deepL' as Pathname)} data-sveltekit-reload {...props}>
-											DeepL
-										</a>
-									{/snippet}
-								</NavigationMenu.Link>
-							</li>
-							<li>
-								<NavigationMenu.Link>
-									{#snippet child(props)}
-										<a href={resolve('/Function/tts/SentToTTS' as Pathname)} data-sveltekit-reload {...props}>
-											Gen Sentence to Voice
-										</a>
-									{/snippet}
-								</NavigationMenu.Link>
-							</li>
-							<li>
-								<NavigationMenu.Link>
-									{#snippet child(props)}
-										<a href={resolve('/Function/tts/SentToTTS_Google' as Pathname)} data-sveltekit-reload {...props}>
-											Gen Sentence to Voice Google
-										</a>
-									{/snippet}
-								</NavigationMenu.Link>
-							</li>
 							<li>
 								<NavigationMenu.Link>
 									{#snippet child(props)}
@@ -274,54 +334,6 @@
 
 			<NavigationMenu.Item class="relative">
 				<NavigationMenu.Trigger
-					id="trigger-flipclock"
-					onmouseenter={() => handleTriggerEnter('flipclock', 'trigger-flipclock')}
-					onmouseleave={handleLeave}
-				>Flip Clock</NavigationMenu.Trigger>
-				{#if openMenu === 'flipclock'}
-					<div
-						role="menu"
-						tabindex="-1"
-						style={contentStyles['trigger-flipclock']}
-						class="rounded-md border bg-popover shadow-md"
-						onmouseenter={handleContentEnter}
-						onmouseleave={handleLeave}
-					>
-						<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
-							<li>
-								<NavigationMenu.Link>
-									{#snippet child(props)}
-										<a href={resolve('/flipclock/flipclock_Nomal' as Pathname)} data-sveltekit-reload {...props}>
-											Flip Clock Nomal
-										</a>
-									{/snippet}
-								</NavigationMenu.Link>
-							</li>
-							<li>
-								<NavigationMenu.Link>
-									{#snippet child(props)}
-										<a href={resolve('/flipclock/flipclock_word' as Pathname)} data-sveltekit-reload {...props}>
-											Flip Clock Word
-										</a>
-									{/snippet}
-								</NavigationMenu.Link>
-							</li>
-							<li>
-								<NavigationMenu.Link>
-									{#snippet child(props)}
-										<a href={resolve('/flipclock/flipclock_card' as Pathname)} data-sveltekit-reload {...props}>
-											Flip Clock Card
-										</a>
-									{/snippet}
-								</NavigationMenu.Link>
-							</li>
-						</ul>
-					</div>
-				{/if}
-			</NavigationMenu.Item>
-
-			<NavigationMenu.Item class="relative">
-				<NavigationMenu.Trigger
 					id="trigger-goods"
 					onmouseenter={() => handleTriggerEnter('goods', 'trigger-goods')}
 					onmouseleave={handleLeave}
@@ -336,6 +348,15 @@
 						onmouseleave={handleLeave}
 					>
 						<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/Goods/SentToImage' as Pathname)} data-sveltekit-reload {...props}>
+											Sent To Image
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
 							<li>
 								<NavigationMenu.Link>
 									{#snippet child(props)}
