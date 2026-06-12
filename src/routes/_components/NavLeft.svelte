@@ -180,7 +180,7 @@
 							<li>
 								<NavigationMenu.Link>
 									{#snippet child(props)}
-										<a href={resolve('/tts/SentToTTS' as Pathname)} data-sveltekit-reload {...props}>
+										<a href={resolve('/Function/tts/SentToTTS' as Pathname)} data-sveltekit-reload {...props}>
 											Gen Sentence to Voice
 										</a>
 									{/snippet}
@@ -318,7 +318,7 @@
 			</NavigationMenu.Item>
 
 			<NavigationMenu.Item>
-				<NavigationMenu.Link href={resolve('/TempPgm/Translation' as Pathname)} data-sveltekit-reload>
+				<NavigationMenu.Link href={resolve('/TempPgm/TTS' as Pathname)} data-sveltekit-reload>
 					TempPGM
 				</NavigationMenu.Link>
 			</NavigationMenu.Item>

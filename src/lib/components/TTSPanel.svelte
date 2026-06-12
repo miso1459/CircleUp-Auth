@@ -33,12 +33,14 @@
 		savedLang = 'en-US',
 		savedVoice = 'en-US-Neural2-F',
 		ttsBaseUrl = '',
+		formAction = '?/process',
 		form
 	}: {
 		sentences: Sentence[];
 		savedLang: string;
 		savedVoice: string;
 		ttsBaseUrl: string;
+		formAction?: string;
 		form?: { error?: string; success?: boolean; file_tts?: string } | null;
 	} = $props();
 
@@ -149,7 +151,7 @@
 								<Card.Description>언어, 음성 모델 및 속도를 설정합니다.</Card.Description>
 							</Card.Header>
 							<Card.Content>
-								<form method="POST" action="?/process" use:enhance={onSubmit} id="generator-form" class="space-y-4">
+								<form method="POST" action={formAction} use:enhance={onSubmit} id="generator-form" class="space-y-4">
 									<input type="hidden" name="sentenceId" value={selectedSentenceId} />
 									<input type="hidden" name="voice" value={selectedVoice} />
 									<input type="hidden" name="speed" value={rate} />
