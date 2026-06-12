@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { untrack } from 'svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
@@ -44,13 +43,11 @@
 	let errorMessage = $state<string | null>(null);
 	let successMessage = $state<string | null>(null);
 
-	// 초기 로드 시 DB에서 불러온 프롬프트를 할당하되, 로컬에서 입력할 때는 종속적 반응을 제거
+	// DB에서 불러온 프롬프트를 할당. savedPrompt 변경 시 항상 반영 (파이프라인 invalidate 등)
 	$effect(() => {
-		untrack(() => {
-			if (savedPrompt) {
-				prompt = savedPrompt;
-			}
-		});
+		if (savedPrompt) {
+			prompt = savedPrompt;
+		}
 	});
 
 	$effect(() => {
