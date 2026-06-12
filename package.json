@@ -5,9 +5,11 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
-		"deploy": "pnpm run build && pm2 reload all",
+
+		"build": "vite build --outDir dist_temp",
+		"deploy": "pnpm run build && robocopy dist_temp deploy /E /IS /IT & pm2 reload all",
 		"update": "git fetch --all && git reset --hard origin/main && pnpm install && pnpm run deploy",
+
 		"preview": "vite preview",
 		"start": "cross-env NODE_ENV=production node server.js",
 		"start:dev": "cross-env NODE_ENV=development node server.js",
