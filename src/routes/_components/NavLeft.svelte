@@ -184,19 +184,7 @@
 						class="rounded-md border bg-popover shadow-md"
 						onmouseenter={handleContentEnter}
 						onmouseleave={handleLeave}
-					>
-						<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
-							<li>
-								<NavigationMenu.Link>
-									{#snippet child(props)}
-										<a href={resolve('/PoC' as Pathname)} data-sveltekit-reload {...props}>
-											PoC Home
-										</a>
-									{/snippet}
-								</NavigationMenu.Link>
-							</li>
-						</ul>
-					</div>
+					></div>
 				{/if}
 			</NavigationMenu.Item>
 
