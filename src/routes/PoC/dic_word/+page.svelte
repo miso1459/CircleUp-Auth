@@ -208,7 +208,7 @@
 				<Database class="size-4 text-indigo-500" />
 				저장된 단어
 			</Card.Title>
-			<Card.Description>dic_word 테이블에 저장된 단어들입니다. (생성일 역순, 최대 100개)</Card.Description>
+			<Card.Description>Dic Word 테이블에 저장된 단어들입니다. (생성일 역순, 최대 100개)</Card.Description>
 		</Card.Header>
 		<Card.Content class="space-y-4">
 			<!-- 검색바 -->
