@@ -37,9 +37,12 @@
 		pipelineDone = false;
 		pipelineError = null;
 
+		// 선택 변경 감지를 위해 이전 ID 기록
+		const previousId = selectedId;
+
 		try {
-			// 데이터 갱신
-			pipelineStep = '문장 생성 완료, 데이터 갱신 중...';
+			// ## 문장이 생성되면 저장된 문장 갱신
+			pipelineStep = '저장된 문장 갱신 중...';
 			await invalidate('app:sentences');
 			await tick();
 			await delay(300);
@@ -51,13 +54,23 @@
 				return;
 			}
 
-			const top = sentences[0];
-			const sentenceId = top.id;
-			const sentenceLang = top.lang;
+			// ## 저장된 문장 중에서 마지막 생성 문장 선택
+			// sentences는 desc(id) 정렬이므로 [0]이 가장 최신 생성 문장
+			const lastGenerated = sentences[0];
+			const sentenceId = lastGenerated.id;
+			const sentenceLang = lastGenerated.lang;
 
-			// 가장 위 행 선택
+			// ## 선택된 문장으로 각 단계에 설정
 			selectedId = sentenceId;
-			selectedSentence = top.sent;
+			selectedSentence = lastGenerated.sent;
+
+			// ## TTL 생성은 선택된 문장이 변경된 후에 진행
+			if (previousId === sentenceId && previousId !== null) {
+				pipelineStep = '선택된 문장이 변경되지 않아 TTS를 건너뜁니다.';
+				await delay(500);
+				pipelineDone = true;
+				return;
+			}
 
 			// Step 1: 1초 딜레이 → TTS
 			pipelineStep = 'TTS 생성 중... (1/4)';
