@@ -58,43 +58,68 @@ export const load = (async ({ locals, url, depends }) => {
 		.where(eq(config.key, 'LLM_Tag'))
 		.limit(1);
 
+	// Check 설정
+	const imgBaseUrl = (env.IMG_BASE_URL || process.env.IMG_BASE_URL || 'http://localhost:5173/IMG_files').replace(/\/+$/, '');
+
 	// URL 검색 파라미터 처리
 	const searchQuery = url.searchParams.get('search') || '';
+	const imgFilter = url.searchParams.get('imgFilter') || 'unchecked';
 
 	// sentences 테이블 조회 (ID 역순, 최대 100개)
+	const selectFields = {
+		id: sentences.id,
+		lang: sentences.lang,
+		voice: sentences.voice,
+		speed: sentences.speed,
+		sent: sentences.sent,
+		tag: sentences.tag,
+		createdAt: sentences.createdAt,
+		file_tts: sentences.file_tts,
+		file_image: sentences.file_image,
+		check_img: sentences.check_img
+	};
+
 	let sentenceRows;
-	if (searchQuery) {
+	const searchFilter = like(sentences.sent, `%${searchQuery}%`);
+
+	if (imgFilter === 'checked') {
 		sentenceRows = await db
-			.select({
-				id: sentences.id,
-				lang: sentences.lang,
-				voice: sentences.voice,
-				speed: sentences.speed,
-				sent: sentences.sent,
-				tag: sentences.tag,
-				createdAt: sentences.createdAt,
-				file_tts: sentences.file_tts
-			})
+			.select(selectFields)
 			.from(sentences)
-			.where(like(sentences.sent, `%${searchQuery}%`))
+			.where(and(searchFilter, eq(sentences.check_img, 1)))
+			.orderBy(desc(sentences.id))
+			.limit(100);
+	} else if (imgFilter === 'unchecked') {
+		sentenceRows = await db
+			.select(selectFields)
+			.from(sentences)
+			.where(and(searchFilter, eq(sentences.check_img, 0)))
 			.orderBy(desc(sentences.id))
 			.limit(100);
 	} else {
 		sentenceRows = await db
-			.select({
-				id: sentences.id,
-				lang: sentences.lang,
-				voice: sentences.voice,
-				speed: sentences.speed,
-				sent: sentences.sent,
-				tag: sentences.tag,
-				createdAt: sentences.createdAt,
-				file_tts: sentences.file_tts
-			})
+			.select(selectFields)
 			.from(sentences)
+			.where(searchFilter)
 			.orderBy(desc(sentences.id))
 			.limit(100);
 	}
+
+	// 번역 데이터 조회
+	const sentenceIds = sentenceRows.map(s => s.id);
+	const translations = sentenceIds.length > 0
+		? await db
+			.select()
+			.from(sentences_tran)
+			.where(inArray(sentences_tran.id, sentenceIds))
+		: [];
+
+	const translationMap = new Map(translations.map(t => [t.id, t]));
+	const sentencesWithTrans = sentenceRows.map(s => ({
+		...s,
+		tran: translationMap.get(s.id)?.sent || null,
+		tranLang: translationMap.get(s.id)?.lang || null
+	}));
 
 	return {
 		geminiConfigured: Boolean(env.GEMINI_API_KEY),
@@ -104,7 +129,9 @@ export const load = (async ({ locals, url, depends }) => {
 		savedTransLang: savedConfigTransLang[0]?.value || 'EN',
 		savedTagPrompt: savedConfigTagPrompt[0]?.value || '',
 		ttsBaseUrl,
-		sentences: sentenceRows,
+		imgBaseUrl,
+		imgFilter,
+		sentences: sentencesWithTrans,
 		searchQuery
 	};
 }) satisfies PageServerLoad;
@@ -627,6 +654,64 @@ export const actions = {
 			.update(sentences)
 			.set({ tag: '' })
 			.where(eq(sentences.id, sentenceId));
+
+		return { success: true };
+	},
+	toggleCheckImg: async ({ request, locals }) => {
+		if (locals.user?.role !== 'admin') {
+			return fail(403, { error: 'Unauthorized' });
+		}
+
+		const formData = await request.formData();
+		const id = Number(formData.get('id'));
+		const checkImg = Number(formData.get('check_img'));
+
+		if (!id) {
+			return fail(400, { error: 'ID가 필요합니다.' });
+		}
+
+		await db
+			.update(sentences)
+			.set({ check_img: checkImg })
+			.where(eq(sentences.id, id));
+
+		return { success: true };
+	},
+	deleteImage: async ({ request, locals }) => {
+		if (locals.user?.role !== 'admin') {
+			return fail(403, { error: 'Unauthorized' });
+		}
+
+		const formData = await request.formData();
+		const id = Number(formData.get('id'));
+
+		if (!id) {
+			return fail(400, { error: 'ID가 필요합니다.' });
+		}
+
+		const [record] = await db
+			.select({ file_image: sentences.file_image })
+			.from(sentences)
+			.where(eq(sentences.id, id))
+			.limit(1);
+
+		if (record?.file_image && record.file_image.trim()) {
+			const imgDir = env.IMG_DIR || process.env.IMG_DIR || 'static/IMG';
+			const imgDirFull = path.resolve(process.cwd(), imgDir);
+			const imgFilePath = path.join(imgDirFull, record.file_image);
+			try {
+				if (fs.existsSync(imgFilePath)) {
+					fs.unlinkSync(imgFilePath);
+				}
+			} catch (e) {
+				console.error('Failed to delete image file:', imgFilePath, e);
+			}
+		}
+
+		await db
+			.update(sentences)
+			.set({ file_image: '' })
+			.where(eq(sentences.id, id));
 
 		return { success: true };
 	}

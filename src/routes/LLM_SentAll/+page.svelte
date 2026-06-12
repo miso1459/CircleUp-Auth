@@ -4,6 +4,7 @@
 	import TTSPanel from '$lib/components/TTSPanel.svelte';
 	import TranslationPanel from '$lib/components/TranslationPanel.svelte';
 	import LLMTagPanel from '$lib/components/LLMTagPanel.svelte';
+	import CheckTable from '$lib/components/CheckTable.svelte';
 
 	let { data, form }: PageProps = $props();
 </script>
@@ -31,5 +32,14 @@
 	savedPrompt={data.savedTagPrompt}
 	geminiConfigured={data.geminiConfigured}
 	formAction="?/tagProcess"
+	{form}
+/>
+
+<CheckTable
+	sentences={data.sentences}
+	searchQuery={data.searchQuery}
+	imgFilter={data.imgFilter}
+	imgBaseUrl={data.imgBaseUrl}
+	ttsBaseUrl={data.ttsBaseUrl}
 	{form}
 />
