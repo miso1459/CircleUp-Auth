@@ -77,6 +77,13 @@
 
 	const dicWords = $derived(data.dicWords);
 
+	function sensesCount(w: { senses?: string | null }): string {
+		try { const arr = JSON.parse(w.senses || '[]'); return arr.length ? String(arr.length) : '-'; } catch { return '-'; }
+	}
+	function phrasalCount(w: { phrasal_verbs?: string | null }): string {
+		try { const arr = JSON.parse(w.phrasal_verbs || '[]'); return arr.length ? String(arr.length) : '-'; } catch { return '-'; }
+	}
+
 	function handleSearch() {
 		const params = searchQuery.trim() ? `?search=${encodeURIComponent(searchQuery)}` : '';
 		window.location.href = `/Function/gen/LLM_SentToSent${params}`;
@@ -231,6 +238,9 @@
 							<Table.Head class="w-24">IPA</Table.Head>
 							<Table.Head class="w-16">POS</Table.Head>
 							<Table.Head class="w-16">Level</Table.Head>
+							<Table.Head class="w-20">Frequency</Table.Head>
+							<Table.Head class="w-16">Senses</Table.Head>
+							<Table.Head class="w-16">Phrasal</Table.Head>
 							<Table.Head class="w-44">Created At</Table.Head>
 							<Table.Head class="w-20">삭제</Table.Head>
 						</Table.Row>
@@ -238,7 +248,7 @@
 					<Table.Body>
 						{#if dicWords.length === 0}
 							<Table.Row>
-								<Table.Cell colspan="7" class="text-center text-muted-foreground py-8 text-sm">
+								<Table.Cell colspan="10" class="text-center text-muted-foreground py-8 text-sm">
 									저장된 단어가 없습니다.
 								</Table.Cell>
 							</Table.Row>
@@ -253,6 +263,9 @@
 									<Table.Cell class="text-xs font-mono">{w.ipa || '-'}</Table.Cell>
 									<Table.Cell class="text-xs">{w.pos || '-'}</Table.Cell>
 									<Table.Cell class="text-xs">{w.level || '-'}</Table.Cell>
+									<Table.Cell class="text-xs">{w.frequency || '-'}</Table.Cell>
+									<Table.Cell class="text-xs text-center">{sensesCount(w)}</Table.Cell>
+									<Table.Cell class="text-xs text-center">{phrasalCount(w)}</Table.Cell>
 									<Table.Cell class="text-xs text-muted-foreground whitespace-nowrap">
 										{new Date(w.createdAt).toLocaleString('ko-KR')}
 									</Table.Cell>

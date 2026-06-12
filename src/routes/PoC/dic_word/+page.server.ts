@@ -35,6 +35,8 @@ export const load = (async ({ locals, url, depends }) => {
 				pos: dicWord.pos,
 				level: dicWord.level,
 				frequency: dicWord.frequency,
+				senses: dicWord.senses,
+				phrasal_verbs: dicWord.phrasal_verbs,
 				check_core: dicWord.check_core,
 				createdAt: dicWord.createdAt
 			})
@@ -52,6 +54,8 @@ export const load = (async ({ locals, url, depends }) => {
 				pos: dicWord.pos,
 				level: dicWord.level,
 				frequency: dicWord.frequency,
+				senses: dicWord.senses,
+				phrasal_verbs: dicWord.phrasal_verbs,
 				check_core: dicWord.check_core,
 				createdAt: dicWord.createdAt
 			})
