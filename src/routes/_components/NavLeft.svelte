@@ -93,11 +93,20 @@
 						onmouseleave={handleLeave}
 					>
 						<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
+<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/Goods/LLM_SentAll' as Pathname)} data-sveltekit-reload {...props}>
+											LLM Sent All
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
 							<li>
 								<NavigationMenu.Link>
 									{#snippet child(props)}
-										<a href={resolve('/doc/ContentsEditor' as Pathname)} data-sveltekit-reload {...props}>
-											ContentsEditor
+										<a href={resolve('/Goods/SentToImage' as Pathname)} data-sveltekit-reload {...props}>
+											Sent To Image
 										</a>
 									{/snippet}
 								</NavigationMenu.Link>
@@ -311,10 +320,34 @@
 				{/if}
 			</NavigationMenu.Item>
 
-			<NavigationMenu.Item>
-				<NavigationMenu.Link href={resolve('/Goods/LLM_SentAll' as Pathname)} data-sveltekit-reload>
-					LLM Sent All
-				</NavigationMenu.Link>
+			<NavigationMenu.Item class="relative">
+				<NavigationMenu.Trigger
+					id="trigger-goods"
+					onmouseenter={() => handleTriggerEnter('goods', 'trigger-goods')}
+					onmouseleave={handleLeave}
+				>Goods</NavigationMenu.Trigger>
+				{#if openMenu === 'goods'}
+					<div
+						role="menu"
+						tabindex="-1"
+						style={contentStyles['trigger-goods']}
+						class="rounded-md border bg-popover shadow-md"
+						onmouseenter={handleContentEnter}
+						onmouseleave={handleLeave}
+					>
+						<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/Goods/LLM_SentAll' as Pathname)} data-sveltekit-reload {...props}>
+											LLM Sent All
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+						</ul>
+					</div>
+				{/if}
 			</NavigationMenu.Item>
 
 			<NavigationMenu.Item>

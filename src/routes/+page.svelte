@@ -35,24 +35,6 @@
 	<div class="w-full max-w-4xl z-10 flex flex-col gap-8">
 		
 		{#if data.document}
-			<!-- Header Status Banner -->
-			<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white/70 dark:bg-slate-900/60 backdrop-blur-md px-6 py-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
-				<div class="flex items-center gap-3">
-					<div class="w-10 h-10 bg-indigo-500/10 dark:bg-indigo-400/10 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-						<BookOpen class="w-5 h-5" />
-					</div>
-					<div>
-						<span class="text-[10px] font-bold tracking-wider text-indigo-600 dark:text-indigo-400 uppercase">CircleUp 대표 지정 문서</span>
-						<h2 class="text-sm font-semibold text-slate-700 dark:text-slate-350">현재 활성화된 공식 페이지입니다.</h2>
-					</div>
-				</div>
-
-				<div class="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 font-medium">
-					<Calendar class="w-4 h-4" />
-					<span>최종 업데이트: {formatDate(data.document.updatedAt)}</span>
-				</div>
-			</div>
-
 			<!-- Main Article Card -->
 			<article class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 shadow-xl shadow-slate-100 dark:shadow-none overflow-hidden transition-all duration-300">
 				
