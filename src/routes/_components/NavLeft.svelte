@@ -195,52 +195,10 @@
 									{/snippet}
 								</NavigationMenu.Link>
 							</li>
-						</ul>
-					</div>
-				{/if}
-			</NavigationMenu.Item>
-
-			<NavigationMenu.Item class="relative">
-				<NavigationMenu.Trigger
-					id="trigger-docs"
-					onmouseenter={() => handleTriggerEnter('docs', 'trigger-docs')}
-					onmouseleave={handleLeave}
-				>Docs</NavigationMenu.Trigger>
-				{#if openMenu === 'docs'}
-					<div
-						role="menu"
-						tabindex="-1"
-						style={contentStyles['trigger-docs']}
-						class="rounded-md border bg-popover shadow-md"
-						onmouseenter={handleContentEnter}
-						onmouseleave={handleLeave}
-					>
-						<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
-						</ul>
-					</div>
-				{/if}
-			</NavigationMenu.Item>
-
-			<NavigationMenu.Item class="relative">
-				<NavigationMenu.Trigger
-					id="trigger-flipclock"
-					onmouseenter={() => handleTriggerEnter('flipclock', 'trigger-flipclock')}
-					onmouseleave={handleLeave}
-				>Flip Clock</NavigationMenu.Trigger>
-				{#if openMenu === 'flipclock'}
-					<div
-						role="menu"
-						tabindex="-1"
-						style={contentStyles['trigger-flipclock']}
-						class="rounded-md border bg-popover shadow-md"
-						onmouseenter={handleContentEnter}
-						onmouseleave={handleLeave}
-					>
-						<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
 							<li>
 								<NavigationMenu.Link>
 									{#snippet child(props)}
-										<a href={resolve('/flipclock/flipclock_Nomal' as Pathname)} data-sveltekit-reload {...props}>
+										<a href={resolve('/PoC/flipclock/flipclock_Nomal' as Pathname)} data-sveltekit-reload {...props}>
 											Flip Clock Nomal
 										</a>
 									{/snippet}
@@ -249,7 +207,7 @@
 							<li>
 								<NavigationMenu.Link>
 									{#snippet child(props)}
-										<a href={resolve('/flipclock/flipclock_word' as Pathname)} data-sveltekit-reload {...props}>
+										<a href={resolve('/PoC/flipclock/flipclock_word' as Pathname)} data-sveltekit-reload {...props}>
 											Flip Clock Word
 										</a>
 									{/snippet}
@@ -258,7 +216,7 @@
 							<li>
 								<NavigationMenu.Link>
 									{#snippet child(props)}
-										<a href={resolve('/flipclock/flipclock_card' as Pathname)} data-sveltekit-reload {...props}>
+										<a href={resolve('/PoC/flipclock/flipclock_card' as Pathname)} data-sveltekit-reload {...props}>
 											Flip Clock Card
 										</a>
 									{/snippet}
