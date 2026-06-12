@@ -145,10 +145,12 @@
 	}
 
 	const langLabel = $derived(LANG_MAP[selectedLanguage] || '선택');
+
+	let accordionValue = $state('tts-section');
 </script>
 
 <div class="space-y-6">
-	<Accordion.Root type="single" collapsible>
+	<Accordion.Root type="single" bind:value={accordionValue}>
 		<Accordion.Item value="tts-section">
 			<Accordion.Trigger class="text-2xl font-bold tracking-tight py-4">
 				<div class="flex items-center gap-2">
