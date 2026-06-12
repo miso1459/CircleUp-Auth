@@ -241,6 +241,7 @@
 							<Table.Head class="w-20">Frequency</Table.Head>
 							<Table.Head class="w-16">Senses</Table.Head>
 							<Table.Head class="w-16">Phrasal</Table.Head>
+							<Table.Head class="w-12">Core</Table.Head>
 							<Table.Head class="w-44">Created At</Table.Head>
 							<Table.Head class="w-20">삭제</Table.Head>
 						</Table.Row>
@@ -248,7 +249,7 @@
 					<Table.Body>
 						{#if dicWords.length === 0}
 							<Table.Row>
-								<Table.Cell colspan="10" class="text-center text-muted-foreground py-8 text-sm">
+								<Table.Cell colspan="11" class="text-center text-muted-foreground py-8 text-sm">
 									저장된 단어가 없습니다.
 								</Table.Cell>
 							</Table.Row>
@@ -266,6 +267,7 @@
 									<Table.Cell class="text-xs">{w.frequency || '-'}</Table.Cell>
 									<Table.Cell class="text-xs text-center">{sensesCount(w)}</Table.Cell>
 									<Table.Cell class="text-xs text-center">{phrasalCount(w)}</Table.Cell>
+									<Table.Cell class="text-xs text-center">{w.check_core ? '✓' : '-'}</Table.Cell>
 									<Table.Cell class="text-xs text-muted-foreground whitespace-nowrap">
 										{new Date(w.createdAt).toLocaleString('ko-KR')}
 									</Table.Cell>
