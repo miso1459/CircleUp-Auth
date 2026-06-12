@@ -15,7 +15,6 @@
 		FileJson, 
 		Database, 
 		AlertTriangle, 
-		CheckCircle2,
 		Search,
 		X
 	} from '@lucide/svelte';
@@ -27,7 +26,6 @@
 	let loading = $state(false);
 	let errorMessage = $state<string | null>(null);
 
-	let dicResults = $state<{ word: string; core_meaning: string; isNew: boolean }[]>([]);
 	let dicInserted = $state<number | null>(null);
 	let dicUpdated = $state<number | null>(null);
 
@@ -42,7 +40,6 @@
 
 	$effect(() => {
 		if (form?.success) {
-			dicResults = form.dicResults ?? [];
 			dicInserted = form.dicInserted ?? 0;
 			dicUpdated = form.dicUpdated ?? 0;
 			errorMessage = null;
@@ -56,7 +53,6 @@
 	function onSubmit() {
 		loading = true;
 		errorMessage = null;
-		dicResults = [];
 		dicInserted = null;
 		dicUpdated = null;
 		return async ({ update }: { update: () => Promise<void> }) => {
@@ -307,76 +303,4 @@
 		</div>
 	{/if}
 
-	{#if dicInserted !== null && dicUpdated !== null}
-		<div class="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-950/50 flex items-start gap-3 rounded-lg p-4 text-sm transition-all">
-			<CheckCircle2 class="size-5 text-emerald-500 shrink-0 mt-0.5" />
-			<div>
-				<h3 class="font-semibold text-emerald-900 dark:text-emerald-200">dic_word 저장 결과</h3>
-				<p class="text-emerald-700 dark:text-emerald-300 mt-1">
-					입력 단어 중 <strong class="text-emerald-900 dark:text-emerald-100">{dicInserted}</strong>개 신규 추가,
-					<strong class="text-emerald-900 dark:text-emerald-100">{dicUpdated}</strong>개 업데이트 완료.
-				</p>
-			</div>
-		</div>
-	{/if}
-
-	<!-- LLM 생성 결과 -->
-	{#if dicResults.length > 0}
-		<div class="grid gap-6 lg:grid-cols-3">
-			<!-- 결과 단어 테이블 (2/3) -->
-			<Card.Root class="lg:col-span-2 border-muted">
-				<Card.Header>
-					<Card.Title class="text-base flex items-center gap-2">
-						<Database class="size-4 text-indigo-500" />
-						LLM 생성 결과
-					</Card.Title>
-					<Card.Description>Gemini가 생성한 단어 정보입니다.</Card.Description>
-				</Card.Header>
-				<Card.Content>
-					<div class="rounded-md border">
-						<Table.Root>
-							<Table.Header>
-								<Table.Row>
-									<Table.Head class="w-16">번호</Table.Head>
-									<Table.Head>단어</Table.Head>
-									<Table.Head>Core Meaning</Table.Head>
-									<Table.Head class="w-20">구분</Table.Head>
-								</Table.Row>
-							</Table.Header>
-							<Table.Body>
-								{#each dicResults as row, i (row.word)}
-									<Table.Row class="hover:bg-muted/50 transition-colors">
-										<Table.Cell class="font-semibold text-muted-foreground">{i + 1}</Table.Cell>
-										<Table.Cell class="font-medium text-foreground text-sm">{row.word}</Table.Cell>
-										<Table.Cell class="text-xs text-muted-foreground">{row.core_meaning || '-'}</Table.Cell>
-										<Table.Cell class="text-xs">
-											{#if row.isNew}
-												<span class="text-emerald-600 font-semibold">신규</span>
-											{:else}
-												<span class="text-amber-600 font-semibold">업데이트</span>
-											{/if}
-										</Table.Cell>
-									</Table.Row>
-								{/each}
-							</Table.Body>
-						</Table.Root>
-					</div>
-				</Card.Content>
-			</Card.Root>
-
-			<!-- 원본 JSON 뷰 (1/3) -->
-			<Card.Root class="lg:col-span-1 border-muted flex flex-col h-full">
-				<Card.Header>
-					<Card.Title class="text-base flex items-center gap-2">
-						<FileJson class="size-4 text-indigo-500" />
-						LLM RAW JSON
-					</Card.Title>
-					<Card.Description>LLM이 반환한 원본 JSON 결과입니다.</Card.Description>
-				</Card.Header>
-				<Card.Content class="flex-1 flex flex-col">
-					<pre class="bg-muted/50 dark:bg-muted/30 max-h-95 overflow-auto rounded-lg border p-4 font-mono text-xs leading-relaxed text-indigo-600 dark:text-indigo-400 select-all flex-1">{JSON.stringify(dicResults, null, 2)}</pre>
-				</Card.Content>
-			</Card.Root>
-		</div>
-	{/if}
 </div>

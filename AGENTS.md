@@ -97,3 +97,7 @@ Rules:
 - Never use `npx shadcn@latest add` or `npx shadcn-ui@latest add`.
 
 # DESIGN.md 파일 필수 참조
+
+# AGENTES.md 수정 할때 승인 후 진행
+
+# DESIGN.md 수정 할때 승인 후 진행
