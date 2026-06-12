@@ -185,7 +185,7 @@
 					name="prompt"
 					bind:value={prompt}
 					placeholder="예: 입력된 단어를 더 자연스럽고 유창한 영어 표현으로 변환해줘."
-					rows="10" class="w-full resize-none overflow-y-auto border-muted focus-visible:ring-indigo-500 text-sm leading-relaxed"
+					class="w-full min-h-40 max-h-40 [field-sizing:fixed] resize-none overflow-y-auto border-muted focus-visible:ring-indigo-500 text-sm leading-relaxed"
 				/>
 				<p class="text-xs text-muted-foreground">
 					프롬프트 입력 완료 후 왼쪽의 <strong>[단어 생성하기]</strong> 버튼을 클릭하세요. 생성 시 기존 데이터베이스의 중복 단어는 자동으로 제외됩니다.
