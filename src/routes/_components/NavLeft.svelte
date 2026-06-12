@@ -189,6 +189,15 @@
 							<li>
 								<NavigationMenu.Link>
 									{#snippet child(props)}
+										<a href={resolve('/PoC/dic_word' as Pathname)} data-sveltekit-reload {...props}>
+											Dic Word
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
 										<a href={resolve('/PoC/Doc/ContentsEditor' as Pathname)} data-sveltekit-reload {...props}>
 											ContentsEditor
 										</a>
