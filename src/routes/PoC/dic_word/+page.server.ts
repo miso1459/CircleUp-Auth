@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
-import { generateSentencesFromPrompt } from '$lib/server/gemini';
+import { transformSentencesWithPrompt, generateSentencesFromPrompt } from '$lib/server/gemini';
 import { db } from '$lib/server/db';
 import { config, sentences } from '$lib/server/db/schema';
 import { eq, inArray, like, desc } from 'drizzle-orm';
@@ -13,17 +13,11 @@ export const load = (async ({ locals, url, depends }) => {
 		throw redirect(303, '/');
 	}
 
-	// config에서 저장된 프롬프트와 언어 조회
+	// config에서 저장된 프롬프트 조회
 	const savedConfigPrompt = await db
 		.select()
 		.from(config)
-		.where(eq(config.key, 'LLM_Sent'))
-		.limit(1);
-
-	const savedConfigLang = await db
-		.select()
-		.from(config)
-		.where(eq(config.key, 'LLM_Sent_Lang'))
+		.where(eq(config.key, 'LLM_SentToSent'))
 		.limit(1);
 
 	// URL 검색 파라미터 처리
@@ -65,7 +59,6 @@ export const load = (async ({ locals, url, depends }) => {
 	return {
 		geminiConfigured: Boolean(env.GEMINI_API_KEY),
 		savedPrompt: savedConfigPrompt[0]?.value || '',
-		savedLang: savedConfigLang[0]?.value || 'en',
 		sentences: sentenceRows,
 		searchQuery
 	};
@@ -75,41 +68,37 @@ export const actions = {
 	process: async ({ request }) => {
 		const formData = await request.formData();
 		const prompt = String(formData.get('prompt') ?? '').trim();
-		const lang = String(formData.get('lang') ?? 'en').trim();
+		const sentence = String(formData.get('sentence') ?? '').trim();
 
 		if (!prompt) {
 			return fail(400, { error: '프롬프트를 입력해 주세요.' });
-		}
-		if (!lang) {
-			return fail(400, { error: '언어 코드를 입력해 주세요.' });
 		}
 		if (!env.GEMINI_API_KEY) {
 			return fail(500, { error: 'GEMINI_API_KEY 환경 변수를 설정해 주세요.' });
 		}
 
 		try {
-			// 1. config 테이블에 프롬프트 및 언어 저장 (없으면 추가, 있으면 업데이트)
+			// 1. config 테이블에 프롬프트 저장 (없으면 추가, 있으면 업데이트)
 			await db
 				.insert(config)
-				.values({ key: 'LLM_Sent', value: prompt })
+				.values({ key: 'LLM_SentToSent', value: prompt })
 				.onConflictDoUpdate({
 					target: config.key,
 					set: { value: prompt }
 				});
 
-			await db
-				.insert(config)
-				.values({ key: 'LLM_Sent_Lang', value: lang })
-				.onConflictDoUpdate({
-					target: config.key,
-					set: { value: lang }
-				});
+			// 2. Gemini API 호출하여 입력 단어들을 프롬프트에 따라 변환
+			const sentencesList = sentence
+				.split('\n')
+				.map(s => s.trim())
+				.filter(Boolean);
 
-			// 2. Gemini API 호출하여 문장 생성 (original은 빈값, statement에 결과)
-			const generatedRows = await generateSentencesFromPrompt(prompt);
+			const generatedRows = sentencesList.length > 0
+				? await transformSentencesWithPrompt(sentencesList, prompt)
+				: await generateSentencesFromPrompt(prompt);
 
 			if (generatedRows.length === 0) {
-				return fail(500, { error: '생성된 문장이 없습니다.' });
+				return fail(500, { error: '생성된 단어가 없습니다.' });
 			}
 
 			const statements = generatedRows.map(row => row.statement.trim()).filter(Boolean);
@@ -128,10 +117,10 @@ export const actions = {
 				newStatements = statements.filter(s => !existingSet.has(s));
 				duplicateCount = statements.length - newStatements.length;
 
-				// 4. 중복 제외된 새 문장들만 DB sentences 테이블에 저장
+				// 4. 중복 제외된 새 단어들만 DB sentences 테이블에 저장
 				if (newStatements.length > 0) {
 					const insertData = newStatements.map((sent) => ({
-						lang,
+						lang: 'en-US',
 						sent,
 						voice: '',
 						speed: '1.0',
@@ -149,7 +138,8 @@ export const actions = {
 				success: true,
 				rows: generatedRows,
 				insertedCount: newStatements.length,
-				duplicateCount
+				duplicateCount,
+				savedPrompt: prompt
 			};
 		} catch (err) {
 			const message = err instanceof Error ? err.message : 'LLM 처리 중 오류가 발생했습니다.';

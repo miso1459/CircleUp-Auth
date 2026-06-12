@@ -150,13 +150,13 @@
 					</div>
 
 					<div class="space-y-2">
-						<label for="sentence-input" class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">단어 1</label>
+						<label for="sentence-input" class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">단어 리스트</label>
 						<Textarea
 							id="sentence-input"
 							form="generator-form"
 							name="sentence"
 							bind:value={sentence}
-							placeholder="변환할 단어를 입력하세요."
+							placeholder="변환할 단어를 한 줄에 하나씩 입력하세요."
 							class="w-full min-h-20 resize-none border-muted focus-visible:ring-indigo-500 text-sm leading-relaxed"
 						/>
 					</div>
