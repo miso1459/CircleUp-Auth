@@ -318,7 +318,7 @@
 			</NavigationMenu.Item>
 
 			<NavigationMenu.Item>
-				<NavigationMenu.Link href={resolve('/TempPgm/LLM_Tag' as Pathname)} data-sveltekit-reload>
+				<NavigationMenu.Link href={resolve('/TempPgm/Translation' as Pathname)} data-sveltekit-reload>
 					TempPGM
 				</NavigationMenu.Link>
 			</NavigationMenu.Item>
