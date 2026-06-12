@@ -291,13 +291,14 @@
 							<Table.Head class="w-16">Phrasal</Table.Head>
 							<Table.Head class="w-12">Core</Table.Head>
 							<Table.Head class="w-44">Created At</Table.Head>
+							<Table.Head class="w-12">MP3</Table.Head>
 							<Table.Head class="w-20">삭제</Table.Head>
 						</Table.Row>
 					</Table.Header>
 					<Table.Body>
 						{#if dicWords.length === 0}
 							<Table.Row>
-								<Table.Cell colspan="11" class="text-center text-muted-foreground py-8 text-sm">
+								<Table.Cell colspan="12" class="text-center text-muted-foreground py-8 text-sm">
 									저장된 단어가 없습니다.
 								</Table.Cell>
 							</Table.Row>
@@ -325,35 +326,35 @@
 										{new Date(w.createdAt).toLocaleString('ko-KR')}
 									</Table.Cell>
 									<Table.Cell>
-										<div class="flex items-center gap-1">
-											{#if w.mp3_url}
-												<Button
-													size="sm"
-													variant="outline"
-													class="size-7 p-0"
-													onclick={(e) => { e.stopPropagation(); playAudio(w.mp3_url!); }}
-												>
-													<Volume2 class="size-3.5" />
-												</Button>
-											{:else}
-												<Button
-													size="sm"
-													variant="outline"
-													class="size-7 p-0"
-													disabled
-													onclick={(e) => e.stopPropagation()}
-												>
-													<VolumeX class="size-3.5" />
-												</Button>
-											{/if}
+										{#if w.mp3_url}
 											<Button
 												size="sm"
-												variant="destructive"
-												onclick={(e) => { e.stopPropagation(); handleDelete(w.word); }}
+												variant="outline"
+												class="size-7 p-0"
+												onclick={(e) => { e.stopPropagation(); playAudio(w.mp3_url!); }}
 											>
-												삭제
+												<Volume2 class="size-3.5" />
 											</Button>
-										</div>
+										{:else}
+											<Button
+												size="sm"
+												variant="outline"
+												class="size-7 p-0"
+												disabled
+												onclick={(e) => e.stopPropagation()}
+											>
+												<VolumeX class="size-3.5" />
+											</Button>
+										{/if}
+									</Table.Cell>
+									<Table.Cell>
+										<Button
+											size="sm"
+											variant="destructive"
+											onclick={(e) => { e.stopPropagation(); handleDelete(w.word); }}
+										>
+											삭제
+										</Button>
 									</Table.Cell>
 								</Table.Row>
 							{/each}
