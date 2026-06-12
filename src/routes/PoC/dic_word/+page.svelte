@@ -27,11 +27,9 @@
 	let loading = $state(false);
 	let errorMessage = $state<string | null>(null);
 
-	let generatedRows = $state<{ index: number; original: string; statement: string }[]>([]);
-	let insertedCount = $state<number | null>(null);
-	let duplicateCount = $state<number | null>(null);
+	let dicResults = $state<{ word: string; core_meaning: string; isNew: boolean }[]>([]);
 	let dicInserted = $state<number | null>(null);
-	let dicSkipped = $state<number | null>(null);
+	let dicUpdated = $state<number | null>(null);
 
 	// 초기 로드 시 DB에서 불러온 프롬프트 할당
 	$effect(() => {
@@ -44,17 +42,11 @@
 
 	$effect(() => {
 		if (form?.success) {
-			generatedRows = form.rows ?? [];
-			insertedCount = form.insertedCount ?? 0;
-			duplicateCount = form.duplicateCount ?? 0;
+			dicResults = form.dicResults ?? [];
 			dicInserted = form.dicInserted ?? 0;
-			dicSkipped = form.dicSkipped ?? 0;
+			dicUpdated = form.dicUpdated ?? 0;
 			errorMessage = null;
 			prompt = form.savedPrompt ?? prompt;
-			const rows = form.rows ?? [];
-			if (rows.length > 0) {
-				sentence = rows[rows.length - 1].statement;
-			}
 		}
 		if (form?.error) {
 			errorMessage = form.error;
@@ -64,10 +56,9 @@
 	function onSubmit() {
 		loading = true;
 		errorMessage = null;
-		insertedCount = null;
-		duplicateCount = null;
+		dicResults = [];
 		dicInserted = null;
-		dicSkipped = null;
+		dicUpdated = null;
 		return async ({ update }: { update: () => Promise<void> }) => {
 			await update();
 			loading = false;
@@ -209,7 +200,7 @@
 					class="w-full min-h-40 max-h-40 [field-sizing:fixed] resize-none overflow-y-auto border-muted focus-visible:ring-indigo-500 text-sm leading-relaxed"
 				/>
 				<p class="text-xs text-muted-foreground">
-					프롬프트 입력 완료 후 왼쪽의 <strong>[단어 생성하기]</strong> 버튼을 클릭하세요. 생성 시 기존 데이터베이스의 중복 단어는 자동으로 제외됩니다.
+					프롬프트 입력 완료 후 왼쪽의 <strong>[단어 생성하기]</strong> 버튼을 클릭하세요. 기존 단어는 업데이트, 새 단어는 추가됩니다.
 				</p>
 			</Card.Content>
 		</Card.Root>
@@ -316,47 +307,30 @@
 		</div>
 	{/if}
 
-	{#if insertedCount !== null && duplicateCount !== null}
-		<div class="bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-950/50 flex items-start gap-3 rounded-lg p-4 text-sm transition-all">
-			<CheckCircle2 class="size-5 text-indigo-500 shrink-0 mt-0.5" />
-			<div>
-				<h3 class="font-semibold text-indigo-900 dark:text-indigo-200">데이터베이스 저장 결과</h3>
-				<p class="text-indigo-700 dark:text-indigo-300 mt-1">
-					새로 생성된 단어 중 <strong class="text-indigo-900 dark:text-indigo-100">{insertedCount}</strong>개가 <code>sentences</code> 테이블에 저장되었습니다.
-					{#if duplicateCount > 0}
-						<span class="text-muted-foreground ml-1 font-normal text-xs">(중복으로 제외된 단어: {duplicateCount}개)</span>
-					{/if}
-				</p>
-			</div>
-		</div>
-	{/if}
-
-	{#if dicInserted !== null && dicSkipped !== null}
+	{#if dicInserted !== null && dicUpdated !== null}
 		<div class="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-950/50 flex items-start gap-3 rounded-lg p-4 text-sm transition-all">
 			<CheckCircle2 class="size-5 text-emerald-500 shrink-0 mt-0.5" />
 			<div>
 				<h3 class="font-semibold text-emerald-900 dark:text-emerald-200">dic_word 저장 결과</h3>
 				<p class="text-emerald-700 dark:text-emerald-300 mt-1">
-					입력 단어 중 <strong class="text-emerald-900 dark:text-emerald-100">{dicInserted}</strong>개가 <code>dic_word</code> 테이블에 저장되었습니다.
-					{#if dicSkipped > 0}
-						<span class="text-muted-foreground ml-1 font-normal text-xs">(중복으로 제외된 단어: {dicSkipped}개)</span>
-					{/if}
+					입력 단어 중 <strong class="text-emerald-900 dark:text-emerald-100">{dicInserted}</strong>개 신규 추가,
+					<strong class="text-emerald-900 dark:text-emerald-100">{dicUpdated}</strong>개 업데이트 완료.
 				</p>
 			</div>
 		</div>
 	{/if}
 
-	<!-- 결과 테이블 및 JSON -->
-	{#if generatedRows.length > 0}
+	<!-- LLM 생성 결과 -->
+	{#if dicResults.length > 0}
 		<div class="grid gap-6 lg:grid-cols-3">
 			<!-- 결과 단어 테이블 (2/3) -->
 			<Card.Root class="lg:col-span-2 border-muted">
 				<Card.Header>
 					<Card.Title class="text-base flex items-center gap-2">
 						<Database class="size-4 text-indigo-500" />
-						생성된 단어 목록
+						LLM 생성 결과
 					</Card.Title>
-					<Card.Description>Gemini가 생성해 낸 단어들입니다.</Card.Description>
+					<Card.Description>Gemini가 생성한 단어 정보입니다.</Card.Description>
 				</Card.Header>
 				<Card.Content>
 					<div class="rounded-md border">
@@ -364,14 +338,24 @@
 							<Table.Header>
 								<Table.Row>
 									<Table.Head class="w-16">번호</Table.Head>
-									<Table.Head>단어 (Statement)</Table.Head>
+									<Table.Head>단어</Table.Head>
+									<Table.Head>Core Meaning</Table.Head>
+									<Table.Head class="w-20">구분</Table.Head>
 								</Table.Row>
 							</Table.Header>
 							<Table.Body>
-								{#each generatedRows as row (row.index)}
+								{#each dicResults as row, i (row.word)}
 									<Table.Row class="hover:bg-muted/50 transition-colors">
-										<Table.Cell class="font-semibold text-muted-foreground">{row.index}</Table.Cell>
-										<Table.Cell class="font-medium text-foreground text-sm leading-relaxed">{row.statement}</Table.Cell>
+										<Table.Cell class="font-semibold text-muted-foreground">{i + 1}</Table.Cell>
+										<Table.Cell class="font-medium text-foreground text-sm">{row.word}</Table.Cell>
+										<Table.Cell class="text-xs text-muted-foreground">{row.core_meaning || '-'}</Table.Cell>
+										<Table.Cell class="text-xs">
+											{#if row.isNew}
+												<span class="text-emerald-600 font-semibold">신규</span>
+											{:else}
+												<span class="text-amber-600 font-semibold">업데이트</span>
+											{/if}
+										</Table.Cell>
 									</Table.Row>
 								{/each}
 							</Table.Body>
@@ -385,12 +369,12 @@
 				<Card.Header>
 					<Card.Title class="text-base flex items-center gap-2">
 						<FileJson class="size-4 text-indigo-500" />
-						Gemini RAW JSON
+						LLM RAW JSON
 					</Card.Title>
-					<Card.Description>LLM이 반환한 데이터의 원본 JSON 결과입니다.</Card.Description>
+					<Card.Description>LLM이 반환한 원본 JSON 결과입니다.</Card.Description>
 				</Card.Header>
 				<Card.Content class="flex-1 flex flex-col">
-					<pre class="bg-muted/50 dark:bg-muted/30 max-h-95 overflow-auto rounded-lg border p-4 font-mono text-xs leading-relaxed text-indigo-600 dark:text-indigo-400 select-all flex-1">{JSON.stringify(generatedRows, null, 2)}</pre>
+					<pre class="bg-muted/50 dark:bg-muted/30 max-h-95 overflow-auto rounded-lg border p-4 font-mono text-xs leading-relaxed text-indigo-600 dark:text-indigo-400 select-all flex-1">{JSON.stringify(dicResults, null, 2)}</pre>
 				</Card.Content>
 			</Card.Root>
 		</div>
