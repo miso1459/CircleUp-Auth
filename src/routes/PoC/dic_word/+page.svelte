@@ -8,6 +8,7 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import { invalidate } from '$app/navigation';
 	import { Input } from '$lib/components/ui/input/index.js';
+	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import { 
 		Loader2, 
 		Sparkles, 
@@ -87,6 +88,19 @@
 	function handleSearch() {
 		const params = searchQuery.trim() ? `?search=${encodeURIComponent(searchQuery)}` : '';
 		window.location.href = `/Function/gen/LLM_SentToSent${params}`;
+	}
+
+	async function toggleCheckCore(word: string, current: boolean) {
+		try {
+			const res = await fetch('/Function/gen/LLM_SentToSent', {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ word, check_core: !current })
+			});
+			if (res.ok) {
+				await invalidate('app:dicword');
+			}
+		} catch { /* 무시 */ }
 	}
 
 	async function handleDelete(word: string) {
@@ -267,7 +281,12 @@
 									<Table.Cell class="text-xs">{w.frequency || '-'}</Table.Cell>
 									<Table.Cell class="text-xs text-center">{sensesCount(w)}</Table.Cell>
 									<Table.Cell class="text-xs text-center">{phrasalCount(w)}</Table.Cell>
-									<Table.Cell class="text-xs text-center">{w.check_core ? '✓' : '-'}</Table.Cell>
+									<Table.Cell class="text-center">
+										<Checkbox
+											checked={Boolean(w.check_core)}
+											oncheckedchange={() => toggleCheckCore(w.word, Boolean(w.check_core))}
+										/>
+									</Table.Cell>
 									<Table.Cell class="text-xs text-muted-foreground whitespace-nowrap">
 										{new Date(w.createdAt).toLocaleString('ko-KR')}
 									</Table.Cell>
