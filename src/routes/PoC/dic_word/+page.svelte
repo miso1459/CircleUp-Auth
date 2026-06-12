@@ -90,12 +90,12 @@
 		window.location.href = `/Function/gen/LLM_SentToSent${params}`;
 	}
 
-	async function toggleCheckCore(word: string, current: boolean) {
+	async function toggleCheckCore(word: string, checked: boolean) {
 		try {
 			const res = await fetch('/Function/gen/LLM_SentToSent', {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ word, check_core: !current })
+				body: JSON.stringify({ word, check_core: checked })
 			});
 			if (res.ok) {
 				await invalidate('app:dicword');
@@ -281,10 +281,10 @@
 									<Table.Cell class="text-xs">{w.frequency || '-'}</Table.Cell>
 									<Table.Cell class="text-xs text-center">{sensesCount(w)}</Table.Cell>
 									<Table.Cell class="text-xs text-center">{phrasalCount(w)}</Table.Cell>
-									<Table.Cell class="text-center">
+									<Table.Cell class="text-center" onclick={(e: MouseEvent) => e.stopPropagation()}>
 										<Checkbox
 											checked={Boolean(w.check_core)}
-											oncheckedchange={() => toggleCheckCore(w.word, Boolean(w.check_core))}
+											onCheckedChange={(c: boolean) => toggleCheckCore(w.word, c)}
 										/>
 									</Table.Cell>
 									<Table.Cell class="text-xs text-muted-foreground whitespace-nowrap">
