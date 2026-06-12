@@ -22,10 +22,10 @@ export const auth = betterAuth({
         }		
 	},
 	session: {
-		expiresIn: 60 * 30
+		expiresIn: 60 * 30 * 12
 	},
 	jwt: {
-		expiresIn: 60 * 30
+		expiresIn: 60 * 30 * 12
 	},
 	plugins: [
 		admin(),
