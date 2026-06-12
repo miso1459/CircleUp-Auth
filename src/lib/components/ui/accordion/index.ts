@@ -1,8 +1,10 @@
 import Root from "./accordion.svelte";
+
 import Content from "./accordion-content.svelte";
 import Item from "./accordion-item.svelte";
 import Trigger from "./accordion-trigger.svelte";
 
+// Accordion component exports
 export {
 	Root,
 	Content,
