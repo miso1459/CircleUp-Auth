@@ -36,6 +36,7 @@
 		imgFilter = 'unchecked',
 		imgBaseUrl = '',
 		ttsBaseUrl = '',
+		compact = false,
 		form
 	}: {
 		sentences: Sentence[];
@@ -43,6 +44,7 @@
 		imgFilter: string;
 		imgBaseUrl: string;
 		ttsBaseUrl: string;
+		compact?: boolean;
 		form?: { error?: string; success?: boolean } | null;
 	} = $props();
 
@@ -122,7 +124,7 @@
 	}
 </script>
 
-<div class="space-y-6 p-6">
+<div class={compact ? 'space-y-2 p-2' : 'space-y-6 p-6'}>
 	<!-- 헤더 영역 -->
 	<div class="space-y-1">
 		<h1 class="flex items-center gap-2 text-2xl font-bold tracking-tight">

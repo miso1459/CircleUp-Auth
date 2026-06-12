@@ -26,12 +26,14 @@
 		savedPrompt = '',
 		geminiConfigured = true,
 		formAction = '?/process',
+		compact = false,
 		form
 	}: {
 		sentences: Sentence[];
 		savedPrompt: string;
 		geminiConfigured: boolean;
 		formAction?: string;
+		compact?: boolean;
 		form?: { error?: string; success?: boolean; successCount?: number; errorCount?: number } | null;
 	} = $props();
 
@@ -80,10 +82,10 @@
 	}
 </script>
 
-<div class="space-y-6 p-6">
+<div class={compact ? 'space-y-2 p-2' : 'space-y-6 p-6'}>
 	<Accordion.Root type="single" collapsible>
 		<Accordion.Item value="llm-tag-section">
-			<Accordion.Trigger class="text-2xl font-bold tracking-tight py-4">
+			<Accordion.Trigger class={compact ? 'text-2xl font-bold tracking-tight py-1' : 'text-2xl font-bold tracking-tight py-4'}>
 				<div class="flex items-center gap-2">
 					<Sparkles class="size-6 text-indigo-500" />
 					<span>LLM Tag</span>

@@ -34,6 +34,7 @@
 		savedVoice = 'en-US-Neural2-F',
 		ttsBaseUrl = '',
 		formAction = '?/process',
+		compact = false,
 		form
 	}: {
 		sentences: Sentence[];
@@ -41,6 +42,7 @@
 		savedVoice: string;
 		ttsBaseUrl: string;
 		formAction?: string;
+		compact?: boolean;
 		form?: { error?: string; success?: boolean; file_tts?: string } | null;
 	} = $props();
 
@@ -126,10 +128,10 @@
 	const langLabel = $derived(LANG_MAP[selectedLanguage] || '선택');
 </script>
 
-<div class="space-y-6 p-6">
+<div class={compact ? 'space-y-2 p-2' : 'space-y-6 p-6'}>
 	<Accordion.Root type="single" collapsible>
 		<Accordion.Item value="tts-section">
-			<Accordion.Trigger class="text-2xl font-bold tracking-tight py-4">
+			<Accordion.Trigger class={compact ? 'text-2xl font-bold tracking-tight py-1' : 'text-2xl font-bold tracking-tight py-4'}>
 				<div class="flex items-center gap-2">
 					<Sparkles class="size-6 text-indigo-500" />
 					<span>TTS</span>

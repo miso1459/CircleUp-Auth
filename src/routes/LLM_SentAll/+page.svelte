@@ -13,6 +13,7 @@
 	savedPrompt={data.savedPrompt}
 	savedLang={data.savedLang}
 	geminiConfigured={data.geminiConfigured}
+	compact={true}
 	{form}
 />
 
@@ -22,16 +23,18 @@
 	savedVoice={data.savedVoice}
 	ttsBaseUrl={data.ttsBaseUrl}
 	formAction="?/ttsProcess"
+	compact={true}
 	{form}
 />
 
-<TranslationPanel sentences={data.sentences} savedTransLang={data.savedTransLang} {form} />
+<TranslationPanel sentences={data.sentences} savedTransLang={data.savedTransLang} compact={true} {form} />
 
 <LLMTagPanel
 	sentences={data.sentences}
 	savedPrompt={data.savedTagPrompt}
 	geminiConfigured={data.geminiConfigured}
 	formAction="?/tagProcess"
+	compact={true}
 	{form}
 />
 
@@ -41,5 +44,6 @@
 	imgFilter={data.imgFilter}
 	imgBaseUrl={data.imgBaseUrl}
 	ttsBaseUrl={data.ttsBaseUrl}
+	compact={true}
 	{form}
 />

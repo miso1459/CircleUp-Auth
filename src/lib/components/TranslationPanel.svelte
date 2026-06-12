@@ -31,10 +31,12 @@
 	let {
 		sentences = [],
 		savedTransLang = 'EN',
+		compact = false,
 		form
 	}: {
 		sentences: Sentence[];
 		savedTransLang: string;
+		compact?: boolean;
 		form?: { error?: string; success?: boolean } | null;
 	} = $props();
 
@@ -67,10 +69,10 @@
 	}
 </script>
 
-<div class="space-y-6 p-6">
+<div class={compact ? 'space-y-2 p-2' : 'space-y-6 p-6'}>
 	<Accordion.Root type="single" collapsible>
 		<Accordion.Item value="translation-section">
-			<Accordion.Trigger class="text-2xl font-bold tracking-tight py-4">
+			<Accordion.Trigger class={compact ? 'text-2xl font-bold tracking-tight py-1' : 'text-2xl font-bold tracking-tight py-4'}>
 				<div class="flex items-center gap-2">
 					<Sparkles class="size-6 text-indigo-500" />
 					<span>Translation</span>
