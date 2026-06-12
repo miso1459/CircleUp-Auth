@@ -6,6 +6,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
+		"deploy": "pnpm run build && pm2 reload all",
 		"preview": "vite preview",
 		"start": "cross-env NODE_ENV=production node server.js",
 		"start:dev": "cross-env NODE_ENV=development node server.js",

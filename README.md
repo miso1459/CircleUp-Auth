@@ -1,42 +1,23 @@
-# sv
+# SvelteKit -encTools Energy Materials 
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+# 종료
+taskkill /F /IM cmd.exe
+taskkill /F /IM node.exe
 
-## Creating a project
+# 패키지 설치
+pnpm install
 
-If you're seeing this, you've probably already done this step. Congrats!
+# 1. 프로젝트 폴더로 이동
+cd D:\Svelte\CircleUp\CircleUp-Auth
 
-```sh
-# create a new project
-npx sv create my-app
-```
+# 2. 설정 파일을 기반으로 안전하게 PM2 구동
+pm2 start ecosystem.config.cjs
 
-To recreate this project with the same configuration:
+# 3. 윈도우 서버 재부팅을 대비해 현재 상태 완전 저장
+pm2 save
 
-```sh
-# recreate this project
-pnpm dlx sv@0.15.3 create --template minimal --types ts --add prettier eslint tailwindcss="plugins:typography,forms" sveltekit-adapter="adapter:auto" drizzle="database:sqlite+sqlite:better-sqlite3" better-auth="demo:password,github" mdsvex paraglide="languageTags:ko, en+demo:yes" --install pnpm ./
-```
+# 모니터링
+pm2 monit
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+# 재적용
+pm2 reload all
