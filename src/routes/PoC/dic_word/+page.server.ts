@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { transformSentencesWithPrompt, generateSentencesFromPrompt } from '$lib/server/gemini';
 import { db } from '$lib/server/db';
-import { config, sentences } from '$lib/server/db/schema';
+import { config, sentences, dicWord } from '$lib/server/db/schema';
 import { eq, inArray, like, desc } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -87,12 +87,72 @@ export const actions = {
 					set: { value: prompt }
 				});
 
-			// 2. Gemini API 호출하여 입력 단어들을 프롬프트에 따라 변환
+			// 2. 입력 단어 리스트 추출
 			const sentencesList = sentence
 				.split('\n')
 				.map(s => s.trim())
 				.filter(Boolean);
 
+			// 3. dicWord 테이블에 단어 저장 (mp3_url은 dictionaryapi에서 추출)
+			let dicInserted = 0;
+			let dicSkipped = 0;
+
+			if (sentencesList.length > 0) {
+				// 기존 단어 조회 (중복 제외)
+				const existingWords = await db
+					.select({ word: dicWord.word })
+					.from(dicWord)
+					.where(inArray(dicWord.word, sentencesList));
+
+				const existingSet = new Set(existingWords.map(r => r.word));
+				const newWords = sentencesList.filter(w => !existingSet.has(w));
+
+				dicSkipped = sentencesList.length - newWords.length;
+
+				if (newWords.length > 0) {
+					const insertData: typeof dicWord.$inferInsert[] = [];
+
+					for (const w of newWords) {
+						let mp3_url = '';
+						try {
+							const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(w)}`);
+							if (res.ok) {
+								const json = await res.json();
+								// phonetics 배열에서 첫 번째 유효한 audio 추출
+								const phonetics = json[0]?.phonetics ?? [];
+								for (const p of phonetics) {
+									if (p.audio?.trim()) {
+										mp3_url = p.audio.trim();
+										break;
+									}
+								}
+							}
+						} catch {
+							// dictionary API 실패 시 mp3_url 빈 값
+						}
+
+						insertData.push({
+							word: w,
+							mp3_url,
+							core_meaning: '',
+							ipa: '',
+							pos: '',
+							level: '',
+							frequency: '',
+							senses: '[]',
+							phrasal_verbs: '[]',
+							check_core: 0
+						});
+					}
+
+					if (insertData.length > 0) {
+						await db.insert(dicWord).values(insertData);
+						dicInserted = insertData.length;
+					}
+				}
+			}
+
+			// 4. Gemini API 호출하여 입력 단어들을 프롬프트에 따라 변환
 			const generatedRows = sentencesList.length > 0
 				? await transformSentencesWithPrompt(sentencesList, prompt)
 				: await generateSentencesFromPrompt(prompt);
@@ -139,7 +199,9 @@ export const actions = {
 				rows: generatedRows,
 				insertedCount: newStatements.length,
 				duplicateCount,
-				savedPrompt: prompt
+				savedPrompt: prompt,
+				dicInserted,
+				dicSkipped
 			};
 		} catch (err) {
 			const message = err instanceof Error ? err.message : 'LLM 처리 중 오류가 발생했습니다.';

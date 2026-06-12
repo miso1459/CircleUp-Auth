@@ -29,6 +29,8 @@
 	let generatedRows = $state<{ index: number; original: string; statement: string }[]>([]);
 	let insertedCount = $state<number | null>(null);
 	let duplicateCount = $state<number | null>(null);
+	let dicInserted = $state<number | null>(null);
+	let dicSkipped = $state<number | null>(null);
 
 	// 초기 로드 시 DB에서 불러온 프롬프트 할당
 	$effect(() => {
@@ -44,6 +46,8 @@
 			generatedRows = form.rows ?? [];
 			insertedCount = form.insertedCount ?? 0;
 			duplicateCount = form.duplicateCount ?? 0;
+			dicInserted = form.dicInserted ?? 0;
+			dicSkipped = form.dicSkipped ?? 0;
 			errorMessage = null;
 			prompt = form.savedPrompt ?? prompt;
 			const rows = form.rows ?? [];
@@ -61,6 +65,8 @@
 		errorMessage = null;
 		insertedCount = null;
 		duplicateCount = null;
+		dicInserted = null;
+		dicSkipped = null;
 		return async ({ update }: { update: () => Promise<void> }) => {
 			await update();
 			loading = false;
@@ -285,6 +291,21 @@
 					새로 생성된 단어 중 <strong class="text-indigo-900 dark:text-indigo-100">{insertedCount}</strong>개가 <code>sentences</code> 테이블에 저장되었습니다.
 					{#if duplicateCount > 0}
 						<span class="text-muted-foreground ml-1 font-normal text-xs">(중복으로 제외된 단어: {duplicateCount}개)</span>
+					{/if}
+				</p>
+			</div>
+		</div>
+	{/if}
+
+	{#if dicInserted !== null && dicSkipped !== null}
+		<div class="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-950/50 flex items-start gap-3 rounded-lg p-4 text-sm transition-all">
+			<CheckCircle2 class="size-5 text-emerald-500 shrink-0 mt-0.5" />
+			<div>
+				<h3 class="font-semibold text-emerald-900 dark:text-emerald-200">dic_word 저장 결과</h3>
+				<p class="text-emerald-700 dark:text-emerald-300 mt-1">
+					입력 단어 중 <strong class="text-emerald-900 dark:text-emerald-100">{dicInserted}</strong>개가 <code>dic_word</code> 테이블에 저장되었습니다.
+					{#if dicSkipped > 0}
+						<span class="text-muted-foreground ml-1 font-normal text-xs">(중복으로 제외된 단어: {dicSkipped}개)</span>
 					{/if}
 				</p>
 			</div>
