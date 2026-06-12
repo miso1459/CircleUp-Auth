@@ -22,6 +22,7 @@
 		Trash2,
 		ChevronDown
 	} from '@lucide/svelte';
+	import TTS from '$lib/components/TTS/TTS.svelte';
 
 	let { data, form }: PageProps = $props();
 
@@ -139,10 +140,25 @@
 	function handleClearTag(id: number) {
 		if (!confirm('태그를 삭제하시겠습니까?')) return;
 		clearTagId = id;
-		const form = document.getElementById('clear-tag-form') as HTMLFormElement;
-		if (form) {
-			form.requestSubmit();
+		const clearForm = document.getElementById('clear-tag-form') as HTMLFormElement;
+		if (clearForm) {
+			clearForm.requestSubmit();
 		}
+	}
+
+	// Batch TTS form handling
+	let batchTtsLoading = $state(false);
+
+	function onBatchTTS() {
+		batchTtsLoading = true;
+		errorMessage = null;
+		return async ({ result, update }: { result: { type: string; data?: Record<string, unknown> }; update: () => Promise<void> }) => {
+			await update();
+			batchTtsLoading = false;
+			if (result?.type === 'success' && result?.data?.success) {
+				await invalidate('app:sentences');
+			}
+		};
 	}
 </script>
 
@@ -409,6 +425,9 @@
 			</div>
 		</Collapsible.Content>
 	</Collapsible.Root>
+
+	<!-- TTS 컴포넌트 -->
+	<TTS data={data} form={form} {sentences} {selectedSentenceId} />
 
 	<!-- 피드백 메시지 -->
 	{#if errorMessage}

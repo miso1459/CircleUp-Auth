@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { transformSentencesWithPrompt } from '$lib/server/gemini';
+import { getTTSLoadData, ttsActions } from '$lib/server/tts-actions';
 import { db } from '$lib/server/db';
 import { config, sentences } from '$lib/server/db/schema';
 import { eq, like, desc, and, ne, inArray } from 'drizzle-orm';
@@ -18,6 +19,8 @@ export const load = (async ({ locals, url, depends }) => {
 		.from(config)
 		.where(eq(config.key, 'LLM_Tag'))
 		.limit(1);
+
+	const ttsData = await getTTSLoadData({ locals });
 
 	const searchQuery = url.searchParams.get('search') || '';
 	const tagFilter = url.searchParams.get('tagFilter') || 'not-generated';
@@ -104,7 +107,8 @@ export const load = (async ({ locals, url, depends }) => {
 		savedPrompt: savedConfigPrompt[0]?.value || '',
 		sentences: sentenceRows,
 		searchQuery,
-		tagFilter
+		tagFilter,
+		...ttsData
 	};
 }) satisfies PageServerLoad;
 
@@ -261,5 +265,6 @@ export const actions = {
 			.where(eq(sentences.id, sentenceId));
 
 		return { success: true };
-	}
+	},
+	...ttsActions
 } satisfies Actions;
