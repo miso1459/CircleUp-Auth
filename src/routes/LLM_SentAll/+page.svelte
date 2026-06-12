@@ -2,6 +2,7 @@
 	import type { PageProps } from './$types';
 	import LLMSentPanel from '$lib/components/LLMSentPanel.svelte';
 	import TTSPanel from '$lib/components/TTSPanel.svelte';
+	import TranslationPanel from '$lib/components/TranslationPanel.svelte';
 
 	let { data, form }: PageProps = $props();
 </script>
@@ -21,3 +22,5 @@
 	formAction="?/ttsProcess"
 	{form}
 />
+
+<TranslationPanel sentences={data.sentences} savedTransLang={data.savedTransLang} {form} />

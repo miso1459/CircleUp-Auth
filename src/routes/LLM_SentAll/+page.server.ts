@@ -2,8 +2,9 @@ import { fail, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { transformSentencesWithPrompt, generateSentencesFromPrompt } from '$lib/server/gemini';
 import { generateTTS } from '$lib/server/tts';
+import { translateSingle } from '$lib/server/translate';
 import { db } from '$lib/server/db';
-import { config, sentences } from '$lib/server/db/schema';
+import { config, sentences, sentences_tran } from '$lib/server/db/schema';
 import { eq, inArray, like, desc } from 'drizzle-orm';
 import fs from 'fs';
 import path from 'path';
@@ -41,6 +42,13 @@ export const load = (async ({ locals, url, depends }) => {
 		.select()
 		.from(config)
 		.where(eq(config.key, 'TTS_Voice'))
+		.limit(1);
+
+	// 번역 설정
+	const savedConfigTransLang = await db
+		.select()
+		.from(config)
+		.where(eq(config.key, 'Trans_lang'))
 		.limit(1);
 
 	// URL 검색 파라미터 처리
@@ -84,6 +92,7 @@ export const load = (async ({ locals, url, depends }) => {
 		savedPrompt: savedConfigPrompt[0]?.value || '',
 		savedLang: savedConfigLang[0]?.value || 'en',
 		savedVoice: savedConfigVoice[0]?.value || 'en-US-Neural2-F',
+		savedTransLang: savedConfigTransLang[0]?.value || 'EN',
 		ttsBaseUrl,
 		sentences: sentenceRows,
 		searchQuery
@@ -353,6 +362,113 @@ export const actions = {
 			.onConflictDoUpdate({
 				target: config.key,
 				set: { value: voice }
+			});
+
+		return { success: true, successCount, errorCount };
+	},
+	translate: async ({ request, locals }) => {
+		if (locals.user?.role !== 'admin') {
+			return fail(403, { error: 'Unauthorized' });
+		}
+
+		const formData = await request.formData();
+		const sentenceId = Number(formData.get('sentenceId'));
+		const targetLang = String(formData.get('targetLang') ?? 'EN').trim();
+
+		if (!sentenceId) {
+			return fail(400, { error: '문장을 선택해 주세요.' });
+		}
+
+		const [record] = await db
+			.select({ sent: sentences.sent, lang: sentences.lang })
+			.from(sentences)
+			.where(eq(sentences.id, sentenceId))
+			.limit(1);
+
+		if (!record) {
+			return fail(404, { error: '문장을 찾을 수 없습니다.' });
+		}
+
+		const result = await translateSingle(record.sent, targetLang);
+		if (result.error) return fail(500, { error: result.error });
+
+		await db
+			.insert(sentences_tran)
+			.values({ id: sentenceId, lang: targetLang, sent: result.text! })
+			.onConflictDoUpdate({
+				target: [sentences_tran.id],
+				set: { lang: targetLang, sent: result.text! }
+			});
+
+		await db
+			.insert(config)
+			.values({ key: 'Trans_lang', value: targetLang })
+			.onConflictDoUpdate({
+				target: [config.key],
+				set: { value: targetLang }
+			});
+
+		return { success: true };
+	},
+	batchTranslate: async ({ request, locals }) => {
+		if (locals.user?.role !== 'admin') {
+			return fail(403, { error: 'Unauthorized' });
+		}
+
+		const formData = await request.formData();
+		const targetLang = String(formData.get('targetLang') ?? 'EN').trim();
+		const idsStr = String(formData.get('ids') || '');
+		const ids = idsStr.split(',').map(Number).filter(Boolean);
+
+		if (ids.length === 0) {
+			return fail(400, { error: '번역할 문장이 없습니다.' });
+		}
+
+		const translatedIds = await db
+			.select({ id: sentences_tran.id })
+			.from(sentences_tran);
+		const translatedIdSet = new Set(translatedIds.map(t => t.id));
+		const untranslatedIds = ids.filter(id => !translatedIdSet.has(id));
+
+		if (untranslatedIds.length === 0) {
+			return fail(400, { error: '모든 문장이 이미 번역되었습니다.' });
+		}
+
+		const records = await db
+			.select({ id: sentences.id, sent: sentences.sent, lang: sentences.lang })
+			.from(sentences)
+			.where(inArray(sentences.id, untranslatedIds));
+
+		let successCount = 0;
+		let errorCount = 0;
+
+		for (const record of records) {
+			const result = await translateSingle(record.sent, targetLang);
+			if (result.error) {
+				errorCount++;
+				continue;
+			}
+
+			try {
+				await db
+					.insert(sentences_tran)
+					.values({ id: record.id, lang: targetLang, sent: result.text! })
+					.onConflictDoUpdate({
+						target: [sentences_tran.id],
+						set: { lang: targetLang, sent: result.text! }
+					});
+				successCount++;
+			} catch {
+				errorCount++;
+			}
+		}
+
+		await db
+			.insert(config)
+			.values({ key: 'Trans_lang', value: targetLang })
+			.onConflictDoUpdate({
+				target: [config.key],
+				set: { value: targetLang }
 			});
 
 		return { success: true, successCount, errorCount };
