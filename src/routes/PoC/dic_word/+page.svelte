@@ -62,8 +62,25 @@
 	}
 
 	let searchQuery = $state(data.searchQuery);
+	let selectedWord = $state('');
+	let parsedSenses = $state<ReturnType<typeof parseSenses>>([]);
 
 	const dicWords = $derived(data.dicWords);
+
+	function parseSenses(raw: string | null | undefined) {
+		try {
+			const arr = JSON.parse(raw || '[]');
+			return arr as { sense_id: number; definition_en: string; meaning_ko: string; example: { en: string; ko: string } }[];
+		} catch {
+			return [];
+		}
+	}
+
+	function selectWord(w: { word: string; senses?: string | null }) {
+		sentence = w.word;
+		selectedWord = w.word;
+		parsedSenses = parseSenses(w.senses);
+	}
 
 	function phrasalCount(w: { phrasal_verbs?: string | null }): string {
 		try { const arr = JSON.parse(w.phrasal_verbs || '[]'); return arr.length ? String(arr.length) : '-'; } catch { return '-'; }
@@ -209,6 +226,32 @@
 			<Card.Description>Dic Word 테이블에 저장된 단어들입니다. (생성일 역순, 최대 100개)</Card.Description>
 		</Card.Header>
 		<Card.Content class="space-y-4">
+			<!-- 선택된 단어의 Senses -->
+			{#if selectedWord && parsedSenses.length > 0}
+				<div class="bg-muted/50 rounded-lg border p-3 space-y-2">
+					<h4 class="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+						Senses of <span class="font-bold">{selectedWord}</span>
+					</h4>
+					{#each parsedSenses as sense}
+						<div class="bg-background rounded border p-2.5 text-xs space-y-1">
+							<div class="flex items-center gap-2">
+								<span class="font-mono font-semibold text-muted-foreground">#{sense.sense_id}</span>
+								<span class="font-medium">{sense.definition_en}</span>
+							</div>
+							<div class="text-muted-foreground">{sense.meaning_ko}</div>
+							{#if sense.example?.en}
+								<div class="text-muted-foreground/70 italic border-l-2 border-muted-foreground/30 pl-2 mt-1">
+									{sense.example.en}
+									{#if sense.example?.ko}
+										<div>{sense.example.ko}</div>
+									{/if}
+								</div>
+							{/if}
+						</div>
+					{/each}
+				</div>
+			{/if}
+
 			<!-- 검색바 -->
 			<div class="flex items-center gap-2">
 				<div class="relative flex-1">
@@ -255,7 +298,7 @@
 							{#each dicWords as w (w.word)}
 								<Table.Row
 									class="hover:bg-muted/50 transition-colors cursor-pointer"
-									onclick={() => { sentence = w.word; }}
+									onclick={() => { selectWord(w); }}
 								>
 									<Table.Cell class="font-semibold text-sm max-w-24 truncate">{w.word}</Table.Cell>
 									<Table.Cell class="text-xs text-muted-foreground" title={w.core_meaning}>{w.core_meaning || '-'}</Table.Cell>
