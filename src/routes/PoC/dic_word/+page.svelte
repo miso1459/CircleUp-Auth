@@ -16,7 +16,9 @@
 		Database, 
 		AlertTriangle, 
 		Search,
-		X
+		X,
+		Volume2,
+		VolumeX
 	} from '@lucide/svelte';
 
 	let { data, form }: PageProps = $props();
@@ -102,6 +104,11 @@
 				await invalidate('app:dicword');
 			}
 		} catch { /* 무시 */ }
+	}
+
+	function playAudio(url: string) {
+		const audio = new Audio(url);
+		audio.play().catch(() => { /* 재생 실패 무시 */ });
 	}
 
 	async function handleDelete(word: string) {
@@ -318,13 +325,35 @@
 										{new Date(w.createdAt).toLocaleString('ko-KR')}
 									</Table.Cell>
 									<Table.Cell>
-										<Button
-											size="sm"
-											variant="destructive"
-											onclick={(e) => { e.stopPropagation(); handleDelete(w.word); }}
-										>
-											삭제
-										</Button>
+										<div class="flex items-center gap-1">
+											{#if w.mp3_url}
+												<Button
+													size="sm"
+													variant="outline"
+													class="size-7 p-0"
+													onclick={(e) => { e.stopPropagation(); playAudio(w.mp3_url!); }}
+												>
+													<Volume2 class="size-3.5" />
+												</Button>
+											{:else}
+												<Button
+													size="sm"
+													variant="outline"
+													class="size-7 p-0"
+													disabled
+													onclick={(e) => e.stopPropagation()}
+												>
+													<VolumeX class="size-3.5" />
+												</Button>
+											{/if}
+											<Button
+												size="sm"
+												variant="destructive"
+												onclick={(e) => { e.stopPropagation(); handleDelete(w.word); }}
+											>
+												삭제
+											</Button>
+										</div>
 									</Table.Cell>
 								</Table.Row>
 							{/each}
