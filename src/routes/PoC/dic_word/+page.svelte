@@ -65,9 +65,6 @@
 
 	const dicWords = $derived(data.dicWords);
 
-	function sensesCount(w: { senses?: string | null }): string {
-		try { const arr = JSON.parse(w.senses || '[]'); return arr.length ? String(arr.length) : '-'; } catch { return '-'; }
-	}
 	function phrasalCount(w: { phrasal_verbs?: string | null }): string {
 		try { const arr = JSON.parse(w.phrasal_verbs || '[]'); return arr.length ? String(arr.length) : '-'; } catch { return '-'; }
 	}
@@ -266,7 +263,7 @@
 									<Table.Cell class="text-xs">{w.pos || '-'}</Table.Cell>
 									<Table.Cell class="text-xs">{w.level || '-'}</Table.Cell>
 									<Table.Cell class="text-xs">{w.frequency || '-'}</Table.Cell>
-									<Table.Cell class="text-xs text-center">{sensesCount(w)}</Table.Cell>
+									<Table.Cell class="text-xs max-w-32 truncate" title={w.senses}>{w.senses || '-'}</Table.Cell>
 									<Table.Cell class="text-xs text-center">{phrasalCount(w)}</Table.Cell>
 									<Table.Cell class="text-center" onclick={(e: MouseEvent) => e.stopPropagation()}>
 										<Checkbox
