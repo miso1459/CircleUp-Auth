@@ -289,10 +289,10 @@
 							<Table.Head class="w-20">Frequency</Table.Head>
 							<Table.Head class="w-16">Senses</Table.Head>
 							<Table.Head class="w-16">Phrasal</Table.Head>
-							<Table.Head class="w-12">Core</Table.Head>
 							<Table.Head class="w-44">Created At</Table.Head>
-							<Table.Head class="w-12">MP3</Table.Head>
-							<Table.Head class="w-20">삭제</Table.Head>
+							<Table.Head class="w-12 sticky right-[128px] bg-background z-10">Core</Table.Head>
+							<Table.Head class="w-12 sticky right-20 bg-background z-10">MP3</Table.Head>
+							<Table.Head class="w-20 sticky right-0 bg-background z-10">삭제</Table.Head>
 						</Table.Row>
 					</Table.Header>
 					<Table.Body>
@@ -316,16 +316,16 @@
 									<Table.Cell class="text-xs">{w.frequency || '-'}</Table.Cell>
 									<Table.Cell class="text-xs max-w-32 truncate" title={w.senses}>{w.senses || '-'}</Table.Cell>
 									<Table.Cell class="text-xs text-center">{phrasalCount(w)}</Table.Cell>
-									<Table.Cell class="text-center" onclick={(e: MouseEvent) => e.stopPropagation()}>
+									<Table.Cell class="text-xs text-muted-foreground whitespace-nowrap">
+										{new Date(w.createdAt).toLocaleString('ko-KR')}
+									</Table.Cell>
+									<Table.Cell class="text-center sticky right-[128px] bg-background" onclick={(e: MouseEvent) => e.stopPropagation()}>
 										<Checkbox
 											checked={Boolean(w.check_core)}
 											onCheckedChange={(c: boolean) => toggleCheckCore(w.word, c)}
 										/>
 									</Table.Cell>
-									<Table.Cell class="text-xs text-muted-foreground whitespace-nowrap">
-										{new Date(w.createdAt).toLocaleString('ko-KR')}
-									</Table.Cell>
-									<Table.Cell>
+									<Table.Cell class="sticky right-20 bg-background">
 										{#if w.mp3_url}
 											<Button
 												size="sm"
@@ -347,7 +347,7 @@
 											</Button>
 										{/if}
 									</Table.Cell>
-									<Table.Cell>
+									<Table.Cell class="sticky right-0 bg-background">
 										<Button
 											size="sm"
 											variant="destructive"
