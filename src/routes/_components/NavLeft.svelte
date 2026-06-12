@@ -184,7 +184,19 @@
 						class="rounded-md border bg-popover shadow-md"
 						onmouseenter={handleContentEnter}
 						onmouseleave={handleLeave}
-					></div>
+					>
+						<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
+										<a href={resolve('/PoC/Doc/ContentsEditor' as Pathname)} data-sveltekit-reload {...props}>
+											ContentsEditor
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+						</ul>
+					</div>
 				{/if}
 			</NavigationMenu.Item>
 
@@ -204,15 +216,6 @@
 						onmouseleave={handleLeave}
 					>
 						<ul class="grid w-max gap-1 p-2 whitespace-nowrap">
-							<li>
-								<NavigationMenu.Link>
-									{#snippet child(props)}
-										<a href={resolve('/doc/ContentsEditor' as Pathname)} data-sveltekit-reload {...props}>
-											ContentsEditor
-										</a>
-									{/snippet}
-								</NavigationMenu.Link>
-							</li>
 						</ul>
 					</div>
 				{/if}
