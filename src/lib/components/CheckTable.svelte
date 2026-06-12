@@ -277,7 +277,10 @@
 								</Table.Cell>
 							</Table.Row>
 							<!-- 번역 결과 행 -->
-							<Table.Row class="bg-muted/20">
+							<Table.Row
+								class="bg-muted/20 cursor-pointer hover:bg-muted/30 {s.id === selectedId ? 'bg-indigo-50 dark:bg-indigo-950/20' : ''}"
+								onclick={() => onSelectSentence?.(s.id, s.sent)}
+							>
 								<Table.Cell colspan={2} class="text-xs font-semibold text-muted-foreground pl-4">
 									{#if s.tranLang}
 										<span class="inline-flex items-center gap-1">
@@ -293,7 +296,10 @@
 								</Table.Cell>
 							</Table.Row>
 							<!-- 태그 결과 행 -->
-							<Table.Row class="bg-muted/20">
+							<Table.Row
+								class="bg-muted/20 cursor-pointer hover:bg-muted/30 {s.id === selectedId ? 'bg-indigo-50 dark:bg-indigo-950/20' : ''}"
+								onclick={() => onSelectSentence?.(s.id, s.sent)}
+							>
 								<Table.Cell colspan={2} class="text-xs font-semibold text-muted-foreground pl-4">
 									<span class="inline-flex items-center gap-1">
 										<Tag class="size-3" />
@@ -310,7 +316,10 @@
 							</Table.Row>
 							<!-- 이미지 표시 행 -->
 							{#if s.file_image}
-								<Table.Row class="bg-muted/10">
+								<Table.Row
+									class="bg-muted/10 cursor-pointer hover:bg-muted/20 {s.id === selectedId ? 'bg-indigo-50 dark:bg-indigo-950/20' : ''}"
+									onclick={() => onSelectSentence?.(s.id, s.sent)}
+								>
 									<Table.Cell colspan={8}>
 										<img
 											src="{imgBaseUrl}/{s.file_image}"
