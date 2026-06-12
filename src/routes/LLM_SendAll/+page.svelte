@@ -22,7 +22,6 @@
 		Trash2,
 		ChevronDown
 	} from '@lucide/svelte';
-	import TTS from '$lib/components/TTS/TTS.svelte';
 
 	let { data, form }: PageProps = $props();
 
@@ -425,9 +424,6 @@
 			</div>
 		</Collapsible.Content>
 	</Collapsible.Root>
-
-	<!-- TTS 컴포넌트 -->
-	<TTS data={data} form={form} {sentences} {selectedSentenceId} />
 
 	<!-- 피드백 메시지 -->
 	{#if errorMessage}
