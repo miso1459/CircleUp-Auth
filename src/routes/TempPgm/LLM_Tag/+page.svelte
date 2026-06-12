@@ -71,7 +71,7 @@
 			<Accordion.Trigger class="text-2xl font-bold tracking-tight py-4">
 				<div class="flex items-center gap-2">
 					<Sparkles class="size-6 text-indigo-500" />
-					<span>LLM Tag Generation</span>
+					<span>LLM Tag</span>
 				</div>
 			</Accordion.Trigger>
 			<Accordion.Content>
