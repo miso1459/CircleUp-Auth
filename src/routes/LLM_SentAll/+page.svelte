@@ -7,6 +7,14 @@
 	import CheckTable from '$lib/components/CheckTable.svelte';
 
 	let { data, form }: PageProps = $props();
+
+	let selectedId = $state<number | null>(null);
+	let selectedSentence = $state('');
+
+	function handleSelectSentence(id: number, sent: string) {
+		selectedId = id;
+		selectedSentence = sent;
+	}
 </script>
 
 <LLMSentPanel
@@ -15,6 +23,7 @@
 	geminiConfigured={data.geminiConfigured}
 	compact={true}
 	{form}
+	bind:sentence={selectedSentence}
 />
 
 <TTSPanel
@@ -25,9 +34,16 @@
 	formAction="?/ttsProcess"
 	compact={true}
 	{form}
+	bind:selectedSentenceId={selectedId}
 />
 
-<TranslationPanel sentences={data.sentences} savedTransLang={data.savedTransLang} compact={true} {form} />
+<TranslationPanel
+	sentences={data.sentences}
+	savedTransLang={data.savedTransLang}
+	compact={true}
+	{form}
+	bind:selectedSentenceId={selectedId}
+/>
 
 <LLMTagPanel
 	sentences={data.sentences}
@@ -36,6 +52,7 @@
 	formAction="?/tagProcess"
 	compact={true}
 	{form}
+	bind:selectedSentenceId={selectedId}
 />
 
 <CheckTable
@@ -46,4 +63,6 @@
 	ttsBaseUrl={data.ttsBaseUrl}
 	compact={true}
 	{form}
+	{selectedId}
+	onSelectSentence={handleSelectSentence}
 />

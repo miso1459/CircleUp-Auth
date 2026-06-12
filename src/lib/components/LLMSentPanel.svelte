@@ -28,7 +28,8 @@
 		savedLang = 'en-US',
 		geminiConfigured = true,
 		compact = false,
-		form
+		form,
+		sentence = $bindable('')
 	}: {
 		savedPrompt: string;
 		savedLang: string;
@@ -42,10 +43,10 @@
 			duplicateCount?: number;
 			savedPrompt?: string;
 		} | null;
+		sentence?: string;
 	} = $props();
 
 	let prompt = $state('');
-	let sentence = $state('');
 	let lang = $state<LangCode>('en-US');
 	let loading = $state(false);
 	let errorMessage = $state<string | null>(null);

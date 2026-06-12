@@ -27,7 +27,8 @@
 		geminiConfigured = true,
 		formAction = '?/process',
 		compact = false,
-		form
+		form,
+		selectedSentenceId = $bindable(null)
 	}: {
 		sentences: Sentence[];
 		savedPrompt: string;
@@ -35,10 +36,10 @@
 		formAction?: string;
 		compact?: boolean;
 		form?: { error?: string; success?: boolean; successCount?: number; errorCount?: number } | null;
+		selectedSentenceId?: number | null;
 	} = $props();
 
 	let prompt = $state('');
-	let selectedSentenceId = $state<number | null>(null);
 	let loading = $state(false);
 	let errorMessage = $state<string | null>(null);
 	let successMessage = $state<string | null>(null);

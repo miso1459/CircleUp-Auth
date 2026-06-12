@@ -32,16 +32,17 @@
 		sentences = [],
 		savedTransLang = 'EN',
 		compact = false,
-		form
+		form,
+		selectedSentenceId = $bindable(null)
 	}: {
 		sentences: Sentence[];
 		savedTransLang: string;
 		compact?: boolean;
 		form?: { error?: string; success?: boolean } | null;
+		selectedSentenceId?: number | null;
 	} = $props();
 
 	let targetLang = $state<TargetLangCode>((savedTransLang as TargetLangCode) || 'EN');
-	let selectedSentenceId = $state<number | null>(null);
 	let loading = $state(false);
 	let errorMessage = $state<string | null>(null);
 

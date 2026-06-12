@@ -35,7 +35,8 @@
 		ttsBaseUrl = '',
 		formAction = '?/process',
 		compact = false,
-		form
+		form,
+		selectedSentenceId = $bindable(null)
 	}: {
 		sentences: Sentence[];
 		savedLang: string;
@@ -44,12 +45,12 @@
 		formAction?: string;
 		compact?: boolean;
 		form?: { error?: string; success?: boolean; file_tts?: string } | null;
+		selectedSentenceId?: number | null;
 	} = $props();
 
 	let selectedLanguage = $state<LangCode>((savedLang as LangCode) || 'en-US');
 	let selectedVoice = $state(savedVoice || 'en-US-Neural2-F');
 	let rate = $state(1.0);
-	let selectedSentenceId = $state<number | null>(null);
 	let loading = $state(false);
 	let errorMessage = $state<string | null>(null);
 

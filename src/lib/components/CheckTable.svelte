@@ -37,7 +37,9 @@
 		imgBaseUrl = '',
 		ttsBaseUrl = '',
 		compact = false,
-		form
+		form,
+		selectedId = null,
+		onSelectSentence
 	}: {
 		sentences: Sentence[];
 		searchQuery: string;
@@ -46,6 +48,8 @@
 		ttsBaseUrl: string;
 		compact?: boolean;
 		form?: { error?: string; success?: boolean } | null;
+		selectedId?: number | null;
+		onSelectSentence?: (id: number, sent: string) => void;
 	} = $props();
 
 	let _imgFilter = $state<'all' | 'checked' | 'unchecked'>((imgFilter as 'all' | 'checked' | 'unchecked') || 'unchecked');
@@ -204,7 +208,10 @@
 					{:else}
 						{#each filteredSentences as s (s.id)}
 							<!-- 원문 행 -->
-							<Table.Row class="hover:bg-muted/50 transition-colors">
+							<Table.Row
+									class="hover:bg-muted/50 transition-colors cursor-pointer {s.id === selectedId ? 'bg-indigo-50 dark:bg-indigo-950/30 ring-1 ring-indigo-200 dark:ring-indigo-800' : ''}"
+									onclick={() => onSelectSentence?.(s.id, s.sent)}
+								>
 								<Table.Cell class="font-semibold text-muted-foreground text-xs align-top pt-3">{s.id}</Table.Cell>
 								<Table.Cell class="text-xs font-mono align-top pt-3">{s.lang}</Table.Cell>
 								<Table.Cell class="text-sm leading-relaxed break-words">{s.sent}</Table.Cell>
@@ -212,7 +219,8 @@
 									<input
 										type="checkbox"
 										checked={s.check_img === 1}
-										onchange={() => toggleCheckImg(s.id, s.check_img ?? 0)}
+										onchange={(e) => { e.stopPropagation(); toggleCheckImg(s.id, s.check_img ?? 0); }}
+										onclick={(e) => e.stopPropagation()}
 										class="size-4"
 									/>
 								</Table.Cell>
