@@ -11,6 +11,11 @@
 - 사용자가 "그냥 해줘"라고 하면, 가정한 사항들을 번호 목록으로 제시하고 승인을 받은 뒤 진행한다.
 - 명확하게 지시하지 않은 변경은 반드시 승인 후에 처리
 
+## RTK (Token Optimization)
+- 쉘 명령 실행 시 rtk 프리픽스 사용: `rtk git status`, `rtk git diff`, `rtk ls` 등
+- 파일 읽기는 `rtk read <file>`, 검색은 `rtk grep <pattern>` 사용
+- 토큰 절감 현황: `rtk gain`
+
 ## 작업이 완료되면 커밋 메시지 작성해서 커밋
 
 ## 작업이 완료되면 어떤 요청이였는지 간략히 정리
