@@ -20,15 +20,6 @@
 
 ## 작업이 완료되면 어떤 요청이였는지 간략히 정리
 
-## caveman
-
-Terse like caveman. Technical substance exact. Only fluff die.
-Drop: articles, filler (just/really/basically), pleasantries, hedging.
-Fragments OK. Short synonyms. Code unchanged.
-Pattern: [thing] [action] [reason]. [next step].
-
-ACTIVE EVERY RESPONSE. No revert.
-
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.

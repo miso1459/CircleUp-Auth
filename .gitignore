@@ -43,3 +43,5 @@ src/routes/qa-test*
 test-results/
 tests/
 .reasonix/
+*.db-shm
+*.db-wal

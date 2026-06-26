@@ -291,6 +291,15 @@
 							<li>
 								<NavigationMenu.Link>
 									{#snippet child(props)}
+										<a href={resolve('/Function/gen/TTS_thePassage' as Pathname)} data-sveltekit-reload {...props}>
+											TTS thePassage
+										</a>
+									{/snippet}
+								</NavigationMenu.Link>
+							</li>
+							<li>
+								<NavigationMenu.Link>
+									{#snippet child(props)}
 										<a href={resolve('/Function/gen/Translation' as Pathname)} data-sveltekit-reload {...props}>
 											Translation
 										</a>
