@@ -63,5 +63,38 @@ export const dicWord = sqliteTable('dic_word', {
 		.$defaultFn(() => new Date())
 });
 
+export const tp_passages = sqliteTable('tp_passages', {
+	id: integer('id').primaryKey(),
+	work_id: integer('work_id'),
+	chapter_id: integer('chapter_id'),
+	order: integer('order'),
+	chapter_order: integer('chapter_order'),
+	text: text('text'),
+	word_count: integer('word_count'),
+	char_count: integer('char_count'),
+	created_at: integer('created_at'),
+	content_type: text('content_type')
+});
+
+export const tp_sentences = sqliteTable('tp_sentences', {
+	id: integer('id').primaryKey(),
+	work_id: integer('work_id'),
+	chapter_id: integer('chapter_id'),
+	passage_id: integer('passage_id'),
+	order: integer('order'),
+	chapter_order: integer('chapter_order'),
+	passage_order: integer('passage_order'),
+	text: text('text'),
+	normalized_text: text('normalized_text'),
+	word_count: integer('word_count'),
+	char_count: integer('char_count'),
+	created_at: integer('created_at', { mode: 'timestamp' }),
+	// TTS 관련 컬럼
+	lang: text('lang').notNull().default('en-US'),
+	voice: text('voice').default(''),
+	speed: text('speed').default('1.0'),
+	file_tts: text('file_tts').default('')
+});
+
 export * from './auth.schema';
 

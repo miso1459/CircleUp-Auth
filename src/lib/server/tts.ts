@@ -8,6 +8,7 @@ export async function generateTTS(params: {
     languageCode?: string;
     voiceName?: string;
     speakingRate?: number;
+    filename?: string;
 }): Promise<{ url: string; filename: string }> {
     const { text, languageCode = 'ko-KR', voiceName = 'ko-KR-Neural2-A', speakingRate = 1.0 } = params;
 
@@ -46,8 +47,7 @@ export async function generateTTS(params: {
     const ttsDir = env.TTS_DIR || process.env.TTS_DIR;
     const ttsDirFull = path.resolve(process.cwd(), ttsDir ?? 'static/TTS');
 
-    const guid = crypto.randomUUID();
-    const filename = `${guid}.mp3`;
+    const filename = params.filename ?? `${crypto.randomUUID()}.mp3`;
 
     if (!fs.existsSync(ttsDirFull)) {
         fs.mkdirSync(ttsDirFull, { recursive: true });
