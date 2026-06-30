@@ -1,21 +1,16 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
+import { tursoDb } from '$lib/server/db/turso';
+import { turso_passages, turso_sentences, turso_works } from '$lib/server/db/tursoSchema';
 import { db } from '$lib/server/db';
 import { tp_sentences, tp_passages, config } from '$lib/server/db/schema';
-import { eq, like, desc, or, and, isNotNull, ne, isNull, inArray, gt } from 'drizzle-orm';
+import { eq, like, desc, or, and, inArray, gt } from 'drizzle-orm';
 import { generateTTS } from '$lib/server/tts';
 import fs from 'fs';
 import path from 'path';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load = (async ({ locals, url, depends }) => {
-	const baseWhere = and(
-		eq(tp_passages.content_type, 'body'),
-		or(
-			gt(tp_sentences.word_count, 1),
-			gt(tp_sentences.char_count, 2)
-		)
-	);
 	depends('app:sentences');
 
 	if (locals.user?.role !== 'admin') {
@@ -24,9 +19,11 @@ export const load = (async ({ locals, url, depends }) => {
 
 	const searchQuery = url.searchParams.get('search') || '';
 	const ttsFilter = url.searchParams.get('ttsFilter') || 'not_generated';
+	const workIdParam = url.searchParams.get('workId');
+	const selectedWorkId = workIdParam ? Number(workIdParam) : null;
 	const ttsBaseUrl = env.TTS_BASE_URL || process.env.TTS_BASE_URL || 'http://localhost:5173/TTS';
 
-	// config에서 저장된 TTS 언어 및 음성 모델 조회
+	// config에서 저장된 TTS 언어 및 음성 모델 조회 (로컬 DB)
 	const savedConfigLang = await db
 		.select()
 		.from(config)
@@ -39,72 +36,63 @@ export const load = (async ({ locals, url, depends }) => {
 		.where(eq(config.key, 'TTS_Voice'))
 		.limit(1);
 
+	// Turso에서 works 목록 조회
+	const works = await tursoDb
+		.select({ id: turso_works.id, title: turso_works.title })
+		.from(turso_works)
+		.orderBy(turso_works.id);
+
+	const baseWhere = and(
+		eq(turso_passages.content_type, 'body'),
+		or(
+			gt(turso_sentences.word_count, 1),
+			gt(turso_sentences.char_count, 2)
+		),
+		selectedWorkId ? eq(turso_sentences.work_id, selectedWorkId) : undefined
+	);
+
 	const selectCols = {
-		id: tp_sentences.id,
-		lang: tp_sentences.lang,
-		voice: tp_sentences.voice,
-		speed: tp_sentences.speed,
-		sent: tp_sentences.text,
-		createdAt: tp_sentences.created_at,
-		file_tts: tp_sentences.file_tts
+		id: turso_sentences.id,
+		sent: turso_sentences.text,
+		createdAt: turso_sentences.created_at
 	} as const;
 
 	let sentenceRows;
 
-	const baseQuery = db
+	const baseQuery = tursoDb
 		.select(selectCols)
-		.from(tp_sentences)
-		.innerJoin(tp_passages, eq(tp_sentences.passage_id, tp_passages.id));
+		.from(turso_sentences)
+		.innerJoin(turso_passages, eq(turso_sentences.passage_id, turso_passages.id));
 
-	if (ttsFilter === 'all') {
-		if (searchQuery) {
-			sentenceRows = await baseQuery
-				.where(and(
-					baseWhere,
-					like(tp_sentences.text, `%${searchQuery}%`)
-				))
-				.orderBy(desc(tp_sentences.id))
-				.limit(1000);
-		} else {
-			sentenceRows = await baseQuery
-				.where(baseWhere)
-				.orderBy(desc(tp_sentences.id))
-				.limit(1000);
-		}
-	} else if (ttsFilter === 'generated') {
+	if (searchQuery) {
 		sentenceRows = await baseQuery
 			.where(and(
 				baseWhere,
-				like(tp_sentences.text, `%${searchQuery}%`),
-				isNotNull(tp_sentences.file_tts),
-				ne(tp_sentences.file_tts, '')
+				like(turso_sentences.text, `%${searchQuery}%`)
 			))
-			.orderBy(desc(tp_sentences.id))
+			.orderBy(desc(turso_sentences.id))
 			.limit(1000);
 	} else {
-		// not_generated (default)
 		sentenceRows = await baseQuery
-			.where(and(
-				baseWhere,
-				like(tp_sentences.text, `%${searchQuery}%`),
-				or(
-					isNull(tp_sentences.file_tts),
-					eq(tp_sentences.file_tts, '')
-				)
-			))
-			.orderBy(desc(tp_sentences.id))
+			.where(baseWhere)
+			.orderBy(desc(turso_sentences.id))
 			.limit(1000);
 	}
-
-	const ttsDir = env.TTS_DIR || process.env.TTS_DIR || 'static/TTS';
-	const ttsDirFull = path.resolve(process.cwd(), ttsDir);
 
 	return {
 		geminiConfigured: Boolean(env.GEMINI_API_KEY),
 		sentences: sentenceRows.map(s => ({
-			...s,
-			hasMp3: s.file_tts ? fs.existsSync(path.join(ttsDirFull, s.file_tts)) : false
+			id: s.id,
+			lang: 'en-US',
+			voice: '',
+			speed: '1.0',
+			sent: s.sent,
+			createdAt: s.createdAt,
+			file_tts: '',
+			hasMp3: false
 		})),
+		works,
+		selectedWorkId,
 		searchQuery,
 		ttsFilter,
 		ttsBaseUrl,
@@ -112,6 +100,37 @@ export const load = (async ({ locals, url, depends }) => {
 		savedVoice: savedConfigVoice[0]?.value || 'en-US-Neural2-F'
 	};
 }) satisfies PageServerLoad;
+
+/** 배치 크기 (SQLite 변수 제한 999 미만) */
+const BATCH_SIZE = 500;
+
+async function importBatch<T extends { id: number }>(
+	items: T[],
+	table: any,
+	enrichFn?: (item: T) => Record<string, unknown>
+): Promise<number> {
+	let imported = 0;
+	for (let i = 0; i < items.length; i += BATCH_SIZE) {
+		const batch = items.slice(i, i + BATCH_SIZE);
+		const batchIds = batch.map(item => item.id);
+
+		// 배치 단위로 이미 존재하는 ID 조회
+		const existing = await db
+			.select({ id: table.id })
+			.from(table)
+			.where(inArray(table.id, batchIds));
+
+		const existingIds = new Set(existing.map((r: { id: number }) => r.id));
+		const newItems = batch.filter(item => !existingIds.has(item.id));
+
+		if (newItems.length > 0) {
+			const values = enrichFn ? newItems.map(enrichFn) : newItems;
+			await db.insert(table).values(values as any);
+			imported += newItems.length;
+		}
+	}
+	return imported;
+}
 
 export const actions = {
 	process: async ({ request, locals }) => {
@@ -298,5 +317,42 @@ export const actions = {
 			});
 
 		return { success: true, successCount, errorCount };
+	},
+	importFromTurso: async ({ locals }) => {
+		if (locals.user?.role !== 'admin') {
+			return fail(403, { error: 'Unauthorized: Admin access required' });
+		}
+
+		try {
+			// 1. Turso passages → local tp_passages
+			const allPassages = await tursoDb.select().from(turso_passages);
+			const passageImported = allPassages.length > 0
+				? await importBatch(allPassages, tp_passages)
+				: 0;
+
+			// 2. Turso sentences → local tp_sentences
+			const allSentences = await tursoDb.select().from(turso_sentences);
+			const sentenceImported = allSentences.length > 0
+				? await importBatch(allSentences, tp_sentences, (s: any) => ({
+					...s,
+					lang: 'en-US',
+					voice: '',
+					speed: '1.0',
+					file_tts: ''
+				}))
+				: 0;
+
+			return {
+				success: true,
+				passageImported,
+				sentenceImported,
+				passageSkipped: allPassages.length - passageImported,
+				sentenceSkipped: allSentences.length - sentenceImported
+			};
+		} catch (err) {
+			const message = err instanceof Error ? err.message : 'Turso 가져오기 중 오류가 발생했습니다.';
+			console.error('importFromTurso error:', err);
+			return fail(500, { error: message });
+		}
 	}
 } satisfies Actions;

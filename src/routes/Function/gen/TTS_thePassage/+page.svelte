@@ -15,7 +15,8 @@
 		AlertTriangle, 
 		Search,
 		X,
-		Play
+		Play,
+		Download
 	} from '@lucide/svelte';
 
 	let { data, form }: PageProps = $props();
@@ -27,17 +28,26 @@
 
 	type LangCode = keyof typeof LANG_MAP;
 
-	let selectedLanguage = $state<LangCode>((data.savedLang as LangCode) || 'en-US');
-	let selectedVoice = $state(data.savedVoice || 'en-US-Neural2-F');
+	// 초기값을 상수로 분리 (state_referenced_locally 경고 방지)
+	const _savedLang = data.savedLang;
+	const _savedVoice = data.savedVoice;
+	const _ttsFilter = data.ttsFilter;
+	const _searchQuery = data.searchQuery;
+	const _selectedWorkId = data.selectedWorkId;
+
+	let selectedLanguage = $state<LangCode>((_savedLang as LangCode) || 'en-US');
+	let selectedVoice = $state(_savedVoice || 'en-US-Neural2-F');
 	let rate = $state(1.0);
 	let selectedSentenceId = $state<number | null>(null);
-	let ttsFilter = $state<'all' | 'generated' | 'not_generated'>(data.ttsFilter || 'not_generated');
+	let ttsFilter = $state<'all' | 'generated' | 'not_generated'>(_ttsFilter || 'not_generated');
 	let loading = $state(false);
 	let bulkLoading = $state(false);
+	let importLoading = $state(false);
 	let errorMessage = $state<string | null>(null);
 	let successMessage = $state<string | null>(null);
 
-	let searchQuery = $state(data.searchQuery);
+	let selectedWorkId = $state<number | null>(_selectedWorkId);
+	let searchQuery = $state(_searchQuery);
 
 	const sentences = $derived(data.sentences);
 
@@ -153,10 +163,21 @@
 	const langLabel = $derived(LANG_MAP[selectedLanguage] || '선택');
 
 	function handleSearch() {
-		const searchParam = searchQuery.trim() ? `search=${encodeURIComponent(searchQuery)}` : '';
-		const filterParam = `ttsFilter=${ttsFilter}`;
-		const params = searchParam ? `?${filterParam}&${searchParam}` : `?${filterParam}`;
-		window.location.href = `/Function/gen/TTS${params}`;
+		const params = new URLSearchParams();
+		params.set('ttsFilter', ttsFilter);
+		if (searchQuery.trim()) params.set('search', searchQuery.trim());
+		if (selectedWorkId) params.set('workId', String(selectedWorkId));
+		window.location.href = `/Function/gen/TTS_thePassage?${params.toString()}`;
+	}
+
+	function handleWorkChange(e: Event) {
+		const target = e.target as HTMLSelectElement;
+		const value = target.value;
+		const params = new URLSearchParams();
+		params.set('ttsFilter', ttsFilter);
+		if (searchQuery.trim()) params.set('search', searchQuery.trim());
+		if (value) params.set('workId', value);
+		window.location.href = `/Function/gen/TTS_thePassage?${params.toString()}`;
 	}
 
 	async function handleDelete(id: number) {
@@ -177,19 +198,57 @@
 		}
 	}
 
+	function onImportSubmit() {
+		importLoading = true;
+		errorMessage = null;
+		successMessage = null;
+		return async ({ result, update }: { result: { type: string; data?: Record<string, unknown> }; update: () => Promise<void> }) => {
+			await update();
+			importLoading = false;
+			if (result?.type === 'success' && result?.data?.success) {
+				const pImported = result.data.passageImported as number ?? 0;
+				const sImported = result.data.sentenceImported as number ?? 0;
+				const pSkipped = result.data.passageSkipped as number ?? 0;
+				const sSkipped = result.data.sentenceSkipped as number ?? 0;
+				successMessage = `Turso 가져오기 완료: passages ${pImported}건 추가 / ${pSkipped}건 건너뜀, sentences ${sImported}건 추가 / ${sSkipped}건 건너뜀`;
+				await invalidate('app:sentences');
+			} else if (result?.type === 'failure') {
+				errorMessage = (result?.data?.error as string) || '가져오기 중 오류가 발생했습니다.';
+			}
+		};
+	}
 
 </script>
 
 <div class="space-y-6 p-6">
 	<!-- 헤더 영역 -->
-	<div class="space-y-1">
-		<h1 class="flex items-center gap-2 text-2xl font-bold tracking-tight">
-			<Sparkles class="size-6 text-indigo-500" />
-			TTS
-		</h1>
-		<p class="text-muted-foreground text-sm">
-			선택한 문장에 대해 TTS 음성을 생성하고 데이터베이스에 저장합니다.
-		</p>
+	<div class="flex items-start justify-between gap-4">
+		<div class="space-y-1">
+			<h1 class="flex items-center gap-2 text-2xl font-bold tracking-tight">
+				<Sparkles class="size-6 text-indigo-500" />
+				TTS
+			</h1>
+			<p class="text-muted-foreground text-sm">
+				선택한 문장에 대해 TTS 음성을 생성하고 데이터베이스에 저장합니다.
+			</p>
+		</div>
+		<form method="POST" action="?/importFromTurso" use:enhance={onImportSubmit}>
+			<Button
+				type="submit"
+				variant="outline"
+				size="sm"
+				class="gap-2 border-indigo-300 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/50"
+				disabled={importLoading}
+			>
+				{#if importLoading}
+					<Loader2 class="size-4 animate-spin" />
+					가져오는 중...
+				{:else}
+					<Download class="size-4" />
+					Turso에서 가져오기
+				{/if}
+			</Button>
+		</form>
 	</div>
 
 	<!-- 메인 폼 및 설정 카드 -->
@@ -310,9 +369,22 @@
 				<Database class="size-4 text-indigo-500" />
 				저장된 문장
 			</Card.Title>
-			<Card.Description>데이터베이스에 저장된 문장들입니다. (ID 역순, 최대 100개)</Card.Description>
+			<Card.Description>Turso 데이터베이스의 문장들입니다. (ID 역순, 최대 1,000개)</Card.Description>
 		</Card.Header>
 		<Card.Content class="space-y-4">
+			<!-- 작품 선택 필터 -->
+			<div class="flex items-center gap-3">
+				<span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono shrink-0">작품</span>
+				<select
+					onchange={handleWorkChange}
+					class="flex h-10 w-64 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+				>
+					<option value="">전체 작품</option>
+					{#each data.works as w (w.id)}
+						<option value={w.id} selected={selectedWorkId === w.id}>{w.title || `작품 #${w.id}`}</option>
+					{/each}
+				</select>
+			</div>
 			<!-- TTS 필터 -->
 			<div class="flex items-center gap-4 text-sm">
 				<span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">TTS 필터</span>
