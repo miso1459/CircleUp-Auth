@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { tp_sentences } from '$lib/server/db/schema';
+import { tursoDb } from '$lib/server/db/turso';
+import { turso_sentences } from '$lib/server/db/tursoSchema';
 import { eq } from 'drizzle-orm';
 import { env } from '$env/dynamic/private';
 import fs from 'fs';
@@ -26,22 +26,31 @@ export async function deleteTTSFile(event: RequestEvent) {
         throw error(400, 'ID is required');
     }
 
-    // MP3 파일만 삭제 (id.mp3)
+    // turso_sentences에서 audio_file_path 조회 후 파일 삭제
+    const [record] = await tursoDb
+        .select({ audio_file_path: turso_sentences.audio_file_path })
+        .from(turso_sentences)
+        .where(eq(turso_sentences.id, id))
+        .limit(1);
+
     const ttsDir = env.TTS_DIR || process.env.TTS_DIR || 'static/TTS';
     const ttsDirFull = path.resolve(process.cwd(), ttsDir);
-    const filePath = path.join(ttsDirFull, `${id}.mp3`);
-    try {
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
+
+    if (record?.audio_file_path) {
+        const filePath = path.join(ttsDirFull, record.audio_file_path);
+        try {
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        } catch (e) {
+            console.error('Failed to delete MP3 file:', filePath, e);
         }
-    } catch (e) {
-        console.error('Failed to delete MP3 file:', filePath, e);
     }
 
-    // file_tts 초기화
-    await db.update(tp_sentences)
-        .set({ file_tts: '' })
-        .where(eq(tp_sentences.id, id));
+    // audio_file, audio_file_path 초기화
+    await tursoDb.update(turso_sentences)
+        .set({ audio_file: 0, audio_file_path: '' })
+        .where(eq(turso_sentences.id, id));
 
     return json({ success: true });
 }

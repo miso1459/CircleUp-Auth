@@ -33,8 +33,7 @@ export const turso_works = sqliteTable('works', {
 /**
  * Turso DB의 sentences 테이블 (원본 The Passage 데이터)
  * tp_sentences로 가져와서 매핑됨
- */
-export const turso_sentences = sqliteTable('sentences', {
+ */	export const turso_sentences = sqliteTable('sentences', {
 	id: integer('id').primaryKey(),
 	work_id: integer('work_id'),
 	chapter_id: integer('chapter_id'),
@@ -46,5 +45,8 @@ export const turso_sentences = sqliteTable('sentences', {
 	normalized_text: text('normalized_text'),
 	word_count: integer('word_count'),
 	char_count: integer('char_count'),
-	created_at: integer('created_at', { mode: 'timestamp' })
+	created_at: integer('created_at', { mode: 'timestamp' }),
+	// TTS 오디오 파일 상태
+	audio_file: integer('audio_file').default(0),
+	audio_file_path: text('audio_file_path')
 });

@@ -52,42 +52,80 @@ export async function fileExists(key: string): Promise<boolean> {
 }
 
 /**
- * 로컬 MP3 파일을 R2에 업로드 (이미 있으면 건너뜀)
- * @returns 업로드된 파일의 공개 URL 또는 null (건너뛴 경우)
+ * TTS_files 디렉토리의 모든 파일을 재귀적으로 R2에 업로드
+ * 서브디렉토리 구조를 그대로 R2 키로 사용
+ * 이미 존재하는 파일은 건너뜀
  */
-export async function uploadMp3ToR2(sentenceId: number): Promise<{ uploaded: boolean; url?: string; skipped: boolean }> {
+export async function uploadAllFilesToR2(): Promise<{
+	uploaded: { filePath: string; key: string }[];
+	skipped: { filePath: string; key: string }[];
+	errors: { filePath: string; error: string }[];
+}> {
 	const config = getR2Config();
 	const ttsDir = env.TTS_DIR || process.env.TTS_DIR || 'static/TTS';
 	const ttsDirFull = path.resolve(process.cwd(), ttsDir);
-	const filePath = path.join(ttsDirFull, `${sentenceId}.mp3`);
 
-	if (!fs.existsSync(filePath)) {
-		return { uploaded: false, skipped: true };
+	// 모든 파일 재귀 수집
+	function collectAllFiles(dir: string): { filePath: string; relativePath: string }[] {
+		const results: { filePath: string; relativePath: string }[] = [];
+		try {
+			const entries = fs.readdirSync(dir, { withFileTypes: true });
+			for (const entry of entries) {
+				const fullPath = path.join(dir, entry.name);
+				if (entry.isDirectory()) {
+					results.push(...collectAllFiles(fullPath));
+				} else if (entry.isFile()) {
+					const relativePath = path.relative(ttsDirFull, fullPath).replace(/\\/g, '/');
+					results.push({ filePath: fullPath, relativePath });
+				}
+			}
+		} catch (err) {
+			console.error('Error reading directory:', dir, err);
+		}
+		return results;
 	}
 
-	const key = config.folder ? `${config.folder}/${sentenceId}.mp3` : `${sentenceId}.mp3`;
+	const allFiles = collectAllFiles(ttsDirFull);
 
-	// 이미 존재하면 건너뛰기
-	if (await fileExists(key)) {
-		return { uploaded: false, skipped: true };
+	const uploaded: { filePath: string; key: string }[] = [];
+	const skipped: { filePath: string; key: string }[] = [];
+	const errors: { filePath: string; error: string }[] = [];
+
+	const client = getS3Client();
+
+	for (const file of allFiles) {
+		const key = config.folder ? `${config.folder}/${file.relativePath}` : file.relativePath;
+
+		try {
+			if (await fileExists(key)) {
+				skipped.push({ filePath: file.filePath, key });
+				continue;
+			}
+
+			const fileContent = fs.readFileSync(file.filePath);
+			await client.send(new PutObjectCommand({
+				Bucket: config.bucket,
+				Key: key,
+				Body: fileContent,
+				ContentType: getContentType(file.filePath)
+			}));
+
+			uploaded.push({ filePath: file.filePath, key });
+		} catch (err) {
+			const message = err instanceof Error ? err.message : 'Unknown error';
+			errors.push({ filePath: file.filePath, error: message });
+		}
 	}
 
-	try {
-		const client = getS3Client();
-		const fileContent = fs.readFileSync(filePath);
-
-		await client.send(new PutObjectCommand({
-			Bucket: config.bucket,
-			Key: key,
-			Body: fileContent,
-			ContentType: 'audio/mpeg'
-		}));
-
-		// 공개 URL 구성
-		const publicUrl = `${config.endpoint.replace(/\/?$/, '')}/${config.bucket}/${key}`;
-		return { uploaded: true, url: publicUrl, skipped: false };
-	} catch (err) {
-		console.error(`R2 upload failed for sentence ${sentenceId}:`, err);
-		throw err;
-	}
+	return { uploaded, skipped, errors };
 }
+
+function getContentType(filePath: string): string {
+	if (filePath.endsWith('.mp3')) return 'audio/mpeg';
+	if (filePath.endsWith('.wav')) return 'audio/wav';
+	if (filePath.endsWith('.ogg')) return 'audio/ogg';
+	if (filePath.endsWith('.json')) return 'application/json';
+	return 'application/octet-stream';
+}
+
+

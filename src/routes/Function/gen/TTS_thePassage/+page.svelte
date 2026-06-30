@@ -16,7 +16,6 @@
 		Search,
 		X,
 		Play,
-		Download,
 		Upload
 	} from '@lucide/svelte';
 
@@ -29,36 +28,26 @@
 
 	type LangCode = keyof typeof LANG_MAP;
 
-	// 초기값을 상수로 분리 (state_referenced_locally 경고 방지)
-	const _savedLang = data.savedLang;
-	const _savedVoice = data.savedVoice;
-	const _ttsFilter = data.ttsFilter;
-	const _searchQuery = data.searchQuery;
-	const _selectedWorkId = data.selectedWorkId;
-
-	let selectedLanguage = $state<LangCode>((_savedLang as LangCode) || 'en-US');
-	let selectedVoice = $state(_savedVoice || 'en-US-Neural2-F');
+	let selectedLanguage = $state<LangCode>((data.savedLang as LangCode) || 'en-US');
+	let selectedVoice = $state(data.savedVoice || 'en-US-Neural2-F');
 	let rate = $state(1.0);
 	let selectedSentenceId = $state<number | null>(null);
-	let ttsFilter = $state<'all' | 'generated' | 'not_generated'>(_ttsFilter || 'not_generated');
+	let ttsFilter = $state<'all' | 'generated' | 'not_generated'>(data.ttsFilter || 'not_generated');
 	let loading = $state(false);
 	let bulkLoading = $state(false);
-	let importLoading = $state(false);
+
 	let r2Loading = $state(false);
+	let organizeLoading = $state(false);
 	let errorMessage = $state<string | null>(null);
 	let successMessage = $state<string | null>(null);
 
-	let selectedWorkId = $state<number | null>(_selectedWorkId);
-	let searchQuery = $state(_searchQuery);
+	let selectedWorkId = $state<number | null>(data.selectedWorkId);
+	let searchQuery = $state(data.searchQuery);
+	let currentPage = $state(data.page);
 
 	const sentences = $derived(data.sentences);
-
-	const filteredSentences = $derived(sentences.filter((s) => {
-		if (ttsFilter === 'all') return true;
-		const hasTts = s.file_tts && s.file_tts !== '';
-		if (ttsFilter === 'generated') return hasTts;
-		return !hasTts;
-	}));
+	const totalCount = $derived(data.totalCount);
+	const totalPages = $derived(data.totalPages);
 
 	const voices = [
 		{ code: 'ko-KR', name: 'ko-KR-Chirp3-HD-Achernar', label: '한국어 여성 (Chirp3 - 오디오북 스타일)', gender: '여성' },
@@ -168,22 +157,29 @@
 
 	const langLabel = $derived(LANG_MAP[selectedLanguage] || '선택');
 
-	function handleSearch() {
+	function buildUrl(page?: number) {
 		const params = new URLSearchParams();
 		params.set('ttsFilter', ttsFilter);
 		if (searchQuery.trim()) params.set('search', searchQuery.trim());
 		if (selectedWorkId) params.set('workId', String(selectedWorkId));
-		window.location.href = `/Function/gen/TTS_thePassage?${params.toString()}`;
+		if (page && page > 1) params.set('page', String(page));
+		return `/Function/gen/TTS_thePassage?${params.toString()}`;
+	}
+
+	function handleSearch() {
+		window.location.href = buildUrl(1);
 	}
 
 	function handleWorkChange(e: Event) {
 		const target = e.target as HTMLSelectElement;
 		const value = target.value;
-		const params = new URLSearchParams();
-		params.set('ttsFilter', ttsFilter);
-		if (searchQuery.trim()) params.set('search', searchQuery.trim());
-		if (value) params.set('workId', value);
-		window.location.href = `/Function/gen/TTS_thePassage?${params.toString()}`;
+		selectedWorkId = value ? Number(value) : null;
+		window.location.href = buildUrl(1);
+	}
+
+	function goToPage(p: number) {
+		if (p < 1 || p > totalPages) return;
+		window.location.href = buildUrl(p);
 	}
 
 	async function handleDelete(id: number) {
@@ -226,25 +222,6 @@
 		};
 	}
 
-	function onImportSubmit() {
-		importLoading = true;
-		errorMessage = null;
-		successMessage = null;
-		return async ({ result, update }: { result: { type: string; data?: Record<string, unknown> }; update: () => Promise<void> }) => {
-			await update();
-			importLoading = false;
-			if (result?.type === 'success' && result?.data?.success) {
-				const pImported = result.data.passageImported as number ?? 0;
-				const sImported = result.data.sentenceImported as number ?? 0;
-				const pSkipped = result.data.passageSkipped as number ?? 0;
-				const sSkipped = result.data.sentenceSkipped as number ?? 0;
-				successMessage = `Turso 가져오기 완료: passages ${pImported}건 추가 / ${pSkipped}건 건너뜀, sentences ${sImported}건 추가 / ${sSkipped}건 건너뜀`;
-				await invalidate('app:sentences');
-			} else if (result?.type === 'failure') {
-				errorMessage = (result?.data?.error as string) || '가져오기 중 오류가 발생했습니다.';
-			}
-		};
-	}
 
 </script>
 
@@ -260,23 +237,6 @@
 				선택한 문장에 대해 TTS 음성을 생성하고 데이터베이스에 저장합니다.
 			</p>
 		</div>
-		<form method="POST" action="?/importFromTurso" use:enhance={onImportSubmit}>
-			<Button
-				type="submit"
-				variant="outline"
-				size="sm"
-				class="gap-2 border-indigo-300 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/50"
-				disabled={importLoading}
-			>
-				{#if importLoading}
-					<Loader2 class="size-4 animate-spin" />
-					가져오는 중...
-				{:else}
-					<Download class="size-4" />
-					Turso에서 가져오기
-				{/if}
-			</Button>
-		</form>
 		<form method="POST" action="?/uploadToR2" use:enhance={onR2UploadSubmit}>
 			<Button
 				type="submit"
@@ -291,6 +251,44 @@
 				{:else}
 					<Upload class="size-4" />
 					Cloudflare에 올리기
+				{/if}
+			</Button>
+		</form>
+		<form method="POST" action="?/organizeMp3" use:enhance={() => {
+			organizeLoading = true;
+			errorMessage = null;
+			successMessage = null;
+			return async ({ result, update }: { result: { type: string; data?: Record<string, unknown> }; update: () => Promise<void> }) => {
+				await update();
+				organizeLoading = false;
+				if (result?.type === 'success' && result?.data?.success) {
+					const copiedCount = (result.data.copiedCount as number) ?? 0;
+					const skippedCount = (result.data.skippedCount as number) ?? 0;
+					const errorCount = (result.data.errorCount as number) ?? 0;
+					const total = (result.data.total as number) ?? 0;
+					successMessage = `MP3 정리 완료: ${copiedCount}건 복사`;
+					if (skippedCount > 0) successMessage += `, ${skippedCount}건 건너뜀`;
+					if (errorCount > 0) successMessage += `, ${errorCount}건 실패`;
+					successMessage += ` (총 ${total}건)`;
+					await invalidate('app:sentences');
+				} else if (result?.type === 'failure') {
+					errorMessage = (result?.data?.error as string) || 'MP3 정리 중 오류가 발생했습니다.';
+				}
+			};
+		}}>
+			<Button
+				type="submit"
+				variant="outline"
+				size="sm"
+				class="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-950/50"
+				disabled={organizeLoading}
+			>
+				{#if organizeLoading}
+					<Loader2 class="size-4 animate-spin" />
+					정리 중...
+				{:else}
+					<Database class="size-4" />
+					MP3 정리
 				{/if}
 			</Button>
 		</form>
@@ -399,9 +397,11 @@
 		</Card.Root>
 </div>
 
-	<!-- 일괄 생성 폼 -->
+	<!-- 일괄 생성 폼 (전체 건수 기준, 필터 파라미터 전달) -->
 	<form method="POST" action="?/processAll" use:enhance={onSubmitAll} id="batch-tts-form">
-		<input type="hidden" name="ids" value={filteredSentences.map(s => s.id).join(',')} />
+		<input type="hidden" name="ttsFilter" value={ttsFilter} />
+		<input type="hidden" name="workId" value={selectedWorkId ?? ''} />
+		<input type="hidden" name="searchQuery" value={searchQuery} />
 		<input type="hidden" name="voice" value={selectedVoice} />
 		<input type="hidden" name="speed" value={rate} />
 		<input type="hidden" name="lang" value={selectedLanguage} />
@@ -414,7 +414,7 @@
 				<Database class="size-4 text-indigo-500" />
 				저장된 문장
 			</Card.Title>
-			<Card.Description>Turso 데이터베이스의 문장들입니다. (ID 역순, 최대 1,000개)</Card.Description>
+			<Card.Description>Turso 데이터베이스의 문장들입니다. (ID 역순, {totalCount.toLocaleString()}건)</Card.Description>
 		</Card.Header>
 		<Card.Content class="space-y-4">
 			<!-- 작품 선택 필터 -->
@@ -422,11 +422,11 @@
 				<span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono shrink-0">작품</span>
 				<select
 					onchange={handleWorkChange}
-					class="flex h-10 w-64 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+					class="flex h-10 w-[32rem] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					<option value="">전체 작품</option>
 					{#each data.works as w (w.id)}
-						<option value={w.id} selected={selectedWorkId === w.id}>{w.title || `작품 #${w.id}`}</option>
+						<option value={w.id} selected={selectedWorkId === w.id}>{w.id}. {w.title || `작품 #${w.id}`} {w.mp3Count}/{w.totalCount}</option>
 					{/each}
 				</select>
 			</div>
@@ -445,6 +445,7 @@
 					<input type="radio" name="ttsFilter" value="not_generated" bind:group={ttsFilter} onchange={handleSearch} />
 					미생성
 				</label>
+				<span class="ml-2 text-xs text-muted-foreground font-mono">총 {totalCount.toLocaleString()}건</span>
 				{#if ttsFilter === 'not_generated'}
 					<div class="ml-auto shrink-0">
 						<Button
@@ -452,14 +453,14 @@
 							form="batch-tts-form"
 							size="sm"
 							class="bg-indigo-600 hover:bg-indigo-700 text-white"
-							disabled={bulkLoading || filteredSentences.length === 0}
+							disabled={bulkLoading || sentences.length === 0}
 						>
 							{#if bulkLoading}
 								<Loader2 class="size-4 animate-spin mr-2" />
 								일괄 생성 중...
 							{:else}
 								<Sparkles class="size-4 mr-2" />
-								일괄 생성 ({filteredSentences.length}건)
+								일괄 생성 ({totalCount.toLocaleString()}건)
 							{/if}
 						</Button>
 					</div>
@@ -514,14 +515,14 @@
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
-					{#if filteredSentences.length === 0}
+					{#if sentences.length === 0}
 						<Table.Row>
 							<Table.Cell colspan={8} class="text-center text-muted-foreground py-8 text-sm">
 								저장된 문장이 없습니다.
 							</Table.Cell>
 						</Table.Row>
 					{:else}
-						{#each filteredSentences as s (s.id)}
+						{#each sentences as s (s.id)}
 							<Table.Row
 								class="hover:bg-muted/50 transition-colors cursor-pointer {selectedSentenceId === s.id ? 'bg-indigo-50 dark:bg-indigo-950/30' : ''}"
 								onclick={() => { selectedSentenceId = s.id; }}
@@ -559,6 +560,21 @@
 				</Table.Body>
 			</Table.Root>
 		</div>
+
+			<!-- 페이지네이션 -->
+			{#if totalPages > 1}
+				<div class="flex items-center justify-center gap-4 pt-4">
+					<Button size="sm" variant="outline" disabled={currentPage <= 1} onclick={() => goToPage(currentPage - 1)}>
+						이전
+					</Button>
+					<span class="text-xs text-muted-foreground font-mono">
+						{currentPage} / {totalPages} 페이지
+					</span>
+					<Button size="sm" variant="outline" disabled={currentPage >= totalPages} onclick={() => goToPage(currentPage + 1)}>
+						다음
+					</Button>
+				</div>
+			{/if}
 		</Card.Content>
 	</Card.Root>
 
