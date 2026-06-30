@@ -6,6 +6,7 @@ import { db } from '$lib/server/db';
 import { tp_sentences, tp_passages, config } from '$lib/server/db/schema';
 import { eq, like, desc, or, and, inArray, gt } from 'drizzle-orm';
 import { generateTTS } from '$lib/server/tts';
+import { uploadMp3ToR2 } from '$lib/server/r2';
 import fs from 'fs';
 import path from 'path';
 import type { Actions, PageServerLoad } from './$types';
@@ -79,9 +80,28 @@ export const load = (async ({ locals, url, depends }) => {
 			.limit(1000);
 	}
 
+	// TTS 디렉토리에서 기존 MP3 파일 목록 조회
+	const ttsDir = env.TTS_DIR || process.env.TTS_DIR || 'static/TTS';
+	const ttsDirFull = path.resolve(process.cwd(), ttsDir);
+	const existingMp3Ids = new Set<number>();
+	try {
+		const files = fs.readdirSync(ttsDirFull);
+		for (const file of files) {
+			if (file.endsWith('.mp3')) {
+				const id = parseInt(file.replace('.mp3', ''), 10);
+				if (!isNaN(id)) existingMp3Ids.add(id);
+			}
+		}
+	} catch {
+		// 디렉토리가 없으면 무시
+	}
+
+	// MP3 파일이 이미 존재하는 문장은 리스트에서 제외
+	const filteredRows = sentenceRows.filter(s => !existingMp3Ids.has(s.id));
+
 	return {
 		geminiConfigured: Boolean(env.GEMINI_API_KEY),
-		sentences: sentenceRows.map(s => ({
+		sentences: filteredRows.map(s => ({
 			id: s.id,
 			lang: 'en-US',
 			voice: '',
@@ -255,28 +275,32 @@ export const actions = {
 		const ttsDir = env.TTS_DIR || process.env.TTS_DIR || 'static/TTS';
 		const ttsDirFull = path.resolve(process.cwd(), ttsDir);
 		let successCount = 0;
+		let skippedCount = 0;
 		let errorCount = 0;
 		const errors: string[] = [];
 
-		for (const [index, record] of records.entries()) {
+		let genIndex = 0;
+		for (const record of records) {
+			// MP3 파일이 이미 존재하면 건너뛰기
+			const existingFile = path.join(ttsDirFull, `${record.id}.mp3`);
+			if (fs.existsSync(existingFile)) {
+				// DB에 file_tts가 없으면 업데이트
+				if (!record.file_tts) {
+					await db
+						.update(tp_sentences)
+						.set({ file_tts: `${record.id}.mp3` })
+						.where(eq(tp_sentences.id, record.id));
+				}
+				skippedCount++;
+				continue;
+			}
+
 			// 3초 간격 (첫 번째는 대기 없음)
-			if (index > 0) {
+			if (genIndex > 0) {
 				await new Promise(resolve => setTimeout(resolve, 3000));
 			}
 
 			try {
-				// 기존 MP3 파일 삭제
-				if (record.file_tts && record.file_tts.trim()) {
-					const filePath = path.join(ttsDirFull, record.file_tts);
-					try {
-						if (fs.existsSync(filePath)) {
-							fs.unlinkSync(filePath);
-						}
-					} catch (e) {
-						console.error('Failed to delete MP3 file:', filePath, e);
-					}
-				}
-
 				const recFilename = `${record.id}.mp3`;
 				const ttsResult = await generateTTS({
 					text: record.text,
@@ -297,6 +321,7 @@ export const actions = {
 				errors.push(`ID ${record.id}: ${message}`);
 				errorCount++;
 			}
+			genIndex++;
 		}
 
 		// TTS 설정 저장
@@ -316,7 +341,52 @@ export const actions = {
 				set: { value: voice }
 			});
 
-		return { success: true, successCount, errorCount };
+		return { success: true, successCount, skippedCount, errorCount };
+	},
+	uploadToR2: async ({ locals }) => {
+		if (locals.user?.role !== 'admin') {
+			return fail(403, { error: 'Unauthorized: Admin access required' });
+		}
+
+		try {
+			const ttsDir = env.TTS_DIR || process.env.TTS_DIR || 'static/TTS';
+			const ttsDirFull = path.resolve(process.cwd(), ttsDir);
+			const files = fs.readdirSync(ttsDirFull);
+			const mp3Ids = files
+				.filter(f => f.endsWith('.mp3'))
+				.map(f => parseInt(f.replace('.mp3', ''), 10))
+				.filter(id => !isNaN(id));
+
+			if (mp3Ids.length === 0) {
+				return fail(400, { error: '업로드할 MP3 파일이 없습니다.' });
+			}
+
+			let uploadedCount = 0;
+			let skippedCount = 0;
+			let errorCount = 0;
+
+			for (const id of mp3Ids) {
+				try {
+					const result = await uploadMp3ToR2(id);
+					if (result.uploaded) uploadedCount++;
+					else if (result.skipped) skippedCount++;
+				} catch {
+					errorCount++;
+				}
+			}
+
+			return {
+				success: true,
+				uploadedCount,
+				skippedCount,
+				errorCount,
+				total: mp3Ids.length
+			};
+		} catch (err) {
+			const message = err instanceof Error ? err.message : 'R2 업로드 중 오류가 발생했습니다.';
+			console.error('uploadToR2 error:', err);
+			return fail(500, { error: message });
+		}
 	},
 	importFromTurso: async ({ locals }) => {
 		if (locals.user?.role !== 'admin') {

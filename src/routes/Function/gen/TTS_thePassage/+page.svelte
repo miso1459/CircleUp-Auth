@@ -16,7 +16,8 @@
 		Search,
 		X,
 		Play,
-		Download
+		Download,
+		Upload
 	} from '@lucide/svelte';
 
 	let { data, form }: PageProps = $props();
@@ -43,6 +44,7 @@
 	let loading = $state(false);
 	let bulkLoading = $state(false);
 	let importLoading = $state(false);
+	let r2Loading = $state(false);
 	let errorMessage = $state<string | null>(null);
 	let successMessage = $state<string | null>(null);
 
@@ -148,8 +150,12 @@
 			bulkLoading = false;
 			if (result?.type === 'success' && result?.data?.success) {
 				const successCount = (result.data.successCount as number) ?? 0;
+				const skippedCount = (result.data.skippedCount as number) ?? 0;
 				const errorCount = (result.data.errorCount as number) ?? 0;
 				successMessage = `TTS 생성 완료: ${successCount}건 성공`;
+				if (skippedCount > 0) {
+					successMessage += `, ${skippedCount}건 건너뜀`;
+				}
 				if (errorCount > 0) {
 					successMessage += `, ${errorCount}건 실패`;
 				}
@@ -196,6 +202,28 @@
 		} catch (e: unknown) {
 			errorMessage = e instanceof Error ? e.message : '알 수 없는 오류';
 		}
+	}
+
+	function onR2UploadSubmit() {
+		r2Loading = true;
+		errorMessage = null;
+		successMessage = null;
+		return async ({ result, update }: { result: { type: string; data?: Record<string, unknown> }; update: () => Promise<void> }) => {
+			await update();
+			r2Loading = false;
+			if (result?.type === 'success' && result?.data?.success) {
+				const uploadedCount = (result.data.uploadedCount as number) ?? 0;
+				const skippedCount = (result.data.skippedCount as number) ?? 0;
+				const errorCount = (result.data.errorCount as number) ?? 0;
+				const total = (result.data.total as number) ?? 0;
+				successMessage = `R2 업로드 완료: ${uploadedCount}건 업로드`;
+				if (skippedCount > 0) successMessage += `, ${skippedCount}건 이미 있음`;
+				if (errorCount > 0) successMessage += `, ${errorCount}건 실패`;
+				successMessage += ` (총 ${total}건)`;
+			} else if (result?.type === 'failure') {
+				errorMessage = (result?.data?.error as string) || 'R2 업로드 중 오류가 발생했습니다.';
+			}
+		};
 	}
 
 	function onImportSubmit() {
@@ -246,6 +274,23 @@
 				{:else}
 					<Download class="size-4" />
 					Turso에서 가져오기
+				{/if}
+			</Button>
+		</form>
+		<form method="POST" action="?/uploadToR2" use:enhance={onR2UploadSubmit}>
+			<Button
+				type="submit"
+				variant="outline"
+				size="sm"
+				class="gap-2 border-sky-300 text-sky-700 hover:bg-sky-50 dark:border-sky-700 dark:text-sky-300 dark:hover:bg-sky-950/50"
+				disabled={r2Loading}
+			>
+				{#if r2Loading}
+					<Loader2 class="size-4 animate-spin" />
+					업로드 중...
+				{:else}
+					<Upload class="size-4" />
+					Cloudflare에 올리기
 				{/if}
 			</Button>
 		</form>
@@ -438,6 +483,21 @@
 				</Button>
 			</div>
 
+			<!-- 피드백 메시지 (검색 아래, 테이블 위) -->
+			{#if errorMessage}
+				<div class="bg-destructive/10 border-destructive/20 text-destructive flex items-start gap-2 rounded-lg border p-3 text-sm">
+					<AlertTriangle class="size-4 shrink-0 mt-0.5" />
+					<div>{errorMessage}</div>
+				</div>
+			{/if}
+
+			{#if successMessage}
+				<div class="bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400 flex items-start gap-2 rounded-lg border p-3 text-sm">
+					<Sparkles class="size-4 shrink-0 mt-0.5" />
+					<div>{successMessage}</div>
+				</div>
+			{/if}
+
 		<!-- 문장 테이블 -->
 		<div class="rounded-md border overflow-x-auto">
 			<Table.Root>
@@ -501,21 +561,6 @@
 		</div>
 		</Card.Content>
 	</Card.Root>
-
-	<!-- 피드백 메시지 -->
-	{#if errorMessage}
-		<div class="bg-destructive/10 border-destructive/20 text-destructive flex items-start gap-2 rounded-lg border p-4 text-sm">
-			<AlertTriangle class="size-4 shrink-0 mt-0.5" />
-			<div>{errorMessage}</div>
-		</div>
-	{/if}
-
-	{#if successMessage}
-		<div class="bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-400 flex items-start gap-2 rounded-lg border p-4 text-sm">
-			<Sparkles class="size-4 shrink-0 mt-0.5" />
-			<div>{successMessage}</div>
-		</div>
-	{/if}
 
 	{#if audioUrl}
 		<audio controls bind:this={audioPlayer} src={audioUrl} class="w-full"></audio>
