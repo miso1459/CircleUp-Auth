@@ -207,6 +207,10 @@ export const actions = {
 				}
 			}
 
+			if (!record.text) {
+				return fail(400, { error: '문장 내용이 비어 있습니다.' });
+			}
+
 			const workId = record.work_id ?? 0;
 			const workDir = path.join(ttsDirFull, String(workId));
 			if (!fs.existsSync(workDir)) {
@@ -397,9 +401,23 @@ export const actions = {
 			}
 
 			try {
+				if (!record.text) {
+					errors.push(`ID ${record.id}: 문장 내용이 비어 있습니다.`);
+					errorCount++;
+					continue;
+				}
+
 				if (!fs.existsSync(workDir)) {
 					fs.mkdirSync(workDir, { recursive: true });
 				}
+
+				await generateTTS({
+					text: record.text,
+					languageCode: lang,
+					voiceName: voice,
+					speakingRate: speed,
+					filename: audioPath
+				});
 
 				await tursoDb
 					.update(turso_sentences)
@@ -474,7 +492,7 @@ export const actions = {
 
 			for (const id of ids) {
 				const workId = recordMap.get(id);
-				if (!workId) {
+				if (workId === null || workId === undefined) {
 					skippedCount++;
 					continue;
 				}

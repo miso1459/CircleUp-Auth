@@ -28,11 +28,11 @@
 
 	type LangCode = keyof typeof LANG_MAP;
 
-	let selectedLanguage = $state<LangCode>((data.savedLang as LangCode) || 'en-US');
-	let selectedVoice = $state(data.savedVoice || 'en-US-Neural2-F');
+	let selectedLanguage = $state<LangCode>('en-US');
+	let selectedVoice = $state('en-US-Neural2-F');
 	let rate = $state(1.0);
 	let selectedSentenceId = $state<number | null>(null);
-	let ttsFilter = $state<'all' | 'generated' | 'not_generated'>(data.ttsFilter || 'not_generated');
+	let ttsFilter = $state<'all' | 'generated' | 'not_generated'>('not_generated');
 	let loading = $state(false);
 	let bulkLoading = $state(false);
 
@@ -41,9 +41,22 @@
 	let errorMessage = $state<string | null>(null);
 	let successMessage = $state<string | null>(null);
 
-	let selectedWorkId = $state<number | null>(data.selectedWorkId);
-	let searchQuery = $state(data.searchQuery);
-	let currentPage = $state(data.page);
+	let selectedWorkId = $state<number | null>(null);
+	let searchQuery = $state('');
+	let currentPage = $derived(data.page);
+
+	// data에서 한 번만 초기화 (전체 페이지 리로드 시 재생성되므로 문제 없음)
+	let _hydrated = false;
+	$effect(() => {
+		if (!_hydrated) {
+			selectedLanguage = (data.savedLang as LangCode) || 'en-US';
+			selectedVoice = data.savedVoice || 'en-US-Neural2-F';
+			ttsFilter = (data.ttsFilter as 'all' | 'generated' | 'not_generated') || 'not_generated';
+			selectedWorkId = data.selectedWorkId;
+			searchQuery = data.searchQuery;
+			_hydrated = true;
+		}
+	});
 
 	const sentences = $derived(data.sentences);
 	const totalCount = $derived(data.totalCount);
